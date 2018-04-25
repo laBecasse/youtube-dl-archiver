@@ -4,13 +4,18 @@ const Db             = require('tingodb')().Db;
 
 const app            = express();
 const db             = new Db('./archives/db',{});
-const collection     = db.collection("test");
+const collections = {
+  "links": db.collection("test"),
+  "cache": db.collection("cache")
+};
 
 const port = 8000;
+process.env.ROOT = process.env.ROOT || __dirname;
+
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-require('./routes')(app, collection);
+require('./routes')(app, collections);
 
 app.listen(port, () => {
   console.log('We are live on http://localhost:'+port);

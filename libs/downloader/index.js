@@ -3,20 +3,18 @@ const fs   = require('fs');
 const youtubedl = require('youtube-dl');
 const mkdirp = require('mkdirp');
 
-const ROOT = __dirname +'/../../';
+const ROOT = process.env.ROOT;
 
 module.exports = function(url){
   this.URL = url;
-  this.info = {};
   let video;
-
-  console.log('info: '+ url);
   
-  this.info = new Promise((resolve,reject) => {
-
+  this.getInfo = function () {
+    console.log('info: '+ this.URL);
+    return new Promise((resolve,reject) => {
       video = youtubedl(url, ['--format=best'])
 	.on('error', function(err) {
-	  console.log('error on the link '+url+'\n'+err);
+	  console.log('error: '+url);
 	  reject(err);
 	})
     
@@ -24,13 +22,15 @@ module.exports = function(url){
 	.on('info', function(info) {
 	  resolve(info);
 	})
-
     })
-
-  this.pipe = function(dirpath, filepath){
-
+  }
+  this.pipe = function(dirpath,filepath){
+    console.log('down: '+this.URL);
     return new Promise((resolve,reject) => {
-      mkdirp(dirpath,function(err){
+      
+      const absdirpath = path.join(ROOT, dirpath);
+   
+      mkdirp(absdirpath,function(err){
 	if (err) throw err;
 
 	const absfilepath = path.join(ROOT,filepath);
@@ -50,4 +50,18 @@ module.exports = function(url){
     })
     
   }
+
+  this.exists = function(filepath){
+    return new Promise((resolve,reject) => {
+      	const absfilepath = path.join(ROOT,filepath);
+      fs.access(absfilepath, (err) =>{
+	if(!err){
+	  resolve(true);
+	}else{
+	  resolve(false);
+	}
+      })
+    })
+  }
+  
 }
