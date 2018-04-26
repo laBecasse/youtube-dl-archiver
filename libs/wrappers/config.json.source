@@ -1,0 +1,17 @@
+{
+  "wallabag": {
+    "url" : "https://wallabag.cheredeprince.net",
+    "credits": {
+      "clientId" : "",
+      "clientSecret" : "",
+      "username" : "",
+      "password" : ""
+    }
+  },
+  "shaarli": {
+    "url" : "https://shaarli.buron.coffee",
+    "credits":{
+      "secret" : ""
+    }
+  }
+}

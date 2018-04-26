@@ -23,6 +23,18 @@ module.exports = function (collection) {
     })
   }
 
+  let find = function (url) {
+    return new Promise((resolve, reject) => {
+      collection.findOne({'url': url}, (err, res) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(res)
+        }
+      })
+    })
+  }
+
   let remove = function (url) {
     return new Promise((resolve, reject) => {
       const selector = { 'url': url }
@@ -37,82 +49,66 @@ module.exports = function (collection) {
   // we always use this function on url that
   // are not in the database
   let download = function (url) {
-    return new Promise((resolve, reject) => {
-      let dl = new Downloader(url)
+    let dl = new Downloader(url)
+    let item
 
-      dl.getInfo()
-        .then(info => {
-          const uploader = info.uploader_id
-          const filename = info._filename
-          const extractor = info.extractor
-          const dirpath = (uploader) ? path.join(ARCHIVES_DIR + extractor, uploader) : ARCHIVES_DIR + extractor
-          const filepath = path.join(dirpath, filename)
+    return dl.getInfo()
+      .then(info => {
+        const uploader = info.uploader_id
+        const filename = info._filename
+        const extractor = info.extractor
+        const dirpath = (uploader) ? path.join(ARCHIVES_DIR + extractor, uploader) : ARCHIVES_DIR + extractor
+        const filepath = path.join(dirpath, filename)
 
-          const item = {
-            'url': url,
-            'filepath': filepath,
-            'info': info
-          }
+        item = {
+          'url': url,
+          'filepath': filepath,
+          'info': info
+        }
 
-          dl.pipe(dirpath, filepath)
-            .then(() => {
-              resolve(item)
-            })
-            .catch(err => {
-              if (err.message === 'EEXIST') {
-                resolve(item)
-              } else {
-                reject(err)
-              }
-            })
-        })
-        .catch(reject)
-    })
+        return dl.pipe(filepath)
+      })
+      .then(() => item)
+      .catch(err => {
+        if (err.message === 'EEXIST') {
+          return Promise.resolve(item)
+        } else {
+          return Promise.reject(err)
+        }
+      })
   }
 
   let downloadAndCreate = function (url) {
-    return new Promise((resolve, reject) => {
-      download(url)
-        .then(item => {
-          create(item.url, item.filepath, item.info)
-            .then(item => resolve(item))
-            .catch(reject)
-        })
-        .catch(reject)
-    })
+    return download(url)
+      .then(item => {
+        return create(item.url, item.filepath, item.info)
+      })
   }
 
   return {
     findOrDl: function (url) {
-      return new Promise((resolve, reject) => {
-        collection.findOne({'url': url}, function (err, item) {
-          if (err) return reject(err)
-
-          // if the url is saved in the database
+      return find(url)
+        .then(item => {
           if (item) {
-            const download = new Downloader(url)
+            // if the url is saved in the database
+            const dl = new Downloader(url)
+
             // if the file is still in archives
-            download.exists(item.filepath)
+            return dl.exists(item.filepath)
               .then(exist => {
                 if (exist) {
-                  resolve(item)
+                  return item
                 } else {
-                  remove(url)
+                  return remove(url)
                     .then(() => {
-                      downloadAndCreate(url)
-                        .then(() => resolve(item))
-                        .catch(resolve)
+                      return downloadAndCreate(url)
                     })
-                    .catch(resolve)
                 }
               })
           } else {
-            downloadAndCreate(url)
-              .then(() => resolve(item))
-              .catch(reject)
+            return downloadAndCreate(url)
           }
         })
-      })
     }
   }
 }
