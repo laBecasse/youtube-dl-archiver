@@ -1,31 +1,65 @@
-const path = require('path')
-const Downloader = require('../libs/downloader')
-
-const ARCHIVES_DIR = './archives/'
-
 module.exports = function (collection) {
-  let create = function (url, filepath, info) {
-    return new Promise((resolve, reject) => {
-      const item = {
-        'url': url,
-        'filepath': filepath,
-        'info': info
-      }
+  let insert = function (mediaId, url, filepath, info) {
+    return findMediaUrl(mediaId, url)
+      .then(res => {
+        if (!res) {
+          const media = {
+            'mediaId': mediaId,
+            'filepath': filepath,
+            'url': url,
+            'info': info
+          }
+          return new Promise((resolve, reject) => {
+            collection.insert(media, (err, res) => {
+              if (err) {
+                reject(err)
+              } else {
+                console.log('create: ' + mediaId)
+                resolve(res)
+              }
+            })
+          })
+        } else {
+          console.log(res)
+          throw new Error('Conflict on mediaUrl key')
+        }
+      })
+  }
 
-      collection.insert(item, (err, res) => {
+  let find = function (selector) {
+    return new Promise((resolve, reject) => {
+      collection.find(selector, (err, res) => {
         if (err) {
           reject(err)
         } else {
-          console.log('create: ' + url)
-          resolve(url)
+          res.toArray((err, a) => resolve(a))
         }
       })
     })
   }
 
-  let find = function (url) {
+  let findOne = function (selector) {
     return new Promise((resolve, reject) => {
-      collection.findOne({'url': url}, (err, res) => {
+      collection.findOne(selector, (err, res) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(res)
+        }
+      })
+    })
+  }
+  
+  let findMedia = function (mediaId) {
+    let selector = {'mediaId': mediaId}
+    return find(selector)
+  }
+
+  let update = function (mediaId, media) {
+    return new Promise((resolve, reject) => {
+      let selector = {'mediaId': mediaId}
+
+      collection.update(selector, media, (err, res) => {
         if (err) {
           reject(err)
         } else {
@@ -35,9 +69,9 @@ module.exports = function (collection) {
     })
   }
 
-  let remove = function (url) {
+  let remove = function (mediaId) {
     return new Promise((resolve, reject) => {
-      const selector = { 'url': url }
+      const selector = { 'mediaId': mediaId }
 
       collection.remove(selector, (err) => {
         if (err) return reject(err)
@@ -46,69 +80,23 @@ module.exports = function (collection) {
     })
   }
 
-  // we always use this function on url that
-  // are not in the database
-  let download = function (url) {
-    let dl = new Downloader(url)
-    let item
-
-    return dl.getInfo()
-      .then(info => {
-        const uploader = info.uploader_id
-        const filename = info._filename
-        const extractor = info.extractor
-        const dirpath = (uploader) ? path.join(ARCHIVES_DIR + extractor, uploader) : ARCHIVES_DIR + extractor
-        const filepath = path.join(dirpath, filename)
-
-        item = {
-          'url': url,
-          'filepath': filepath,
-          'info': info
-        }
-
-        return dl.pipe(filepath)
-      })
-      .then(() => item)
-      .catch(err => {
-        if (err.message === 'EEXIST') {
-          return Promise.resolve(item)
-        } else {
-          return Promise.reject(err)
-        }
-      })
+  let findUrl = function (url) {
+    const selector = {
+      'url': url
+    }
+    return find(selector)
   }
 
-  let downloadAndCreate = function (url) {
-    return download(url)
-      .then(item => {
-        return create(item.url, item.filepath, item.info)
-      })
+  let findMediaUrl = function (mediaId, url) {
+    let selector = {
+      'mediaId': mediaId,
+      'url': url
+    }
+    return findOne(selector)
   }
 
   return {
-    findOrDl: function (url) {
-      return find(url)
-        .then(item => {
-          if (item) {
-            // if the url is saved in the database
-            const dl = new Downloader(url)
-
-            // if the file is still in archives
-            return dl.exists(item.filepath)
-              .then(exist => {
-                if (exist) {
-                  return item
-                } else {
-                  return remove(url)
-                    .then(() => {
-                      return downloadAndCreate(url)
-                    })
-                }
-              })
-          } else {
-            return downloadAndCreate(url)
-          }
-        })
-    }
+    add: insert,
+    findUrl: findUrl
   }
 }
