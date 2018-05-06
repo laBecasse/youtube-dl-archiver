@@ -10,9 +10,12 @@ const collections = {
   'links': db.collection('links'),
   'cache': db.collection('cache')
 }
+collections.cache.createIndex({ 'url': 1 }, { unique: true })
+collections.links.createIndex({ 'url': 1, 'mediaUrl': 1 }, { unique: true })
 
 const port = 8000
 
+app.set('json spaces', 40)
 app.use(bodyParser.urlencoded({ extended: true }))
 
 require('./routes')(app, collections)

@@ -1,57 +1,94 @@
 const wrapper = require('../libs/wrappers')
 const Media = require('../models/Media.js')
+const Cache = require('../models/Cache.js')
 const filePath = require('../models/FilePath')
 const Downloader = require('../libs/downloader')
 
-module.exports = function (app, collections) {
-  const cache = collections.cache
-  const collection = collections.links
-  const media = Media(collection)
+let handleJson = function (promises, req, res) {
+  promises.then(object => {
+    if (object) {
+      res.json(object)
+    } else {
+      res.status(404)
+      res.json({message: 'not found'})
+    }
+  })
+    .catch(handleError(res))
+}
 
-  app.get('/update', (req, res) => {
-    create('')
-      .then(() => {
-        console.log('finish end')
-        res.send('ok')
+let handleError = function (res) {
+  return err => {
+    console.error(err.stack)
+    res.status(500)
+      .json({error: 'server error'})
+  }
+}
+
+module.exports = function (app, collections) {
+  const cacheCol = collections.cache
+  const cache = Cache(cacheCol)
+  const links = collections.links
+  const media = Media(links)
+
+  app.get('/update', (req, res, next) => {
+    wrapper.getLinks()
+      .then(links => {
+        return bagOfPromises(links, 0)
+      })
+      .then(obj => {
+        console.log('update finished')
       })
       .catch(err => {
-        console.log(err)
-        res.send('error')
+        if (err) return next(err)
       })
-    // wrapper.getLinks()
-    //   .then(links => {
-    //     let promises = []
 
-    //     links.forEach(link => {
-    //       cache.findOne({'url': link}, (err, r) => {
-    //         if (err) throw err
-    //         if (!r) {
-    //           promises.push(
-    //             Media(collection)
-    //               .findOrDl(link)
-    //               .catch(() => addToCache(link)))
-    //         }
-    //       })
-    //     })
-    //     res.send('ok')
-    //   })
-    //
+    console.log('update started')
+    return res.send('update started')
   })
 
-  let addToCache = function (link) {
-    let item = { 'url': link }
+  app.post('/medias', (req, res, next) => {
+    const url = req.query.url
+    if (url) {
+      handleJson(create(url), req, res)
+    } else {
+      res.status(400)
+      res.json({message: 'url parameter needed'})
+    }
+  })
 
-    cache.insert(item, (err, res) => {
-      if (err) return console.log(err)
-      console.log('forget: ' + link)
-    })
+  let bagOfPromises = function (links, start) {
+    const step = 2
+    const list = links.slice(start, start + step)
+    return Promise.all(list.map(createOrCache))
+      .then(() => {
+        if (links.length > start + step) {
+          return bagOfPromises(links, start + step)
+        }
+      })
   }
 
-  let create = function (url, forced) {
-    return media.findUrl(url)
+  let createOrCache = function (url) {
+    return cache.find(url)
+      .then(obj => {
+        if (!obj) {
+          return create(url)
+        } else {
+          return Promise.resolve()
+        }
+      })
+      .catch(err => {
+        if (err.name !== 'InfoError') {
+          console.error(err.stack)
+        } else {
+          return cache.add(url)
+        }
+      })
+  }
+
+  let create = function (url) {
+    return media.findByUrl(url)
       .then(res => {
-        console.log(res)
-        if (res.length === 0 || forced) {
+        if (res.length === 0) {
           return Downloader.info(url)
         } else {
           return []
@@ -64,19 +101,29 @@ module.exports = function (app, collections) {
 
   let createOne = function (url) {
     return info => {
-      const absfilepath = filePath.absolute(info)
-      const filepath = filePath.relative(info)
+      const absfilepath = filePath.getAbsPath(info)
+      const filepath = filePath.getRelPath(info)
+      let thumbnails
+      let subtitles
 
       return Downloader.download(info, absfilepath)
-        .then(() => {
-          return media.add(info.webpage_url, url, filepath, info)
-        })
         .catch(downError)
+        .then(() => Downloader.downThumb(info, absfilepath))
+        .then(absfilepaths => {
+          thumbnails = absfilepaths.map(filePath.relative)
+          return Downloader.downSubs(info, absfilepath)
+        })
+        .then(absfilepaths => {
+          subtitles = absfilepaths.map(filePath.relative)
+          const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
+          const mediaId = (test) ? info.webpage_url : info.url
+          return media.add(mediaId, url, filepath, thumbnails, subtitles, info)
+        })
     }
   }
 
   let downError = function (err) {
-    if (err.message !== 'EEXIST') {
+    if (err.name !== 'eexist') {
       return Promise.reject(err)
     }
   }

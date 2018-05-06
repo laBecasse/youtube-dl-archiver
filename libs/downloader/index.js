@@ -3,11 +3,8 @@ const fs = require('fs')
 const youtubedl = require('youtube-dl')
 const mkdirp = require('mkdirp')
 
-const ROOT = process.env.ROOT
-
 module.exports.info = function (url) {
   console.log('info: ' + url)
-
 
   return new Promise((resolve, reject) => {
     let info
@@ -18,10 +15,10 @@ module.exports.info = function (url) {
     video
       .on('error', function (err) {
         console.log('error: ' + url)
+        err.name = 'InfoError'
         reject(err)
       })
       .on('next', function (i) {
-        console.log('next')
         if (!nextEmitted) {
           nextEmitted = true
           i.push(info)
@@ -29,61 +26,85 @@ module.exports.info = function (url) {
         }
       })
 
-
     // Will be called when the download starts.
       .on('info', function (i) {
-        console.log('info')
         info = i
         setTimeout(() => {
           video.emit('end')
           video.emit('next', [])
         }, 5)
       })
-      .on('end', () => console.log('end'))
   })
 }
 
 module.exports.download = function (info, filepath) {
-  console.log('down: ' + info.webpage_url)
-
   return new Promise((resolve, reject) => {
     const dirpath = path.dirname(filepath)
 
     mkdirp(dirpath, function (err) {
-      if (err) throw err
+      if (err) return reject(err)
 
       let video = youtubedl(info)
 
       video
         .on('error', function (err) {
-          console.log(err)
-          reject(err)
+          return reject(err)
         })
         .on('end', function () {
-          resolve()
+          return resolve()
         })
 
       if (!fs.existsSync(filepath)) {
+        console.log('down: ' + info.webpage_url)
         video
           .pipe(fs.createWriteStream(filepath, {flags: 'a'}))
       } else {
-        video.emit('end')
-        console.log(filepath + ' already exists.')
-        reject(new Error('EEXIST'))
+        const err = new Error('Media is already downloaded')
+        err.name = 'eexist'
+        return reject(err)
       }
     })
   })
 }
 
-//   this.exists = function (filepath) {
-//     return new Promise((resolve, reject) => {
-//       const absfilepath = path.join(ROOT, filepath)
-//       fs.access(absfilepath, (err) => {
-//         if (!err) {
-//           resolve(true)
-//         } else {
-//           resolve(false)
-//         }
-//       })
-//     })
-// }
+module.exports.downThumb = function (info, filepath) {
+  return new Promise((resolve, reject) => {
+    const url = info.webpage_url
+    const dirpath = path.dirname(filepath)
+    const options = {
+      // Downloads all the available subtitles.
+      all: false,
+      // The directory to save the downloaded files in.
+      cwd: dirpath
+    }
+
+    youtubedl.getThumbs(url, options, (err, files) => {
+      if (err) return reject(err)
+      const absfilepaths = files.map(file => path.join(dirpath, file))
+      resolve(absfilepaths)
+    })
+  })
+}
+
+module.exports.downSubs = function (info, filepath) {
+  return new Promise((resolve, reject) => {
+    const url = info.webpage_url
+    const dirpath = path.dirname(filepath)
+    const options = {
+      // Write automatic subtitle file (youtube only)
+      auto: false,
+      // Downloads all the available subtitles.
+      all: false,
+      // Languages of subtitles to download, separated by commas.
+      lang: 'en,fr',
+      // The directory to save the downloaded files in.
+      cwd: dirpath
+    }
+
+    youtubedl.getSubs(url, options, (err, files) => {
+      if (err) return reject(err)
+      const absfilepaths = files.map(file => path.join(dirpath, file))
+      resolve(absfilepaths)
+    })
+  })
+}
