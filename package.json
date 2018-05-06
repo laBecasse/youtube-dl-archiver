@@ -1,6 +1,6 @@
 {
   "name": "youtube-dl-archiver",
-  "version": "0.0.1",
+  "version": "0.4.0",
   "description": "Youtebe-dl Archiver is a server service which archives videos from bookmarks or using a link using the youtube-dl program.",
   "main": "index.js",
   "scripts": {
