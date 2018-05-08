@@ -33,7 +33,7 @@ module.exports = function (app, collections) {
   app.get('/update', (req, res, next) => {
     wrapper.getLinks()
       .then(links => {
-        return bagOfPromises(links, 0)
+        return bagOfPromises(createOrCache, links, 0)
       })
       .then(obj => {
         console.log('update finished')
@@ -47,22 +47,23 @@ module.exports = function (app, collections) {
   })
 
   app.post('/medias', (req, res, next) => {
-    const url = req.query.url
+    const url = req.body.url
+
     if (url) {
-      handleJson(create(url), req, res)
+      handleJson(createOrCache(url), req, res)
     } else {
       res.status(400)
       res.json({message: 'url parameter needed'})
     }
   })
 
-  let bagOfPromises = function (links, start) {
-    const step = 2
-    const list = links.slice(start, start + step)
-    return Promise.all(list.map(createOrCache))
+  let bagOfPromises = function (promise, args, start) {
+    const step = 3
+    const list = args.slice(start, start + step)
+    return Promise.all(list.map(promise))
       .then(() => {
-        if (links.length > start + step) {
-          return bagOfPromises(links, start + step)
+        if (args.length > start + step) {
+          return bagOfPromises(promise, args, start + step)
         }
       })
   }
@@ -95,7 +96,7 @@ module.exports = function (app, collections) {
         }
       })
       .then(infos => {
-        return Promise.all(infos.map(createOne(url)))
+        return bagOfPromises(createOne(url), infos, 0)
       })
   }
 

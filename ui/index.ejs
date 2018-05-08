@@ -3,12 +3,25 @@
   <head>
     <meta charset="utf-8">
     <title>Youtube Dl Archiver</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="static/style.css">
+    <script>
+      const ADDRESS = '<%=address%>'
+    </script>
+    <script src="static/script.js" defer></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
   </head>
   <body>
+    <div>
+      <form action="/medias" method="post">
+        <label for="post">Ajouter une vidéo</label>
+        <input id="post" type="text" value="" name="url"/>
+        <input id="" type="submit" value="Ajouter">
+      </form>
+    </div>
+    <div>
+      <form action="/medias/update" method="get">
+        <input id="update" type="submit" value="Mise à jour"/>
     <section id ="app">
     <div v-if="medias.length === 0" class="loading">Loading...</div>
     <div id="list">
@@ -27,7 +40,8 @@
         </audio> 
         <img v-if="media.type === 'image'"
              :src="media.file_url">
-        
+        <a v-if="media.type === 'other'"
+           :href="media.file_url">media</a>
       </div>
     </div>
     </section>

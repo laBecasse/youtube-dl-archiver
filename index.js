@@ -3,6 +3,8 @@ const bodyParser = require('body-parser')
 const Db = require('tingodb')().Db
 
 process.env.ARCHIVES_DIR = process.env.ARCHIVES_DIR || __dirname + '/archives'
+process.env.HOST = process.env.HOST || 'http://localhost'
+const port = process.env.PORT = process.env.PORT || 8000
 
 const app = express()
 const db = new Db(process.env.ARCHIVES_DIR + '/db', {})
@@ -13,10 +15,12 @@ const collections = {
 collections.cache.createIndex({ 'url': 1 }, { unique: true })
 collections.links.createIndex({ 'url': 1, 'mediaUrl': 1 }, { unique: true })
 
-const port = 8000
-
 app.set('json spaces', 40)
 app.use(bodyParser.urlencoded({ extended: true }))
+
+app.use('/static', express.static('ui/static'))
+app.set('views', __dirname + '/ui')
+app.set('view engine', 'ejs')
 
 require('./routes')(app, collections)
 

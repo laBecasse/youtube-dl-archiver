@@ -90,7 +90,6 @@ module.exports = function (app, links) {
 
     function getFilePath (m) {
       const subres = m.subtitles.find(sub => sub.lang === lang)
-      console.log(subres)
       if (subres) {
         return FilePath.absolute(subres.file_path)
       } else {

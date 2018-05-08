@@ -17,7 +17,7 @@ var app = new Vue({
       return bottomOfPage || pageHeight < visible
     },
     addMedias () {
-      axios.get('http://localhost:8000/medias', {
+      axios.get(ADDRESS + '/medias', {
         params: {
           limit: this.step,
           offset: this.offset

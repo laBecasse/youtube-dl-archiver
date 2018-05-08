@@ -1,52 +1,60 @@
 const Mime = require('mime')
 
-const HOST = 'http://localhost:8000'
+const PORT = process.env.PORT
+const HOST = process.env.HOST
+const ADDRESS = HOST + ':' + PORT
+
 const LANGS = ['fr', 'en']
 
 module.exports = function (collection) {
   let build = function (obj) {
-    let testSubLang = function (lang) {
-      return fileName => {
-        const re = new RegExp('.' + lang + '.')
-        return re.test(fileName)
-      }
-    }
-
-    let subtitlesArray
-    if (obj.subtitles) {
-      subtitlesArray = LANGS.reduce((res, lang) => {
-        const filePath = obj.subtitles.find(testSubLang)
-        if (filePath) {
-          res.push({
-            url: HOST + '/medias/' + obj._id + '/subtitle/' + lang,
-            file_path: filePath,
-            lang: lang
-          })
+    if (obj) {
+      let testSub = function (lang) {
+        return fileName => {
+          const re = new RegExp('.' + lang + '.')
+          return re.test(fileName)
         }
-        return res
-      }, [])
-    }
-
-    let thumb
-    if (obj.thumbnails && obj.thumbnails.length > 0) {
-      thumb = {
-        url: HOST + '/medias/' + obj._id + '/thumbnail',
-        file_path: obj.thumbnails[0]
       }
-    }
 
-    return {
-      id: obj._id,
-      media_url: obj.media_url,
-      ext: obj.info.ext,
-      mime: Mime.lookup(obj.info.ext),
-      title: obj.info.title,
-      creation_date: obj.creation_date,
-      upload_date: obj.info.upload_date,
-      file_url: HOST + '/medias/' + obj._id + '/file',
-      file_path: obj.file_path,
-      thumbnail: thumb,
-      subtitles: subtitlesArray
+      let subtitlesArray
+      if (obj.subtitles) {
+        subtitlesArray = LANGS.reduce((res, lang) => {
+          const filePath = obj.subtitles.find(testSub(lang))
+          if (filePath) {
+            res.push({
+              url: ADDRESS + '/medias/' + obj._id + '/subtitle/' + lang,
+              file_path: filePath,
+              lang: lang
+            })
+          }
+          return res
+        }, [])
+      }
+
+      let thumb
+      if (obj.thumbnails && obj.thumbnails.length > 0) {
+        thumb = {
+          url: ADDRESS + '/medias/' + obj._id + '/thumbnail',
+          file_path: obj.thumbnails[0]
+        }
+      }
+
+      return {
+        id: obj._id,
+        url: obj.url,
+        media_url: obj.media_url,
+        ext: obj.info.ext,
+        mime: Mime.lookup(obj.info.ext),
+        title: obj.info.title,
+        creation_date: obj.creation_date,
+        upload_date: obj.info.upload_date,
+        file_url: ADDRESS + '/medias/' + obj._id + '/file',
+        file_path: obj.file_path,
+        thumbnail: thumb,
+        subtitles: subtitlesArray
+      }
+    } else {
+      return null
     }
   }
 
@@ -67,8 +75,8 @@ module.exports = function (collection) {
           }
 
           const media = {
-            'media_url': mediaUrl,
             'url': url,
+            'media_url': mediaUrl,
             'file_path': filepath,
             'thumbnails': thumbnails,
             'subtitles': subtitles,
@@ -174,7 +182,9 @@ module.exports = function (collection) {
     findByUrl: findUrl,
     findAll: function (limit, offset) {
       let selector = {}
-      let sort = {'creation_date': -1}
+      let sort = {
+        'creation_date': -1,
+        '_id': -1 }
       return find(selector, limit, offset, sort)
         .then(res => res.map(build))
     },
