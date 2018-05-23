@@ -3,8 +3,9 @@ const bodyParser = require('body-parser')
 const Db = require('tingodb')().Db
 
 process.env.ARCHIVES_DIR = process.env.ARCHIVES_DIR || __dirname + '/archives'
-process.env.HOST = process.env.HOST || 'http://localhost'
-const port = process.env.PORT = process.env.PORT || 8000
+const port = process.env.PORT || 8000
+process.env.HOST = process.env.HOST || 'http://localhost:8000'
+
 
 const app = express()
 const db = new Db(process.env.ARCHIVES_DIR + '/db', {})

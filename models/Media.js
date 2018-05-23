@@ -1,8 +1,6 @@
 const Mime = require('mime')
 
-const PORT = process.env.PORT
 const HOST = process.env.HOST
-const ADDRESS = HOST + ':' + PORT
 
 const LANGS = ['fr', 'en']
 
@@ -22,7 +20,7 @@ module.exports = function (collection) {
           const filePath = obj.subtitles.find(testSub(lang))
           if (filePath) {
             res.push({
-              url: ADDRESS + '/medias/' + obj._id + '/subtitle/' + lang,
+              url: HOST + '/medias/' + obj._id + '/subtitle/' + lang,
               file_path: filePath,
               lang: lang
             })
@@ -34,7 +32,7 @@ module.exports = function (collection) {
       let thumb
       if (obj.thumbnails && obj.thumbnails.length > 0) {
         thumb = {
-          url: ADDRESS + '/medias/' + obj._id + '/thumbnail',
+          url: HOST + '/medias/' + obj._id + '/thumbnail',
           file_path: obj.thumbnails[0]
         }
       }
@@ -48,7 +46,7 @@ module.exports = function (collection) {
         title: obj.info.title,
         creation_date: obj.creation_date,
         upload_date: obj.info.upload_date,
-        file_url: ADDRESS + '/medias/' + obj._id + '/file',
+        file_url: HOST + '/medias/' + obj._id + '/file',
         file_path: obj.file_path,
         thumbnail: thumb,
         subtitles: subtitlesArray
