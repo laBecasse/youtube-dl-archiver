@@ -18,7 +18,7 @@ collections.links.createIndex({ 'url': 1, 'mediaUrl': 1 }, { unique: true })
 app.set('json spaces', 40)
 app.use(bodyParser.urlencoded({ extended: true }))
 
-app.use('/static', express.static('ui'))
+app.use('/', express.static('ui'))
 
 require('./routes')(app, collections)
 
