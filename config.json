@@ -1,0 +1,12 @@
+{
+  "mongo": {
+    "host": "localhost:27017",
+    "db": "youtube-dl-archiver",
+    "collections": {
+      "links": "links",
+      "cache": "cache"
+    }
+  },
+  "archives-dir": "/home/mburon/dev/buron.coffee/youtube-dl-archiver/archives",
+  "port": 8000
+}

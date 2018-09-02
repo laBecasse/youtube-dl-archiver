@@ -1,5 +1,6 @@
 const Media = require('../models/Media.js')
 const FilePath = require('../models/FilePath')
+
 module.exports = function (app, links) {
   const media = Media(links)
 

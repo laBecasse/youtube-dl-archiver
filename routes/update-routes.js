@@ -24,10 +24,8 @@ let handleError = function (res) {
   }
 }
 
-module.exports = function (app, collections) {
-  const cacheCol = collections.cache
+module.exports = function (app, links, cacheCol) {
   const cache = Cache(cacheCol)
-  const links = collections.links
   const media = Media(links)
 
   app.get('/update', (req, res, next) => {

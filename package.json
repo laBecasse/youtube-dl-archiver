@@ -22,6 +22,7 @@
     "express": "^4.16.3",
     "mine": "0.1.0",
     "mkdirp": "^0.5.1",
+    "mongodb": "^3.1.4",
     "shaarli-client": "0.0.2",
     "tingodb": "^0.6.1",
     "wallabag-api": "^0.2.3",
