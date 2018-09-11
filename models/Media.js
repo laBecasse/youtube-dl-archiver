@@ -20,7 +20,7 @@ module.exports = function (links) {
           const filePath = obj.subtitles.find(testSub(lang))
           if (filePath) {
             res.push({
-              url: HOST + '/medias/' + obj._id + '/subtitle/' + lang,
+              url: HOST + '/archives/' + encodeURIComponent(filePath),
               file_path: filePath,
               lang: lang
             })
@@ -32,7 +32,7 @@ module.exports = function (links) {
       let thumb
       if (obj.thumbnails && obj.thumbnails.length > 0) {
         thumb = {
-          url: HOST + '/medias/' + obj._id + '/thumbnail',
+          url: HOST + '/archives/' + encodeURIComponent(obj.thumbnails[0]),
           file_path: obj.thumbnails[0]
         }
       }
@@ -46,7 +46,7 @@ module.exports = function (links) {
         title: obj.info.title,
         creation_date: obj.creation_date,
         upload_date: obj.info.upload_date,
-        file_url: HOST + '/medias/' + obj._id + '/file',
+        file_url: HOST + '/archives/' + encodeURIComponent(obj.file_path),
         file_path: obj.file_path,
         thumbnail: thumb,
         subtitles: subtitlesArray
