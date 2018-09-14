@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "update": "cd node_modules/youtube-dl; npm run update"
   },
   "keywords": [
     "api",
@@ -29,6 +30,6 @@
     "youtube-dl": "^1.12.2"
   },
   "devDependencies": {
-    "nodemon": "^1.17.3"
+    "nodemon": "^1.18.4"
   }
 }

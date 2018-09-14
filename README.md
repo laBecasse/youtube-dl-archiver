@@ -16,3 +16,11 @@ touch ./archives/db/cache
 5. run the server with `node index.js`
 6. open the following link to launch the archiving: http://localhost:8000/update
 
+## Youtube-dl update
+
+Youtube-dl is regularly updated so you need to update it often. To update it execute the following line:
+
+```bash 
+npm run update
+```
+
