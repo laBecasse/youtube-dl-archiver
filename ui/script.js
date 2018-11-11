@@ -3,7 +3,7 @@ const DEFAULT = {
   'bottom': false,
   'query': '/medias',
   'offset': 0,
-  'step': 100,
+  'step': 10,
   'isSearch': false,
   'isDownloading': false
 }
@@ -30,8 +30,7 @@ var app = new Vue({
       })
         .then(response => {
           let data = response.data
-          console.log(this.query)
-          console.log(data.length)
+
           data.forEach(media => {
             const reV = new RegExp('video')
             const reI = new RegExp('image')

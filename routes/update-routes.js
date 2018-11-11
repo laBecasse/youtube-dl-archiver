@@ -6,7 +6,6 @@ const Downloader = require('../libs/downloader')
 
 let handleJson = function (promises, req, res) {
   promises.then(object => {
-    console.log(object)
     if (object) {
       res.json(object)
     } else {
