@@ -4,7 +4,7 @@ const DEFAULT = {
   'query': '/medias',
   'offset': 0,
   'step': 10,
-  'isSearch': false,
+  'isSearching': false,
   'isDownloading': false
 }
 
@@ -54,8 +54,10 @@ var app = new Vue({
     search: function(event) {
       this.reset()
       let text = document.getElementById('search-text').value
-      this.isSearch = true
-      this.query = '/search?text=' + text
+      this.isSearching = true
+      this.query = '/search?text=' + encodeURI(text)
+
+      console.log(this.query)
       this.updateList()
     },
     lastAdded: function(event) {
@@ -76,7 +78,7 @@ var app = new Vue({
         .catch(err => console.error(err))
     },
     reset: function() {
-      this.isSearch = DEFAULT.isSearch
+      this.isSearching = DEFAULT.isSearching
       this.query = DEFAULT.query
       this.medias = []
       this.offset = DEFAULT.offset

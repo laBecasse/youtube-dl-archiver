@@ -5,3 +5,7 @@ video {
 .card {
     margin-bottom: 1em;
 }
+
+input.hidden {
+    display:none;
+}

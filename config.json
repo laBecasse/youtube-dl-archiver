@@ -7,6 +7,6 @@
       "cache": "cache"
     }
   },
-  "archives-dir": "/home/huguette/dev/buron.coffee/youtube-dl-archiver/archives",
+  "archives-dir": "/home/mburon/dev/buron.coffee/youtube-dl-archiver/archives",
   "port": 8000
 }

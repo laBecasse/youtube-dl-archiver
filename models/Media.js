@@ -172,13 +172,28 @@ module.exports = function (links) {
   }
 
   let findText = function (text, limit, offset) {
-    const selector = {
-      $text: {
-        $search: text
-      }
-    }
+    limit = limit || 0
+    offset = offset || 0
 
-    return find(selector, limit, offset)
+    let action = function (collection) {
+      return new Promise((resolve, reject) => {
+        collection.find({
+          $text: {$search: text}
+        })
+          .project({score: {$meta: 'textScore'}})
+          .sort({score: {$meta: 'textScore'}})
+          .limit(limit)
+          .skip(offset)
+          .toArray((err, res) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve(res)
+            }
+          })
+      })
+    }
+    return links.apply(action)
       .then(res => res.map(build))
   }
 
