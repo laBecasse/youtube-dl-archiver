@@ -60,7 +60,6 @@ module.exports = function (config) {
     }
 
     let create = function () {
-      const url = 'mongodb://' + host
       return new Promise((resolve, reject) => {
         MongoClient.connect(url, { useNewUrlParser: true })
           .then(client => {
@@ -69,8 +68,9 @@ module.exports = function (config) {
             db.createCollection(collectionName, err => {
               if (err) reject(err)
               else resolve()
+
+              client.close()
             })
-            client.close()
           })
       })
     }

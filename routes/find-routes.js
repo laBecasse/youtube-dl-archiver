@@ -61,9 +61,11 @@ module.exports = function (app, links) {
     handleJson(media.findAll(limit, offset), req, res)
   })
 
-  app.get('/search/:text', getByUrl, (req, res) => {
-    const text = req.params.text
-    handleJson(media.findText(text), req, res)
+  app.get('/search', getByUrl, (req, res) => {
+    const limit = parseInt(req.query.limit) || 0
+    const offset = parseInt(req.query.offset) || 0
+    const text = req.query.text
+    handleJson(media.findText(text, limit, offset), req, res)
   })
 
   app.get('/medias/:id', (req, res) => {

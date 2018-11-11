@@ -81,14 +81,9 @@ module.exports = function (links) {
     return find(selector)
       .then(conflict => {
         if (conflict.length === 0) {
-          let yyyymmdd = function () {
-            var now = new Date()
-            var y = now.getFullYear()
-            var m = now.getMonth() + 1
-            var d = now.getDate()
-            return '' + y + (m < 10 ? '0' : '') + m + (d < 10 ? '0' : '') + d
-          }
 
+          const date = new Date()
+          
           const media = {
             'url': url,
             'media_url': mediaUrl,
@@ -96,7 +91,7 @@ module.exports = function (links) {
             'thumbnails': thumbnails,
             'subtitles': subtitles,
             'info': info,
-            'creation_date': yyyymmdd()
+            'creation_date': date.toISOString()
           }
 
           return insertOne(media)
@@ -148,17 +143,6 @@ module.exports = function (links) {
     return links.apply(action)
   }
 
-  // let update = function (id, media) {
-  //   return new Promise((resolve, reject) => {
-  //     let selector = {'_id': id}
-
-  //     collection.update(selector, media, (err, res) => {
-  //       if (err) return reject(err)
-  //       return resolve(res)
-  //     })
-  //   })
-  // }
-
   let remove = function (id) {
     let action = function (collection) {
       return new Promise((resolve, reject) => {
@@ -187,25 +171,16 @@ module.exports = function (links) {
       .then(res => res.map(build))
   }
 
-  let findText = function (text) {
+  let findText = function (text, limit, offset) {
     const selector = {
       $text: {
         $search: text
       }
     }
 
-    return find(selector)
+    return find(selector, limit, offset)
       .then(res => res.map(build))
   }
-
-  // let findMediaUrl = function (mediaUrl, url) {
-  //   let selector = {
-  //     'media_url': mediaUrl,
-  //     'url': url
-  //   }
-  //   return findOne(selector)
-  //     .then(res => build(res))
-  // }
 
   return {
     add: function (mediaUrl, url, filepath, thumbnails, subtitles, info) {

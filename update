@@ -1,0 +1,9 @@
+#!/bin/bash
+
+wget https://unpkg.com/axios/dist/axios.min.js -O ui/axios.min.js
+
+wget https://vuejs.org/js/vue.min.js -O ui/vue.min.js
+
+wget https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css  -O ui/bulma.min.css
+
+cd node_modules/youtube-dl; npm run update;

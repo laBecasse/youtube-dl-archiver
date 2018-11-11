@@ -6,6 +6,7 @@ const Downloader = require('../libs/downloader')
 
 let handleJson = function (promises, req, res) {
   promises.then(object => {
+    console.log(object)
     if (object) {
       res.json(object)
     } else {
@@ -46,7 +47,6 @@ module.exports = function (app, links, cacheCol) {
 
   app.post('/medias', (req, res, next) => {
     const url = req.body.url
-
     if (url) {
       handleJson(createOrCache(url), req, res)
     } else {
@@ -62,6 +62,8 @@ module.exports = function (app, links, cacheCol) {
       .then(() => {
         if (args.length > start + step) {
           return bagOfPromises(promise, args, start + step)
+        } else {
+          return media.findAll()
         }
       })
   }
