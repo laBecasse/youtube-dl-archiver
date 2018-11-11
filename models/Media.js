@@ -44,6 +44,10 @@ module.exports = function (links) {
         ext: obj.info.ext,
         mime: Mime.lookup(obj.info.ext),
         title: obj.info.title,
+        description: obj.info.description,
+        tags: obj.info.tags,
+        uploader: obj.info.uploader,
+        creator: obj.info.creator,
         creation_date: obj.creation_date,
         upload_date: obj.info.upload_date,
         file_url: HOST + '/archives/' + encodeURIComponent(obj.file_path),
@@ -183,6 +187,17 @@ module.exports = function (links) {
       .then(res => res.map(build))
   }
 
+  let findText = function (text) {
+    const selector = {
+      $text: {
+        $search: text
+      }
+    }
+
+    return find(selector)
+      .then(res => res.map(build))
+  }
+
   // let findMediaUrl = function (mediaUrl, url) {
   //   let selector = {
   //     'media_url': mediaUrl,
@@ -210,6 +225,7 @@ module.exports = function (links) {
       return findOne(selector)
         .then(res => build(res))
     },
+    findText: findText,
     removeById: function (id) {
       return remove(id)
     }

@@ -24,7 +24,7 @@ var app = new Vue({
         }
       })
         .then(response => {
-          console.log(response)
+
           let data = response.data
 
           data.forEach(media => {
@@ -41,7 +41,6 @@ var app = new Vue({
             if (reA.test(media.mime)) {
               media.type = 'audio'
             }
-            console.log(media.type)
             this.medias.push(media)
           })
           this.offset += this.step
@@ -55,6 +54,7 @@ var app = new Vue({
   watch: {
     bottom (bottom) {
       if (bottom) {
+        console.log("bottom")
         this.addMedias()
       }
     }

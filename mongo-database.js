@@ -44,6 +44,21 @@ module.exports = function (config) {
       return apply(action)
     }
 
+    let defineTextIndex = function (keys) {
+      let action = function (collection) {
+        return new Promise((resolve, reject) => {
+          let columns = {}
+          for (let key of keys) {
+            columns[key] = 'text'
+          }
+
+          collection.createIndex(columns)
+        })
+      }
+
+      return apply(action)
+    }
+
     let create = function () {
       const url = 'mongodb://' + host
       return new Promise((resolve, reject) => {
@@ -64,6 +79,7 @@ module.exports = function (config) {
       'create': create,
       'apply': apply,
       'defineKey': defineKey,
+      'defineTextIndex': defineTextIndex,
       'ObjectID': mongo.ObjectID
     }
   }
