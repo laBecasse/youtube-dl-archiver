@@ -57,7 +57,6 @@ var app = new Vue({
       this.isSearching = true
       this.query = '/search?text=' + encodeURI(text)
 
-      console.log(this.query)
       this.updateList()
     },
     lastAdded: function(event) {
@@ -66,10 +65,11 @@ var app = new Vue({
     },
     onSubmit (event) {
       let url = document.getElementById("post-media-url").value
-      let params = new URLSearchParams();
+      let params = new URLSearchParams()
 
       params.append('url', url)
-      this.isDownloading = true;
+
+      this.isDownloading = true
       axios.post('/medias', params)
         .then(res => {
           this.reset()
