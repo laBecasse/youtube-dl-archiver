@@ -62,7 +62,7 @@ module.exports = function (app, links, cacheCol) {
         if (args.length > start + step) {
           return bagOfPromises(promise, args, start + step)
         } else {
-          return media.findAll()
+          return true
         }
       })
   }
