@@ -11,9 +11,8 @@ module.exports.info = function (url) {
     let nextEmitted = false
     // for maxBuffer detail : https://github.com/przemyslawpluta/node-youtube-dl/issues/128
     // best format is sometime badly selected,
-    // especially on Youtube 137+140 seems to be the best
-    let video = youtubedl(url, ['--format', '137+140/best', '--merge-output-format', 'mp4'], {cwd: __dirname, maxBuffer: Infinity})
-
+    // especially on Youtube 137+140 seems to be the best 
+    let video = youtubedl(url, ['--format=best'], {cwd: __dirname, maxBuffer: Infinity})
     video
       .on('error', function (err) {
         console.log('error: ' + url)
