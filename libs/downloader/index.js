@@ -13,6 +13,7 @@ module.exports.info = function (url) {
     // best format is sometime badly selected,
     // especially on Youtube 137+140 seems to be the best 
     let video = youtubedl(url, ['--format=best'], {cwd: __dirname, maxBuffer: Infinity})
+
     video
       .on('error', function (err) {
         console.log('error: ' + url)

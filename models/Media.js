@@ -48,6 +48,8 @@ module.exports = function (links) {
         tags: obj.info.tags,
         uploader: obj.info.uploader,
         creator: obj.info.creator,
+        channel_id: obj.info.channel_id,
+        channel_url: obj.info.channel_url,
         creation_date: obj.creation_date,
         upload_date: obj.info.upload_date,
         file_url: HOST + '/archives/' + encodeURIComponent(obj.file_path),
