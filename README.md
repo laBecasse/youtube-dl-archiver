@@ -26,4 +26,4 @@ npm run update
 
 ## TODO
 
-- download directly info by using : `youtube-dl -f "(bestvideo[height<=1080]/bestvideo)+bestaudio/best[height<=1080]/best" --write-sub --sub-lang fr --write-thumbnail URL`
+- download directly info by using : `youtube-dl -f "(bestvideo[height<=1080]/bestvideo)+bestaudio/best[height<=1080]/best" --write-sub --sub-lang fr --write-thumbnail --write-info-json --output "%(title)s.%(ext)s" URL`

@@ -1,41 +1,33 @@
 const path = require('path')
 const fs = require('fs')
 const youtubedl = require('youtube-dl')
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 const mkdirp = require('mkdirp')
 
 module.exports.info = function (url) {
   console.log('info: ' + url)
 
   return new Promise((resolve, reject) => {
-    let info
-    let nextEmitted = false
-    // for maxBuffer detail : https://github.com/przemyslawpluta/node-youtube-dl/issues/128
-    // best format is sometime badly selected,
-    // especially on Youtube 137+140 seems to be the best 
-    let video = youtubedl(url, ['--format=best'], {cwd: __dirname, maxBuffer: Infinity})
+    exec('youtube-dl --dump-json -i ' + url, {maxBuffer: Infinity})
+      .then((data) => {
+        if (data.stderr !== '') return Promise.reject(data.stderr)
 
-    video
-      .on('error', function (err) {
-        console.log('error: ' + url)
-        err.name = 'InfoError'
-        reject(err)
-      })
-      .on('next', function (i) {
-        if (!nextEmitted) {
-          nextEmitted = true
-          i.push(info)
-          resolve(i)
+        const jsonString = data.stdout.split('\n')
+        // remove the last empty string
+        jsonString.pop()
+        const objects = []
+
+        for (let str of jsonString) {
+          objects.push(JSON.parse(str))
         }
-      })
 
-    // Will be called when the download starts.
-      .on('info', function (i) {
-        info = i
-        setTimeout(() => {
-          video.emit('end')
-          video.emit('next', [])
-        }, 5)
+        // there is just one 
+        if ()
+
+        return resolve(objects)
       })
+      .catch(reject)
   })
 }
 
@@ -45,7 +37,7 @@ module.exports.download = function (info, filepath) {
 
     mkdirp(dirpath, function (err) {
       if (err) return reject(err)
-
+      console.log(info)
       let video = youtubedl(info)
 
       video
