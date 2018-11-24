@@ -24,3 +24,6 @@ Youtube-dl is regularly updated so you need to update it often. To update it exe
 npm run update
 ```
 
+## TODO
+
+- download directly info by using : `youtube-dl -f "(bestvideo[height<=1080]/bestvideo)+bestaudio/best[height<=1080]/best" --write-sub --sub-lang fr --write-thumbnail URL`
