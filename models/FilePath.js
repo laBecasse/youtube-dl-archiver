@@ -23,10 +23,10 @@ module.exports.getAbsDirPath = function (info) {
   return path.dirname(path.join(ARCHIVES_DIR, getRelPath(info)))
 }
 
-module.exports.relative = function (path) {
-  return path.relative(ARCHIVES_DIR, path)
+module.exports.relative = function (p) {
+  return path.relative(ARCHIVES_DIR, p)
 }
 
-module.exports.absolute = function (path) {
-  return path.join(ARCHIVES_DIR, path)
+module.exports.absolute = function (p) {
+  return path.join(ARCHIVES_DIR, p)
 }

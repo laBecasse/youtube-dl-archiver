@@ -1,9 +1,12 @@
+const path = require('path')
 const config = require('./config.json')
 const express = require('express')
 const bodyParser = require('body-parser')
 const MongoDB = require('./mongo-database')
 
-process.env.ARCHIVES_DIR = process.env.ARCHIVES_DIR || config['archives-dir']
+process.env.ARCHIVES_DIR = process.env.ARCHIVES_DIR || config['archives-dir'] || path.join(__dirname, 'archives')
+process.env.ARCHIVES_TMP_DIR = process.env.ARCHIVES_TMP_DIR || path.join(process.env.ARCHIVES_DIR, 'tmp')
+process.env.YOUTUBE_DL_BIN = process.env.YOUTUBE_DL_BIN || path.join(__dirname, 'bin/youtube-dl')
 process.env.HOST = process.env.HOST || 'http://localhost:8000'
 const collections = MongoDB(config['mongo'])
 

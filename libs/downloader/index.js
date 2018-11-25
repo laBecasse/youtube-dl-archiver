@@ -4,13 +4,14 @@ const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const mkdirp = require('mkdirp')
 
-const tempDownloadDir = '/home/mburon/dev/buron.coffee/youtube-dl-archiver/archives/tmp'
-const langs = 'fr,en'
+const tempDownloadDir = process.env.ARCHIVES_TMP_DIR
+const youtubeDl = process.env.YOUTUBE_DL_BIN
+const langs = ['fr', 'en']
 
 function createCmdLine (url, langs, dlDirPath) {
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
-  const subLangValue = langs
-  const cmdFormat = 'youtube-dl -f "137+140/best" --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
+  const subLangValue = langs.join(',')
+  const cmdFormat = youtubeDl + ' -f "137+140/best" --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
   const cmdLine = util.format(cmdFormat, subLangValue, outputValue, url)
 
   return cmdLine
@@ -51,35 +52,53 @@ function download (url) {
     })
 }
 
+/*
+ * move all temporary files related to info object
+ * into a new directory
+ */
 function move (info, absDirPath) {
-  const basename = path.basename(info._filename)
+  const basename = removeExt(info._filename)
   const downloadDirPath = info._dirname
 
   return new Promise((resolve, reject) => {
     fs.readdir(downloadDirPath, (err, files) => {
-      if (err) return Promise.reject(err)
+      if (err) return reject(err)
+      console.log(files)
       files = files.filter(file => {
-        return path.basename(file) === basename
+        const fileBasename = removeExt(file)
+        return fileBasename === basename
       })
-
+      console.log(files)
       const promises = files.map(file => {
         return new Promise((resolve, reject) => {
-          console.log(file)
           const oldFile = path.join(downloadDirPath, file)
           const newFile = path.join(absDirPath, file)
-          console.log(absDirPath)
-          mkdirp(path, function (err) {
+
+          mkdirp(path.dirname(newFile), function (err) {
             if (err) return reject(err)
-            fs.rename(oldFile, newFile, err => {
-              (err) ? reject(err) : resolve(newFile)
+            fs.rename(oldFile, newFile, function (err) {
+              if (err) return reject(err)
+              return resolve(newFile)
             })
           })
         })
       })
 
-      return Promise.all(promises)
+      return resolve(Promise.all(promises))
     })
   })
+}
+
+function removeExt (file) {
+  // remove the first extension like .json, .srt
+  let fileBasename = path.basename(file, path.extname(file))
+  const otherExt = langs.slice()
+  otherExt.push('info')
+  // remove other extensions
+  for (let ext of otherExt) {
+    fileBasename = path.basename(fileBasename, '.' + ext)
+  }
+  return fileBasename
 }
 
 module.exports = {

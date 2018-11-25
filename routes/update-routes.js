@@ -11,7 +11,7 @@ let handleJson = function (promises, req, res) {
       res.json(object)
     } else {
       res.status(404)
-      res.json({message: 'not found'})
+      res.json({ message: 'not found' })
     }
   })
     .catch(handleError(res))
@@ -21,7 +21,7 @@ let handleError = function (res) {
   return err => {
     console.error(err.stack)
     res.status(500)
-      .json({error: 'server error'})
+      .json({ error: 'server error' })
   }
 }
 
@@ -51,7 +51,7 @@ module.exports = function (app, links, cacheCol) {
       handleJson(createOrCache(url), req, res)
     } else {
       res.status(400)
-      res.json({message: 'url parameter needed'})
+      res.json({ message: 'url parameter needed' })
     }
   })
 
@@ -95,7 +95,7 @@ module.exports = function (app, links, cacheCol) {
           return []
         }
       })
-//      .catch(downError)
+      .catch(downError)
       .then(infos => {
         const promises = infos.map(info => {
           return createOne(url, info)
