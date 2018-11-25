@@ -1,3 +1,4 @@
+const path = require('path')
 const wrapper = require('../libs/wrappers')
 const Media = require('../models/Media.js')
 const Cache = require('../models/Cache.js')
@@ -89,37 +90,40 @@ module.exports = function (app, links, cacheCol) {
     return media.findByUrl(url)
       .then(res => {
         if (res.length === 0) {
-          return Downloader.info(url)
+          return Downloader.download(url)
         } else {
           return []
         }
       })
+//      .catch(downError)
       .then(infos => {
-        return bagOfPromises(createOne(url), infos, 0)
+        const promises = infos.map(info => {
+          return createOne(url, info)
+        })
+        return Promise.all(promises)
       })
   }
 
-  let createOne = function (url) {
-    return info => {
-      const absfilepath = filePath.getAbsPath(info)
-      const filepath = filePath.getRelPath(info)
-      let thumbnails
-      let subtitles
+  let createOne = function (url, info) {
+    const absDirPath = filePath.getAbsDirPath(info)
 
-      return Downloader.download(info, absfilepath)
-        .catch(downError)
-        .then(() => Downloader.downThumb(info, absfilepath))
-        .then(absfilepaths => {
-          thumbnails = absfilepaths.map(filePath.relative)
-          return Downloader.downSubs(info, absfilepath)
-        })
-        .then(absfilepaths => {
-          subtitles = absfilepaths.map(filePath.relative)
-          const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
-          const mediaId = (test) ? info.webpage_url : info.url
-          return media.add(mediaId, url, filepath, thumbnails, subtitles, info)
-        })
-    }
+    return Downloader.move(info, absDirPath)
+      .then(files => {
+        const fileExt = path.extname(info._filename)
+        const filepath = filePath.relative(files.filter(testExt([fileExt]))[0])
+
+        const thumbnails = files.filter(testExt(['.png', '.jpeg', '.jpg']))
+                                   .map(filePath.relative)
+        const subtitles = files.filter(testExt(['.vtt']))
+              .map(filePath.relative)
+        const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
+        const mediaId = (test) ? info.webpage_url : info.url
+        return media.add(mediaId, url, filepath, thumbnails, subtitles, info)
+      })
+  }
+
+  let testExt = function (exts) {
+    return (file) => exts.includes(path.extname(file).toLowerCase())
   }
 
   let downError = function (err) {

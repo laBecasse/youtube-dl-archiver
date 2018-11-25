@@ -4,7 +4,7 @@
   "description": "Youtebe-dl Archiver is a server service which archives videos from bookmarks or using a link using the youtube-dl program.",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon server.js",
+    "dev": "nodemon server.js --ignore archives/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "update": "./update"
   },

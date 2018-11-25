@@ -1,13 +1,13 @@
-const Path = require('path')
+const path = require('path')
 
 const ARCHIVES_DIR = process.env.ARCHIVES_DIR
 
 let getRelPath = function (info) {
-  const filename = info._filename
+  const filename = path.basename(info._filename)
   const extractor = info.extractor
   const id = (extractor === 'generic') ? info.url.replace(/\//g, '_') : info.id
-  const dirpath = Path.join(extractor, id)
-  const filepath = Path.join(dirpath, filename)
+  const dirpath = path.join(extractor, id)
+  const filepath = path.join(dirpath, filename)
 
   return filepath
 }
@@ -15,13 +15,18 @@ let getRelPath = function (info) {
 module.exports.getRelPath = getRelPath
 
 module.exports.getAbsPath = function (info) {
-  return Path.join(ARCHIVES_DIR, getRelPath(info))
+  return path.join(ARCHIVES_DIR, getRelPath(info))
+}
+
+module.exports.getAbsDirPath = function (info) {
+  console.log(info._filename)
+  return path.dirname(path.join(ARCHIVES_DIR, getRelPath(info)))
 }
 
 module.exports.relative = function (path) {
-  return Path.relative(ARCHIVES_DIR, path)
+  return path.relative(ARCHIVES_DIR, path)
 }
 
 module.exports.absolute = function (path) {
-  return Path.join(ARCHIVES_DIR, path)
+  return path.join(ARCHIVES_DIR, path)
 }
