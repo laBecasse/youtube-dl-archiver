@@ -7,18 +7,6 @@ const mkdirp = require('mkdirp')
 const tempDownloadDir = '/home/mburon/dev/buron.coffee/youtube-dl-archiver/archives/tmp'
 const langs = 'fr,en'
 
-function createFreshDownloadDir () {
-  return new Promise((resolve, reject) => {
-    const downloadDirName = Math.random().toString(36).substring(7)
-    const downloadDirPath = path.join(tempDownloadDir, downloadDirName)
-
-    mkdirp(downloadDirName, function (err) {
-      if (err) return reject(err)
-      return resolve(downloadDirPath)
-    })
-  })
-}
-
 function createCmdLine (url, langs, dlDirPath) {
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
   const subLangValue = langs
@@ -29,38 +17,37 @@ function createCmdLine (url, langs, dlDirPath) {
 }
 
 function download (url) {
-  return createFreshDownloadDir()
-    .then(downloadDirPath => {
-      const cmdLine = createCmdLine(url, langs, downloadDirPath)
-      console.log(cmdLine)
-      return exec(cmdLine, {maxBuffer: Infinity})
-        .then((data) => {
-          // WARNING goes into sterr :/
-          // if (data.stderr !== '') return Promise.reject(data.stderr)
-          return new Promise((resolve, reject) => {
-            fs.readdir(downloadDirPath, (err, files) => {
-              if (err) return reject(err)
-              files = files.filter(file => {
-                return path.extname(file).toLowerCase() === '.json'
+  const downloadDirName = Math.random().toString(36).substring(7)
+  const downloadDirPath = path.join(tempDownloadDir, downloadDirName)
+  const cmdLine = createCmdLine(url, langs, downloadDirPath)
+  console.log(cmdLine)
+  return exec(cmdLine, { maxBuffer: Infinity })
+    .then((data) => {
+      // WARNING goes into sterr :/
+      // if (data.stderr !== '') return Promise.reject(data.stderr)
+      return new Promise((resolve, reject) => {
+        fs.readdir(downloadDirPath, (err, files) => {
+          if (err) return reject(err)
+          files = files.filter(file => {
+            return path.extname(file).toLowerCase() === '.json'
+          })
+
+          const promises = files.map(file => {
+            return new Promise((resolve, reject) => {
+              const filePath = path.join(downloadDirPath, file)
+              fs.readFile(filePath, (err, data) => {
+                if (err) return reject(err)
+
+                const info = JSON.parse(data)
+
+                info._dirname = downloadDirPath
+                return resolve(info)
               })
-
-              const promises = files.map(file => {
-                return new Promise((resolve, reject) => {
-                  const filePath = path.join(downloadDirPath, file)
-                  fs.readFile(filePath, (err, data) => {
-                    if (err) return reject(err)
-
-                    const info = JSON.parse(data)
-
-                    info._dirname = downloadDirPath
-                    return resolve(info)
-                  })
-                })
-              })
-              return resolve(Promise.all(promises))
             })
           })
+          return resolve(Promise.all(promises))
         })
+      })
     })
 }
 
