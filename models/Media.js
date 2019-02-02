@@ -20,7 +20,7 @@ module.exports = function (links) {
           const filePath = obj.subtitles.find(testSub(lang))
           if (filePath) {
             res.push({
-              url: HOST + '/archives/' + encodeURIComponent(filePath),
+              url: HOST + '/archives/' + filePath,
               file_path: filePath,
               lang: lang
             })
@@ -32,7 +32,7 @@ module.exports = function (links) {
       let thumb
       if (obj.thumbnails && obj.thumbnails.length > 0) {
         thumb = {
-          url: HOST + '/archives/' + encodeURIComponent(obj.thumbnails[0]),
+          url: HOST + '/archives/' + obj.thumbnails[0],
           file_path: obj.thumbnails[0]
         }
       }
