@@ -1,7 +1,9 @@
+const SHORT_DESCRIPTION_LENGTH = 200;
+
 const DEFAULT = {
   'medias': [],
   'bottom': false,
-  'query': '/medias',
+  'query': '/api/medias',
   'offset': 0,
   'step': 10,
   'isSearching': false,
@@ -32,26 +34,13 @@ var app = new Vue({
           let data = response.data
 
           data.forEach(media => {
-            const reV = new RegExp('video')
-            const reI = new RegExp('image')
-            const reA = new RegExp('audio')
-            media.type = 'other'
-            if (reV.test(media.mime)) {
-              media.type = 'video'
-            }
-            if (reI.test(media.mime)) {
-              media.type = 'image'
-            }
-            if (reA.test(media.mime)) {
-              media.type = 'audio'
-            }
-            this.medias.push(media)
+            this.medias.push(formatMedia(media))
           })
           this.offset += this.step
         })
         .catch(err => console.error(err))
     },
-    search: function(event) {
+    search: function (event) {
       this.reset()
       let text = document.getElementById('search-text').value
       this.isSearching = true
@@ -59,25 +48,25 @@ var app = new Vue({
 
       this.updateList()
     },
-    lastAdded: function(event) {
+    lastAdded: function (event) {
       this.reset()
       this.updateList()
     },
     onSubmit (event) {
-      let url = document.getElementById("post-media-url").value
+      let url = document.getElementById('post-media-url').value
       let params = new URLSearchParams()
 
       params.append('url', url)
 
       this.isDownloading = true
-      axios.post('/medias', params)
+      axios.post(DEFAULT.query, params)
         .then(res => {
           this.reset()
           this.updateList()
         })
         .catch(err => console.error(err))
     },
-    reset: function() {
+    reset: function () {
       this.isSearching = DEFAULT.isSearching
       this.query = DEFAULT.query
       this.medias = []
@@ -100,3 +89,58 @@ var app = new Vue({
     this.updateList()
   }
 })
+
+/*
+ * Format media functions
+ */
+
+function formatMedia (media) {
+  addMediaType(media)
+  addShortDecription(media)
+  addFormatedUploadDate(media)
+
+  return media
+}
+
+function addShortDecription (media) {
+  const description = media.description
+
+  if (description !== null) {
+    media.short_description = description.substring(0, SHORT_DESCRIPTION_LENGTH)
+    if (media.description.length > SHORT_DESCRIPTION_LENGTH) {
+      media.short_description += '...'
+    }
+  }
+}
+
+function addMediaType (media) {
+  const reV = new RegExp('video')
+  const reI = new RegExp('image')
+  const reA = new RegExp('audio')
+  media.type = 'other'
+  if (reV.test(media.mime)) {
+    media.type = 'video'
+  }
+  if (reI.test(media.mime)) {
+    media.type = 'image'
+  }
+  if (reA.test(media.mime)) {
+    media.type = 'audio'
+  }
+}
+
+function addFormatedUploadDate (media) {
+  if (media.upload_date !== null) {
+    const date = parseUploadDate(media)
+    media.formated_creation_date = new Intl.DateTimeFormat().format(date)
+  }
+}
+
+function parseUploadDate (media) {
+  const dateString = media.upload_date
+  const year = dateString.substring(0, 4)
+  const month = dateString.substring(4, 6)
+  const day = dateString.substring(6, 8)
+
+  return new Date(year, month, day)
+}

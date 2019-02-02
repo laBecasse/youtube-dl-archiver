@@ -49,25 +49,44 @@
         <div v-if="medias.length === 0" class="loading">Pas de résultat</div>
         <div id="list" class="container">
           <div v-for="media in medias" class="is-6">
-            <div class="card">
-              <div class="card-header">
-                <h4 class="card-header-title is-2">{{media.title}}</h4>
+            <div class="card media-card">
+              <div class="columns is-gapless">
+                <div class="column media-column-video">
+                  <div class="card-image">
+                    <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
+                      <source :src="media.file_url" :type="media.mime"/>
+                      <track v-for="sub in media.subtitles"
+                             :src="sub.url"
+                             :label="sub.lang"
+                             kind="subtitles" :srclang="sub.lang">
+                    </video>
+                    <audio v-if="media.type === 'audio'" controls preload="none">
+                      <source :src="media.file_url" :type="media.mime"/>
+                      Your browser does not support the audio element.
+                    </audio> 
+                    <img v-if="media.type === 'image'"
+                         :src="media.file_url">
+                    <a v-if="media.type === 'other'"
+                       :href="media.file_url">media</a>
+                  </div>
+                </div>
+                <div class="column is-primary">
+                  <div class="card-header">
+                    <h4 class="card-header-title is-2">{{media.title}}</h4>
+                  </div>
+                  <div class="card-content">
+                    <p class="media-meta">
+                      <span v-if="media.creator">{{media.creator}} -</span>
+                      <span v-if="!media.creator && media.uploader">{{media.uploader}} -</span>
+                      <span>{{media.formated_creation_date}}</span>
+                    </p>
+                    <p v-if="media.description">
+                      {{media.short_description}}
+                    </p>
+                    <a v-bind:href="media.url">lien original</a>
+                  </div>
+                </div>
               </div>
-              <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
-                <source :src="media.file_url" :type="media.mime">
-                  <track v-for="sub in media.subtitles"
-                         :src="sub.url"
-                         :label="sub.lang"
-                         kind="subtitles" :srclang="sub.lang">
-              </video>
-              <audio v-if="media.type === 'audio'" controls preload="none">
-                <source :src="media.file_url" :type="media.mime">
-                  Your browser does not support the audio element.
-              </audio> 
-              <img v-if="media.type === 'image'"
-                   :src="media.file_url">
-              <a v-if="media.type === 'other'"
-                 :href="media.file_url">media</a>
             </div>
           </div>
         </div>
