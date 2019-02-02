@@ -1,7 +1,7 @@
 const Media = require('../models/Media.js')
 const FilePath = require('../models/FilePath')
 
-module.exports = function (app, links) {
+module.exports = function (router, links) {
   const media = Media(links)
 
   let getByUrl = function (req, res, next) {
@@ -49,31 +49,31 @@ module.exports = function (app, links) {
       .catch(err => next(err))
   }
 
-  app.use((req, res, next) => {
+  router.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*')
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
     next()
   })
 
-  app.get('/medias', getByUrl, (req, res) => {
+  router.get('/medias', getByUrl, (req, res) => {
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0
     handleJson(media.findAll(limit, offset), req, res)
   })
 
-  app.get('/search', getByUrl, (req, res) => {
+  router.get('/search', getByUrl, (req, res) => {
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0
     const text = req.query.text
     handleJson(media.findText(text, limit, offset), req, res)
   })
 
-  app.get('/medias/:id', (req, res) => {
+  router.get('/medias/:id', (req, res) => {
     const dbId = req.params.id
     handleJson(media.findById(dbId), req, res)
   })
 
-  app.get('/medias/:id/file', (req, res, next) => {
+  router.get('/medias/:id/file', (req, res, next) => {
     function getFilePath (m) {
       return FilePath.absolute(m.file_path)
     }
@@ -81,7 +81,7 @@ module.exports = function (app, links) {
     return handleFile(getFilePath, req, res, next)
   })
 
-  app.get('/medias/:id/thumbnail', (req, res, next) => {
+  router.get('/medias/:id/thumbnail', (req, res, next) => {
     function getFilePath (m) {
       if (m.thumbnail) {
         return FilePath.absolute(m.thumbnail.file_path)
@@ -93,7 +93,7 @@ module.exports = function (app, links) {
     return handleFile(getFilePath, req, res, next)
   })
 
-  app.get('/medias/:id/subtitle/:lang', (req, res, next) => {
+  router.get('/medias/:id/subtitle/:lang', (req, res, next) => {
     const lang = req.params.lang
 
     function getFilePath (m) {

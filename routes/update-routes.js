@@ -25,11 +25,11 @@ let handleError = function (res) {
   }
 }
 
-module.exports = function (app, links, cacheCol) {
+module.exports = function (router, links, cacheCol) {
   const cache = Cache(cacheCol)
   const media = Media(links)
 
-  app.get('/update', (req, res, next) => {
+  router.get('/update', (req, res, next) => {
     wrapper.getLinks()
       .then(links => {
         return bagOfPromises(createOrCache, links, 0)
@@ -45,7 +45,7 @@ module.exports = function (app, links, cacheCol) {
     return res.send('update started')
   })
 
-  app.post('/medias', (req, res, next) => {
+  router.post('/medias', (req, res, next) => {
     const url = req.body.url
     if (url) {
       handleJson(createOrCache(url), req, res)

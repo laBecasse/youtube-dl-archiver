@@ -1,9 +1,13 @@
+const express = require('express')
 const updateRoutes = require('./update-routes')
 const findRoutes = require('./find-routes')
 const deleteRoutes = require('./delete-routes')
 
-module.exports = function (app, collections) {
-  updateRoutes(app, collections['links'], collections['cache'])
-  findRoutes(app, collections['links'])
-  deleteRoutes(app, collections['links'])
+module.exports = function (collections) {
+  const router = express.Router()
+  updateRoutes(router, collections['links'], collections['cache'])
+  findRoutes(router, collections['links'])
+  deleteRoutes(router, collections['links'])
+
+  return router
 }

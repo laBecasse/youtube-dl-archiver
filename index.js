@@ -7,7 +7,7 @@ const MongoDB = require('./mongo-database')
 process.env.ARCHIVES_DIR = process.env.ARCHIVES_DIR || config['archives-dir'] || path.join(__dirname, 'archives')
 process.env.ARCHIVES_TMP_DIR = process.env.ARCHIVES_TMP_DIR || path.join(process.env.ARCHIVES_DIR, 'tmp')
 process.env.YOUTUBE_DL_BIN = process.env.YOUTUBE_DL_BIN || path.join(__dirname, 'bin/youtube-dl')
-process.env.HOST = process.env.HOST || 'http://localhost:8000'
+process.env.HOST = process.env.HOST || config['host'] || 'http://localhost:8000'
 const collections = MongoDB(config['mongo'])
 
 // create collections if they don't exist
@@ -25,7 +25,9 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use('/', express.static('ui'))
 app.use('/archives', express.static(process.env.ARCHIVES_DIR))
 
-require('./routes')(app, collections)
+const router = require('./routes')(collections)
+
+app.use('/api', router)
 
 app.listen(port, () => {
   console.log('We are live on http://localhost:' + port)
