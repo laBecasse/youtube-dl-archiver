@@ -12,38 +12,52 @@
   </head>
   <body>
     <div id="app">
-      <div id="post-media">
-        <form v-on:submit.prevent="onSubmit" action="/medias" method="post">
-          <div class="field has-addons">
-            <div class="control">
-              <input id="post-media-url" class="input" type="text" value="" name="url" placeholder="ajouter une vidéo"/>
-            </div>
-            <div class="control">
-              <button class="button is-info" v-bind:class="{'is-loading': isDownloading}">+</button>
-            </div>
-          </div>
-        </form>
-      </div>
       
-      <div id="search">
-        <form v-on:submit.prevent="search" action="/search" method="get">
-          <div class="field has-addons">
-            <div class="control">
-              <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
+      <nav role="navigation" aria-label="main navigation">
+
+        <div class="level is-mobile">
+          <div class="level-left">
+          </div>
+          <div class="level-right">
+            <div id="post-media" class="level-item">
+              <form v-on:submit.prevent="onSubmit" action="/medias" method="post">
+                <div class="field has-addons">
+                  <div class="control">
+                    <input id="post-media-url" class="input" type="text" value="" name="url" placeholder="ajouter une vidéo"/>
+                  </div>
+                  <div class="control" v-bind:class="{'is-loading': isDownloading}">
+                    <label for="post-media-url" class="button is-info">+</label>
+                    <!-- <button class="button is-info" >+</button> -->
+                  </div>
+                </div>
+              </form>
             </div>
-            <div class="control">
-              <input v-bind:class="{hidden: isSearching}" class="button is-info" type="submit" value="&#x1f50d;">
-              <button v-if="isSearching" class="button" v-on:click.prevent="lastAdded">❌</button>
+            
+            <div class="level-item">
+              <form action="/update" method="get">
+                <input id="update" class="button" type="submit" value="MAJ"/>
+              </form>
             </div>
           </div>
-        </form>
-      </div>
-
-      <div>
-        <form action="/update" method="get">
-          <input id="update" class="button" type="submit" value="Mise à jour"/>
-        </form>
-      </div>
+          
+        </div>
+        <div class="level">
+          <div id="search" class="level-item">
+            <form v-on:submit.prevent="search" action="/search" method="get">
+              <div class="field has-addons">
+                <div class="control">
+                  <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
+                </div>
+                <div class="control">
+                  <input v-bind:class="{hidden: isSearching}" class="button is-info" type="submit" value="&#x1f50d;">
+                  <button v-if="isSearching" class="button" v-on:click.prevent="lastAdded">❌</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+      </nav>
       
       <section class="section is-medium">
         <div v-if="medias.length === 0" class="loading">Pas de résultat</div>
@@ -91,6 +105,7 @@
           </div>
         </div>
       </section>
+      
     </div>
   </body>
 </html>

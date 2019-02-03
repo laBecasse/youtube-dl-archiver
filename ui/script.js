@@ -1,4 +1,4 @@
-const SHORT_DESCRIPTION_LENGTH = 200;
+const SHORT_DESCRIPTION_LENGTH = 200
 
 const DEFAULT = {
   'medias': [],
@@ -54,6 +54,7 @@ var app = new Vue({
     },
     onSubmit (event) {
       let url = document.getElementById('post-media-url').value
+      console.log(url)
       let params = new URLSearchParams()
 
       params.append('url', url)

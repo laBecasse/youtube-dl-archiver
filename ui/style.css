@@ -1,3 +1,21 @@
+.media-logo {
+    font-size: 2em;
+}
+
+#post-media-url {
+    width:0;
+    opacity:0;
+}
+
+nav input {
+    max-width: 80px;
+}
+
+#post-media-url:focus, .is-loading #post-media-url {
+    width: auto;
+    opacity:1;
+}
+
 video, audio, img {
     max-width: 100%;
     width: 100%;
