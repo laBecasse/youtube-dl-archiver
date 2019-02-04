@@ -1,6 +1,7 @@
 const path = require('path')
 const config = require('./config.json')
 const express = require('express')
+const cors = require('cors')
 const bodyParser = require('body-parser')
 const MongoDB = require('./mongo-database')
 
@@ -18,7 +19,7 @@ collections['cache'].create().catch(console.error)
 
 const port = process.env.PORT || config['port'] || 8000
 const app = express()
-
+app.use(cors())
 app.set('json spaces', 40)
 app.use(bodyParser.urlencoded({ extended: true }))
 

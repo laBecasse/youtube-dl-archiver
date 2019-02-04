@@ -49,17 +49,14 @@
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-import Media from './components/Media.vue'
-
 export default {
   data () {
     return {
       'bottom': false,
-      'API_URL': 'http://192.168.1.26:8000/api',
+      'API_URL': process.env.VUE_APP_API_URL,
       'offset': 0,
       'step': 10,
-      'isDownloading': false
+      'isDownloading': false,
     }
   },
   methods: {
@@ -76,6 +73,9 @@ export default {
       this.isDownloading = true
       this.axios.post(this.API_URL + "/medias", params)
         .then(res => {
+          console.log(res.data)
+          const medias = res.data;
+          this.$store.commit('prependMedias', medias)
           this.isDownloading = false
         })
         .catch(err => console.error(err))

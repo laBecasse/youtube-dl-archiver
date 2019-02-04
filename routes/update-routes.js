@@ -74,7 +74,7 @@ module.exports = function (router, links, cacheCol) {
         if (!obj) {
           return create(url)
         } else {
-          return Promise.resolve()
+          return Promise.resolve(obj)
         }
       })
       .catch(err => {
@@ -119,6 +119,7 @@ module.exports = function (router, links, cacheCol) {
         const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
         const mediaId = (test) ? info.webpage_url : info.url
         return media.add(mediaId, url, filepath, thumbnails, subtitles, info)
+          .then((media) => media)
       })
   }
 

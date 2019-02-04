@@ -20,7 +20,7 @@ module.exports = function (links) {
           const filePath = obj.subtitles.find(testSub(lang))
           if (filePath) {
             res.push({
-              url: HOST + '/archives/' + filePath,
+              url: HOST + '/archives/' + encodeURI(filePath).replace('#','%23'),
               file_path: filePath,
               lang: lang
             })
@@ -32,7 +32,7 @@ module.exports = function (links) {
       let thumb
       if (obj.thumbnails && obj.thumbnails.length > 0) {
         thumb = {
-          url: HOST + '/archives/' + obj.thumbnails[0],
+          url: HOST + '/archives/' + encodeURI(obj.thumbnails[0]).replace('#','%23'),
           file_path: obj.thumbnails[0]
         }
       }
@@ -52,7 +52,7 @@ module.exports = function (links) {
         channel_url: obj.info.channel_url,
         creation_date: obj.creation_date,
         upload_date: obj.info.upload_date,
-        file_url: HOST + '/archives/' + obj.file_path,
+        file_url: HOST + '/archives/' + encodeURI(obj.file_path).replace('#','%23'),
         file_path: obj.file_path,
         thumbnail: thumb,
         subtitles: subtitlesArray
@@ -67,7 +67,7 @@ module.exports = function (links) {
       return new Promise((resolve, reject) => {
         collection.insertOne(document, (err, res) => {
           if (err) return reject(err)
-          resolve(res)
+          return resolve(document)
         })
       })
     }
@@ -202,7 +202,7 @@ module.exports = function (links) {
   return {
     add: function (mediaUrl, url, filepath, thumbnails, subtitles, info) {
       return insert(mediaUrl, url, filepath, thumbnails, subtitles, info)
-        .then(res => build(res[0]))
+        .then(document => {console.log(build(document)); return build(document)})
     },
     findByUrl: findUrl,
     findAll: function (limit, offset) {

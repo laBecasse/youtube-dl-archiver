@@ -2,7 +2,7 @@
 <section class="section is-medium">
   <div v-if="medias.length === 0" class="loading">Pas de résultat</div>
   <div id="list" class="container">
-    <div v-for="media in medias" class="is-6">
+    <div v-for="media in medias" :key="media.id" class="is-6">
       <Media :media="media" :expanded="!(!watch_id)" v-if="!watch_id || media.id === watch_id"></Media>
     </div>
   </div>
@@ -17,21 +17,38 @@ export default {
   components: {
     Media
   },
+  computed: {
+    medias () {
+      return this.$store.state.medias
+    }
+  },
   data() {
     return{
-      medias: [],
       query: '',
-      watch_id: undefined
+      watch_id: undefined,
+      bottom: false,
+      offset: 0,
+      step: 10
     }
   },
   created: function()
   {
     this.updateQuery();
+    this.$store.commit("emptyMedias")
+    window.addEventListener('scroll', () => {
+      this.bottom = this.bottomVisible() && !(this.watch_id)
+    })
   },
   watch: {
     // call again the method if the route changes
     '$route': 'updateQuery',
-    'query': 'updateMedias'
+    'query': 'updateMedias',
+    'offset': 'updateQuery',
+    bottom(bottom) {
+      if (bottom) {
+        this.offset = this.$store.state.medias.length + this.step
+      }
+    }
   },
   methods: {
     updateQuery () {
@@ -41,6 +58,7 @@ export default {
       
       if (this.$route.name === 'SearchMedia' &&
           this.$route.query.text) {
+        this.$store.commit('emptyMedias')
         uri = base + this.getSearchPath()
         
       } else if (this.$route.name === 'WatchMedia' &&
@@ -52,7 +70,7 @@ export default {
           uri = base + this.getMediaPath()
         }
       } else {
-        uri = base + '/medias?limit=10'
+        uri = base + '/medias?limit='+this.step+'&offset='+this.offset
       }
       this.query = uri
     },
@@ -63,79 +81,26 @@ export default {
       return '/medias/' + this.$route.params.id
     },
     fetchMedias () {
+      console.log(this.query)
       this.axios.get(this.query)
         .then((response) => {
           const medias = (response.data.length !== undefined) ? response.data : [response.data]
+          this.$store.commit('appendMedias', medias)
           
-          this.medias = this.medias.concat(formatMedia(medias))
         })
         .catch(console.error)
     },
     updateMedias () {
-      this.medias = []
       this.fetchMedias()
+    },
+    bottomVisible() {
+      const scrollY = window.scrollY
+      const visible = document.documentElement.clientHeight
+      const pageHeight = document.documentElement.scrollHeight
+      const bottomOfPage = visible + scrollY >= pageHeight
+      return bottomOfPage || pageHeight < visible
     }
   }
-}
-
-/*
- * Format media functions
- */
-
-const SHORT_DESCRIPTION_LENGTH = 200
-
-function formatMedia (medias) {
-
-  for(let media of medias) {
-    addMediaType(media)
-    addShortDecription(media)
-    addFormatedUploadDate(media)
-  }
-
-  return medias
-}
-
-function addShortDecription (media) {
-  const description = media.description
-
-  if (description !== null) {
-    media.short_description = description.substring(0, SHORT_DESCRIPTION_LENGTH)
-    if (media.description.length > SHORT_DESCRIPTION_LENGTH) {
-      media.short_description += '...'
-    }
-  }
-}
-
-function addMediaType (media) {
-  const reV = new RegExp('video')
-  const reI = new RegExp('image')
-  const reA = new RegExp('audio')
-  media.type = 'other'
-  if (reV.test(media.mime)) {
-    media.type = 'video'
-  }
-  if (reI.test(media.mime)) {
-    media.type = 'image'
-  }
-  if (reA.test(media.mime)) {
-    media.type = 'audio'
-  }
-}
-
-function addFormatedUploadDate (media) {
-  if (media.upload_date !== null) {
-    const date = parseUploadDate(media)
-    media.formated_creation_date = new Intl.DateTimeFormat().format(date)
-  }
-}
-
-function parseUploadDate (media) {
-  const dateString = media.upload_date
-  const year = dateString.substring(0, 4)
-  const month = dateString.substring(4, 6)
-  const day = dateString.substring(6, 8)
-
-  return new Date(year, month, day)
 }
 
 </script>
