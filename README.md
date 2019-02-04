@@ -22,3 +22,10 @@ npm run update
 ## TODO
 
 - download directly info by using : `youtube-dl -f "(bestvideo[height<=1080]/bestvideo)+bestaudio/best[height<=1080]/best" --write-sub --sub-lang fr --write-thumbnail --write-info-json --output "%(title)s.%(ext)s" URL`
+
+- solve the problem of url containing #. Think about urlencode for path 
+- solve problem of serving index.html for /medias/ urls
+- add a download button 
+- add widen icon 
+- implements scroll infinite
+- think about share access
