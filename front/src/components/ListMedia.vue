@@ -88,17 +88,17 @@ function formatMedia (medias) {
 
   for(let media of medias) {
     addMediaType(media)
-    addShortDecription(media)
+    addShortDescription(media)
     addFormatedUploadDate(media)
   }
 
   return medias
 }
 
-function addShortDecription (media) {
+function addShortDescription (media) {
   const description = media.description
 
-  if (description !== null) {
+  if (description) {
     media.short_description = description.substring(0, SHORT_DESCRIPTION_LENGTH)
     if (media.description.length > SHORT_DESCRIPTION_LENGTH) {
       media.short_description += '...'
@@ -123,7 +123,7 @@ function addMediaType (media) {
 }
 
 function addFormatedUploadDate (media) {
-  if (media.upload_date !== null) {
+  if (media.upload_date) {
     const date = parseUploadDate(media)
     media.formated_creation_date = new Intl.DateTimeFormat().format(date)
   }
