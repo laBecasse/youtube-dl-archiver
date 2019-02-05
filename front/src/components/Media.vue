@@ -28,8 +28,8 @@
       </div>
       <div class="card-content">
         <p class="media-meta">
-          <span v-if="media.creator">{{media.creator}} -</span>
-          <span v-if="!media.creator && media.uploader">{{media.uploader}} -</span>
+          <span v-if="media.creator">{{media.creator}} - </span>
+          <span v-if="!media.creator && media.uploader">{{media.uploader}} - </span>
           <span>{{media.formated_creation_date}}</span>
         </p>
         <p v-if="media.description && !expanded">

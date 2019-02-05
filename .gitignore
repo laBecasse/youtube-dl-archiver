@@ -4,3 +4,5 @@ package-lock.json
 libs/wrappers/config.json
 archives/
 config.json
+
+front/.env*

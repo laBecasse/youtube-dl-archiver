@@ -46,7 +46,7 @@ export default {
     'offset': 'updateQuery',
     bottom(bottom) {
       if (bottom) {
-        this.offset = this.$store.state.medias.length + this.step
+        this.offset = this.$store.state.medias.length
       }
     }
   },
