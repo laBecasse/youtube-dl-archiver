@@ -1,7 +1,7 @@
 <template>
 <div class="card media-card">
   <div class="is-gapless" v-bind:class="{'columns': !expanded}">
-    <div class="column media-column-video">
+    <div class="media-column-video" v-bind:class="{'column': !expanded}">
       <div class="card-image">
         <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
           <source :src="media.file_url" :type="media.mime"/>
@@ -13,23 +13,26 @@
         <audio v-if="media.type === 'audio'" controls preload="none">
           <source :src="media.file_url" :type="media.mime"/>
           Your browser does not support the audio element.
-        </audio> 
+        </audio>
         <img v-if="media.type === 'image'"
-             :src="media.file_url">
+             :src="media.file_url"/>
         <a v-if="media.type === 'other'"
            :href="media.file_url">media</a>
       </div>
     </div>
-    <div class="column is-primary">
+    <div class="is-primary" v-bind:class="{'column': !expanded}">
       <div class="card-header">
-        <router-link :to="{name: 'WatchMedia', params: {id: media.id}}">
-          <h4 class="card-header-title is-2">{{media.title}}</h4>
-        </router-link>
+        <h4 class="card-header-title is-2">
+          <router-link :to="{name: 'WatchMedia', params: {id: media.id}}" class="has-text-dark">{{media.title}}</router-link>
+        </h4>
       </div>
       <div class="card-content">
         <p class="media-meta">
-          <span v-if="media.creator">{{media.creator}} - </span>
-          <span v-if="!media.creator && media.uploader">{{media.uploader}} - </span>
+          <router-link :to="{name: 'SearchMedia', query: {uploader: media.uploader}}" class="has-text-dark">
+            <span v-if="media.creator">{{media.creator}}</span>
+            <span v-if="!media.creator && media.uploader">{{media.uploader}}</span>
+          </router-link>
+          -
           <span>{{media.formated_creation_date}}</span>
         </p>
         <p v-if="media.description && !expanded">
@@ -52,3 +55,8 @@ export default {
 }
 </script>
 
+<style>
+  .media-card a:hover {
+     text-decoration: underline;
+  }
+</style>

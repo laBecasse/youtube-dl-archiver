@@ -5,6 +5,11 @@ const HOST = process.env.HOST
 const LANGS = ['fr', 'en']
 
 module.exports = function (links) {
+
+  let encodeURIPath = function(path) {
+    return path.split('/').map(encodeURIComponent).join('/')
+  }
+  
   let build = function (obj) {
     if (obj) {
       let testSub = function (lang) {
@@ -20,7 +25,7 @@ module.exports = function (links) {
           const filePath = obj.subtitles.find(testSub(lang))
           if (filePath) {
             res.push({
-              url: HOST + '/archives/' + encodeURI(filePath).replace('#','%23'),
+              url: HOST + '/archives/' + encodeURIPath(filePath),
               file_path: filePath,
               lang: lang
             })
@@ -32,7 +37,7 @@ module.exports = function (links) {
       let thumb
       if (obj.thumbnails && obj.thumbnails.length > 0) {
         thumb = {
-          url: HOST + '/archives/' + encodeURI(obj.thumbnails[0]).replace('#','%23'),
+          url: HOST + '/archives/' + encodeURIPath(obj.thumbnails[0]),
           file_path: obj.thumbnails[0]
         }
       }
@@ -52,7 +57,7 @@ module.exports = function (links) {
         channel_url: obj.info.channel_url,
         creation_date: obj.creation_date,
         upload_date: obj.info.upload_date,
-        file_url: HOST + '/archives/' + encodeURI(obj.file_path).replace('#','%23'),
+        file_url: HOST + '/archives/' + encodeURIPath(obj.file_path),
         file_path: obj.file_path,
         thumbnail: thumb,
         subtitles: subtitlesArray
@@ -173,17 +178,52 @@ module.exports = function (links) {
       .then(res => res.map(build))
   }
 
-  let findText = function (text, limit, offset) {
+  let searchText = function (text, uploader, limit, offset) {
     limit = limit || 0
     offset = offset || 0
-
+    let selector
+    if (text & uploader) {
+      selector = {
+        $text: {$search: text},
+        "info.uploader": uploader
+      }
+    } else {
+      selector = {
+        $text: {$search: text},
+        uploader: uploader
+      }
+    }
+    
     let action = function (collection) {
       return new Promise((resolve, reject) => {
-        collection.find({
-          $text: {$search: text}
-        })
+        collection.find(selector)
           .project({score: {$meta: 'textScore'}})
           .sort({score: {$meta: 'textScore'}})
+          .limit(limit)
+          .skip(offset)
+          .toArray((err, res) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve(res)
+            }
+          })
+      })
+    }
+    return links.apply(action)
+      .then(res => res.map(build))
+  }
+
+  let findUploader = function (uploader, limit, offset) {
+    limit = limit || 0
+    offset = offset || 0
+    let selector = {
+        "info.uploader": uploader
+    }
+    console.log(selector)
+    let action = function (collection) {
+      return new Promise((resolve, reject) => {
+        collection.find(selector)
           .limit(limit)
           .skip(offset)
           .toArray((err, res) => {
@@ -217,7 +257,13 @@ module.exports = function (links) {
       return findOne(selector)
         .then(res => build(res))
     },
-    findText: findText,
+    search: function(text, uploader, limit, offset) {
+      if (text) {
+        return searchText(text, uploader, limit, offset)
+      } else {
+        return findUploader(uploader, limit, offset)
+      }
+    },
     removeById: function (id) {
       return remove(id)
     }

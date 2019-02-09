@@ -1,12 +1,35 @@
 <template>
 <div id="app">
-  <nav role="navigation" aria-label="main navigation">
-    
-    <div class="level is-mobile">
-      <div class="level-left">
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <div>
+        <router-link :to="{name: 'ListMedia'}" class="title" id="logo">H</router-link>
       </div>
-      <div class="level-right">
-        <div id="post-media" class="level-item">
+      <div id="search">
+        <form v-on:submit.prevent="search" action="/search" method="get">
+          <div class="field has-addons">
+            <div class="control">
+              <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
+            </div>
+            <div class="control">
+              <input v-bind:class="{hidden: this.$route.name === 'SearchMedia' }" class="button is-info" type="submit" value="Go">
+              <router-link :to="{name: 'ListMedia'}" v-if="this.$route.name === 'SearchMedia'" class="button" v-on:click.prevent="lastAdded">❌</router-link>
+            </div>
+          </div>
+        </form>
+        </div>
+      
+    <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+
+  <div id="navbarBasicExample" class="navbar-menu">
+    <div class="navbar-start">
+
+        <div id="post-media" class="navbar-item">
           <form v-on:submit.prevent="onSubmit" action="/medias" method="post">
             <div class="field has-addons">
               <div class="control">
@@ -20,31 +43,37 @@
           </form>
         </div>
         
-        <div class="level-item">
+        <div class="navbar-item">
           <form action="/update" method="get">
             <input id="update" class="button" type="submit" value="MAJ"/>
           </form>
         </div>
-      </div>
-      
-    </div>
-    <div class="level">
-      <div id="search" class="level-item">
-        <form v-on:submit.prevent="search" action="/search" method="get">
-          <div class="field has-addons">
-            <div class="control">
-              <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
-            </div>
-            <div class="control">
-              <input v-bind:class="{hidden: this.$route.name === 'SearchMedia' }" class="button is-info" type="submit" value="Go">
-              <router-link :to="{name: 'ListMedia'}" v-if="this.$route.name === 'SearchMedia'" class="button" v-on:click.prevent="lastAdded">❌</router-link>
-            </div>
-          </div>
-        </form>
+
+    <div class="navbar-item has-dropdown is-hoverable">
+        <div class="navbar-dropdown">
+        </div>
       </div>
     </div>
+
+    <div class="navbar-end">
+      <div class="navbar-item">
+      </div>
+    </div>
+  </div>
+</nav>
+  <nav role="navigation" aria-label="main navigation">
+    
+    <div class="level is-mobile">
+      </div>
+
   </nav>
-  <router-view></router-view>
+  
+  <section class="section is-medium">
+    <div class="level" v-if="this.$route.name === 'SearchMedia'">
+      <h3 class="level-item title" v-if="this.$route.query.uploader">{{this.$route.query.uploader}}</h3>
+    </div>
+    <router-view></router-view>
+  </section>
 </div>
 </template>
 
@@ -91,6 +120,8 @@ export default {
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #2c3e50;
-    margin-top: 10px;
+}
+#logo {
+    margin-right: 1em;
 }
 </style>

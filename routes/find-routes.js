@@ -65,7 +65,10 @@ module.exports = function (router, links) {
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0
     const text = req.query.text
-    handleJson(media.findText(text, limit, offset), req, res)
+    const uploader = req.query.uploader
+    console.log(uploader)
+    
+    handleJson(media.search(text, uploader, limit, offset), req, res)
   })
 
   router.get('/medias/:id', (req, res) => {
