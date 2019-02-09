@@ -12,8 +12,8 @@
               <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
             </div>
             <div class="control">
-              <input v-bind:class="{hidden: this.$route.name === 'SearchMedia' }" class="button is-info" type="submit" value="Go">
-              <router-link :to="{name: 'ListMedia'}" v-if="this.$route.name === 'SearchMedia'" class="button" v-on:click.prevent="lastAdded">❌</router-link>
+              <input v-bind:class="{hidden: this.$route.name === 'SearchMedia' && this.$route.query.text }" class="button is-info" type="submit" value="Go">
+              <router-link :to="{name: 'ListMedia'}" v-if="this.$route.name === 'SearchMedia' && this.$route.query.text" class="button" v-on:click.prevent="lastAdded">❌</router-link>
             </div>
           </div>
         </form>
