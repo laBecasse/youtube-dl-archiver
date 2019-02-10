@@ -2,33 +2,45 @@
 <div id="app">
   <nav class="navbar" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
-      <div>
-        <router-link :to="{name: 'ListMedia'}" class="title" id="logo">H</router-link>
-      </div>
-      <div id="search">
-        <form v-on:submit.prevent="search" action="/search" method="get">
-          <div class="field has-addons">
-            <div class="control">
-              <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
-            </div>
-            <div class="control">
-              <input v-bind:class="{hidden: this.$route.name === 'SearchMedia' && this.$route.query.text }" class="button is-info" type="submit" value="Go">
-              <router-link :to="{name: 'ListMedia'}" v-if="this.$route.name === 'SearchMedia' && this.$route.query.text" class="button" v-on:click.prevent="lastAdded">❌</router-link>
-            </div>
-          </div>
-        </form>
+      <div class="columns is-mobile is-vcentered is-multiline is-centered mobile-nav-columns">
+        <div class="column is-narrow">
+          <router-link :to="{name: 'ListMedia'}" class="title" id="logo">
+            <img src="logo.svg" class="logo-img">
+          </router-link>
         </div>
+        <div id="search" class="column is-half">
+          <form v-on:submit.prevent="search" action="/search" method="get">
+            <div class="field has-addons">
+              <div class="control">
+                <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
+              </div>
+              <div class="control">
+                <button v-if="!(this.$route.name === 'SearchMedia' && this.$route.query.text)" class="button is-info"><ion-icon name="search"></ion-icon></button>
+                <router-link :to="{name: 'ListMedia'}" v-if="this.$route.name === 'SearchMedia' && this.$route.query.text" class="button" v-on:click.prevent="lastAdded">❌</router-link>
+              </div>
+            </div>
+          </form>
+        </div>
+        
+        <div class="column is-narrow">
+          <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <div id="navbarBasicExample" class="navbar-menu">
+      <div class="navbar-start">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <div class="vbar-dropdown">
+          </div>
+        </div>
+      </div>
       
-    <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-    </a>
-  </div>
-
-  <div id="navbarBasicExample" class="navbar-menu">
-    <div class="navbar-start">
-
+      <div class="navbar-end">
         <div id="post-media" class="navbar-item">
           <form v-on:submit.prevent="onSubmit" action="/medias" method="post">
             <div class="field has-addons">
@@ -48,24 +60,15 @@
             <input id="update" class="button" type="submit" value="MAJ"/>
           </form>
         </div>
-
-    <div class="navbar-item has-dropdown is-hoverable">
-        <div class="navbar-dropdown">
-        </div>
+        
       </div>
     </div>
-
-    <div class="navbar-end">
-      <div class="navbar-item">
-      </div>
-    </div>
-  </div>
-</nav>
+  </nav>
   <nav role="navigation" aria-label="main navigation">
     
     <div class="level is-mobile">
-      </div>
-
+    </div>
+    
   </nav>
   
   <section class="section is-medium">
@@ -120,8 +123,10 @@ export default {
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #2c3e50;
+    margin-top: .5em;
 }
-#logo {
-    margin-right: 1em;
+
+.mobile-nav-columns{
+    width: 100%;
 }
-</style>
+</Style>
