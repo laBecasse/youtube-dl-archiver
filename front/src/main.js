@@ -110,6 +110,9 @@ function parseUploadDate (media) {
   return new Date(year, month, day)
 }
 
+/*
+ * Nav burger 
+ */
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -136,3 +139,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
+/*
+ * Service Worker
+ */
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js")
+    .then(function(registration) {
+      console.log("Service Worker registered with scope:", registration.scope)
+    }).catch(function(err) {
+      console.log("Service worker registration failed:", err)
+    })
+}
