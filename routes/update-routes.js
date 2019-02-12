@@ -113,7 +113,7 @@ module.exports = function (router, links, cacheCol) {
         const filepath = filePath.relative(files.filter(testExt([fileExt]))[0])
 
         const thumbnails = files.filter(testExt(['.png', '.jpeg', '.jpg']))
-                                   .map(filePath.relative)
+              .map(filePath.relative)
         const subtitles = files.filter(testExt(['.vtt']))
               .map(filePath.relative)
         const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)

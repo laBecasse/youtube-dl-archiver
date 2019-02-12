@@ -47,6 +47,11 @@ const store = new Vuex.Store({
       for(let m of list) {
         state.medias.push(formatMedia(m))
       }
+    },
+    removeMedia (state, id) {
+      const index = state.medias.findIndex((m) => m.id === id)
+      console.log(index)
+      state.medias.splice(index, 1)
     }
   }
 })

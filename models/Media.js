@@ -154,12 +154,15 @@ module.exports = function (links) {
     let action = function (collection) {
       return new Promise((resolve, reject) => {
         const selector = { '_id': links.ObjectID(id) }
-
-        collection.remove(selector, (err, count) => {
-          if (err) return reject(err)
-          console.log('remove ' + id)
-          resolve(count)
-        })
+        findOne(selector)
+          .then(res => {
+            collection.deleteOne(selector, (err, count) => {
+              if (err) return reject(err)
+              console.log("media " + id + " delected")
+              resolve(res)
+            })
+          })
+          .catch(reject)
       })
     }
 
@@ -218,7 +221,7 @@ module.exports = function (links) {
     limit = limit || 0
     offset = offset || 0
     let selector = {
-        "info.uploader": uploader
+      "info.uploader": uploader
     }
     console.log(selector)
     let action = function (collection) {

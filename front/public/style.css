@@ -21,6 +21,11 @@ video, audio, img {
     width: 100%;
 }
 
+audio {
+    /* fix height auto in bulma */
+    min-height: 2.5em;
+}
+
 .media-card {
     margin-bottom: 1em;
 }

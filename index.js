@@ -23,7 +23,7 @@ app.use(cors())
 app.set('json spaces', 40)
 app.use(bodyParser.urlencoded({ extended: true }))
 
-app.use('/', express.static('front/dist'))
+app.use('/', express.static('ui'))
 app.use('/archives', express.static(process.env.ARCHIVES_DIR))
 
 const router = require('./routes')(collections)
