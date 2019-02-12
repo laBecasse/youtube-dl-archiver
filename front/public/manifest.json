@@ -4,7 +4,7 @@
   "description": "An archiver for web medias",
   "start_url": "/",
   "scope": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "icons": [
     {
       "src": "/app-icon-192.png",
