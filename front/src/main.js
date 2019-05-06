@@ -75,7 +75,7 @@ function formatMedia (media) {
 function addShortDecription (media) {
   const description = media.description
   
-  if (description) {
+  if (description != null) {
     media.short_description = description.substring(0, SHORT_DESCRIPTION_LENGTH)
     if (media.description.length > SHORT_DESCRIPTION_LENGTH) {
       media.short_description += '...'

@@ -40,7 +40,7 @@ export default {
     this.updateQuery();
     this.$store.commit("emptyMedias")
     window.addEventListener('scroll', () => {
-      this.bottom = this.bottomVisible() && !(this.watch_id)
+      this.bottom = this.bottomIsClose() && !(this.watch_id)
     })
   },
   watch: {
@@ -134,11 +134,12 @@ export default {
       const uri = this.getURIFromQuery(this.query)
       this.fetchMedias(uri)
     },
-    bottomVisible() {
+    bottomIsClose() {
+      const margin = 300
       const scrollY = window.scrollY
       const visible = document.documentElement.clientHeight
       const pageHeight = document.documentElement.scrollHeight
-      const bottomOfPage = visible + scrollY >= pageHeight
+      const bottomOfPage = visible + scrollY >= pageHeight - margin
       return bottomOfPage || pageHeight < visible
     }
   }
