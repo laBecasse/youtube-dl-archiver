@@ -75,7 +75,7 @@ function formatMedia (media) {
 function addShortDecription (media) {
   const description = media.description
   
-  if (description != null) {
+  if (description) {
     media.short_description = description.substring(0, SHORT_DESCRIPTION_LENGTH)
     if (media.description.length > SHORT_DESCRIPTION_LENGTH) {
       media.short_description += '...'
@@ -109,10 +109,10 @@ function addFormatedUploadDate (media) {
 function parseUploadDate (media) {
   const dateString = media.upload_date
   const year = dateString.substring(0, 4)
-  const month = dateString.substring(4, 6)
+  const month = parseInt(dateString.substring(4, 6))
   const day = dateString.substring(6, 8)
   
-  return new Date(year, month, day)
+  return new Date(year, month - 1, day)
 }
 
 /*
