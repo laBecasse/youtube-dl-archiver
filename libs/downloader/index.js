@@ -11,7 +11,7 @@ const langs = ['fr', 'en']
 function createCmdLine (url, langs, dlDirPath) {
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
   const subLangValue = langs.join(',')
-  const cmdFormat = youtubeDl + ' -f "137+140/bestvideo+bestaudio/best" --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
+  const cmdFormat = youtubeDl + ' -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4/best" --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
   const cmdLine = util.format(cmdFormat, subLangValue, outputValue, url)
 
   return cmdLine
