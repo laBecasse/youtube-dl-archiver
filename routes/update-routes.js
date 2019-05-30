@@ -114,7 +114,7 @@ module.exports = function (router, links, cacheCol) {
 
         const thumbnails = files.filter(testExt(['.png', '.jpeg', '.jpg']))
               .map(filePath.relative)
-        const subtitles = files.filter(testExt(['.vtt']))
+        const subtitles = files.filter(testExt(['.vtt', '.srt']))
               .map(filePath.relative)
         const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
         const mediaId = (test) ? info.webpage_url : info.url
