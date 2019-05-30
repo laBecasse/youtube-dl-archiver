@@ -3,6 +3,7 @@ const fs = require('fs')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const mkdirp = require('mkdirp')
+const srt2vtt = require('srt-to-vtt')
 
 const tempDownloadDir = process.env.ARCHIVES_TMP_DIR
 const youtubeDl = process.env.YOUTUBE_DL_BIN
@@ -63,24 +64,36 @@ function move (info, absDirPath) {
   return new Promise((resolve, reject) => {
     fs.readdir(downloadDirPath, (err, files) => {
       if (err) return reject(err)
-      console.log(files)
       files = files.filter(file => {
         const fileBasename = removeExt(file)
         return fileBasename === basename
       })
-      console.log(files)
       const promises = files.map(file => {
         return new Promise((resolve, reject) => {
           const oldFile = path.join(downloadDirPath, file)
-          const newFile = path.join(absDirPath, file)
+          const ext = path.extname(file)
 
-          mkdirp(path.dirname(newFile), function (err) {
-            if (err) return reject(err)
-            fs.rename(oldFile, newFile, function (err) {
+          if (ext !== '.srt') {
+            const newFile = path.join(absDirPath, file)
+            mkdirp(path.dirname(newFile), function (err) {
               if (err) return reject(err)
+
+              fs.rename(oldFile, newFile, function (err) {
+                if (err) return reject(err)
+                return resolve(newFile)
+              })
+            })
+          } else {
+            const newFileName = path.basename(file, path.extname(file)) + '.vtt'
+            const newFile = path.join(absDirPath, newFileName)
+            mkdirp(path.dirname(newFile), function (err) {
+              if (err) return reject(err)
+              fs.createReadStream(oldFile)
+                .pipe(srt2vtt())
+                .pipe(fs.createWriteStream(newFile))
               return resolve(newFile)
             })
-          })
+          }
         })
       })
 
