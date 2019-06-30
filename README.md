@@ -21,6 +21,12 @@ npm run update
 
 ## TODO
 
-- support of webtorrent
+- support of webtorrent for medias directory as an alternative of direct download
+  - move lib/webtorrent to models/Webtorrent
+  - support seeding all torrents at startup
+  - support of seeding just after the download OK
+  - support of deletion of torrent with medias deletion
+  - support of magnetURI field for medias
+  - support of webtorrent in the web interface.
 - check how failed download are handled 
 - add limit and offset for search route in api
