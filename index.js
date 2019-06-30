@@ -5,10 +5,12 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const MongoDB = require('./mongo-database')
 
+// set environment
 process.env.ARCHIVES_DIR = process.env.ARCHIVES_DIR || config['archives-dir'] || path.join(__dirname, 'archives')
 process.env.ARCHIVES_TMP_DIR = process.env.ARCHIVES_TMP_DIR || path.join(process.env.ARCHIVES_DIR, 'tmp')
 process.env.YOUTUBE_DL_BIN = process.env.YOUTUBE_DL_BIN || path.join(__dirname, 'bin/youtube-dl')
 process.env.HOST = process.env.HOST || config['host'] || 'http://localhost:8000'
+process.env.WEBTORRENT_TRACKERS = (config['webtorrent']) ? config['webtorrent'].trakers : []
 const collections = MongoDB(config['mongo'])
 
 // create collections if they don't exist

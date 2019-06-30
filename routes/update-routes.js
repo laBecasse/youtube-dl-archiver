@@ -4,6 +4,7 @@ const Media = require('../models/Media.js')
 const Cache = require('../models/Cache.js')
 const filePath = require('../models/FilePath')
 const Downloader = require('../libs/downloader')
+const Webtorrent = require('../libs/webtorrent')
 
 let handleJson = function (promises, req, res) {
   promises.then(object => {
@@ -117,12 +118,18 @@ module.exports = function (router, links, cacheCol) {
         const subtitles = files.filter(testExt(['.vtt']))
               .map(filePath.relative)
         const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
-        const mediaId = (test) ? info.webpage_url : info.url
-        return media.add(mediaId, url, filepath, thumbnails, subtitles, info)
+        const mediaId = (test) ? info.webpage_url : info.ulr
+
+        // seed the directory using webtorrent
+        return Webtorrent.seed(absDirPath).then(torrent => {
+        const magnetURI = torrent.magnetURI
+          return media.add(mediaId, url, filepath, thumbnails, subtitles, info)
+        
+        })
           .then((media) => media)
       })
   }
-
+  
   let testExt = function (exts) {
     return (file) => exts.includes(path.extname(file).toLowerCase())
   }

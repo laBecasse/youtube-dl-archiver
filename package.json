@@ -29,6 +29,7 @@
     "srt-to-vtt": "^1.1.3",
     "tingodb": "^0.6.1",
     "wallabag-api": "^0.2.3",
+    "webtorrent-hybrid": "^3.0.1",
     "youtube-dl": "^1.12.2"
   },
   "devDependencies": {
