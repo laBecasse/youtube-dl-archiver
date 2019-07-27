@@ -1,20 +1,34 @@
+var createTorrent = require('create-torrent')
 const WebTorrent = require('webtorrent-hybrid')
 const client = new WebTorrent()
-
-let trackers = process.env.WEBTORRENT_TRACKERS
+const config = require('../../config')
+let trackers = config.webtorrent.trackers
 
 function seed(path) {
   return new Promise((resolve, reject) => {
     client.seed(path, { announce: trackers },
                 function (torrent) {
-                  console.log('Client is seeding ' + torrent.magnetURI)
-                  console.log('Client is seeding:', torrent.infoHash)
-                  console.log('Peer id: ', client.peerId)
                   resolve(torrent);
                 })
   })
 }
 
+function create(path, torrentFile) {
+  return new Promise((resolve, reject) => {
+    createTorrent(path, function(err, tor) {
+      // return the buffer of the torrent file
+      fs.writeFile(torrentFile, tor, (err) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    })
+  })
+}
+
 module.exports = {
-  'seed': seed
+  'seed': seed,
+  'create': create
 }

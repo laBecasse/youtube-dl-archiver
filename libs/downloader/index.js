@@ -4,10 +4,11 @@ const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const mkdirp = require('mkdirp')
 const srt2vtt = require('srt-to-vtt')
+const config = require('../../config')
 
-const tempDownloadDir = process.env.ARCHIVES_TMP_DIR
-const youtubeDl = process.env.YOUTUBE_DL_BIN
-const langs = ['fr', 'en']
+const tempDownloadDir = config.archivesTmpDir
+const youtubeDl = config.youtubedlBin
+const langs = config.subtitleLangs
 
 function createCmdLine (url, langs, dlDirPath) {
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'

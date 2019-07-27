@@ -120,13 +120,7 @@ module.exports = function (router, links, cacheCol) {
         const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
         const mediaId = (test) ? info.webpage_url : info.ulr
 
-        // seed the directory using webtorrent
-        return Webtorrent.seed(absDirPath).then(torrent => {
-        const magnetURI = torrent.magnetURI
-          return media.add(mediaId, url, filepath, thumbnails, subtitles, info)
-        
-        })
-          .then((media) => media)
+        return media.add(mediaId, url, filepath, thumbnails, subtitles, info).then((media) => media)
       })
   }
   

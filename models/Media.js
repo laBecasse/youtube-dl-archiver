@@ -1,8 +1,9 @@
 const Mime = require('mime')
+const config = require('../config')
 
-const HOST = process.env.HOST
+const HOST = config.host
 
-const LANGS = ['fr', 'en']
+const LANGS = config.subtitleLangs
 
 module.exports = function (links) {
 
