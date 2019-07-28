@@ -28,7 +28,7 @@
     <div class="media-column-video" v-bind:class="{'column': !expanded}">
       <div class="card-image">
         <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
-          <source :src="media.file_url" :type="media.mime"/>
+          <source v-if="!media.torrent_url" :src="media.file_url" :type="media.mime"/>
           <track v-for="sub in media.subtitles"
                  :src="sub.url"
                  :label="sub.lang"
@@ -80,30 +80,50 @@
 
 <script>
 export default {
-    name: 'Media',
-    props: ['media', 'expanded'],
-    data () {
-        return {
-            deleteConfirmation: false
-        }
-    },
-    methods: {
-        toggleDeleteConfirmation () {
-            this.deleteConfirmation = !this.deleteConfirmation
-        },
-        deleteMedia () {
-            const base = this.$root.$data.API_URL
-            const query = base + '/medias/' + this.media.id
-            console.log(query)
-            this.axios.delete(query)
-                .then((response) => {
-                    this.$store.commit('removeMedia', this.media.id)
-                })
-                .catch((e) => {
-                    console.error(e)
-                })
-        }
+  name: 'Media',
+  props: ['media', 'expanded'],
+  data () {
+    return {
+      deleteConfirmation: false
     }
+  },
+  mounted () {
+    const media = this.media
+    if (media.torrent_url) {
+      const videoCard = this.$el.querySelector('.card-image video')
+      const WebTorrent = require('webtorrent')
+      var client = new WebTorrent()
+
+      client.add(media.torrent_url, function(torrent) {
+        console.log('Client is downloading:', torrent.infoHash)
+        console.log(torrent)
+        torrent.addWebSeed(media.file_url)
+        //torrent.pause()
+        torrent.files.forEach(function (file) {
+          // Display the file by appending it to the DOM. Supports video, audio, images, and
+          // more. Specify a container element (CSS selector or reference to DOM node).
+          file.renderTo(videoCard)
+        })
+      })
+    }
+  },
+  methods: {
+    toggleDeleteConfirmation () {
+      this.deleteConfirmation = !this.deleteConfirmation
+    },
+    deleteMedia () {
+      const base = this.$root.$data.API_URL
+      const query = base + '/medias/' + this.media.id
+      console.log(query)
+      this.axios.delete(query)
+        .then((response) => {
+          this.$store.commit('removeMedia', this.media.id)
+        })
+        .catch((e) => {
+          console.error(e)
+        })
+    }
+  }
 }
 </script>
 
