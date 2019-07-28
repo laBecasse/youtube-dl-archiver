@@ -1,12 +1,9 @@
 const Mime = require('mime')
-const path = require('path')
 const config = require('../config')
-const filePath = require('../models/FilePath')
-
 const HOST = config.host
 const LANGS = config.subtitleLangs
 
-let encodeURIPath = function(path) {
+let encodeURIPath = function (path) {
   return path.split('/').map(encodeURIComponent).join('/')
 }
 
@@ -18,13 +15,13 @@ let testSub = function (lang) {
 }
 
 class Media {
-  constructor(obj) {
-    this.id = obj._id
+  constructor (obj) {
+    this._id = obj._id
     this.url = obj.url
     this.media_url = obj.media_url
     this.ext = obj.ext
     this.mime = obj.mime
-    this.title =  obj.title
+    this.title = obj.title
     this.description = obj.description
     this.tags = obj.tags
     this.uploader = obj.uploader
@@ -36,18 +33,18 @@ class Media {
     this.file_path = obj.file_path
     this.thumbnails = obj.thumbnails
     this.subtitles = obj.subtitles
+    this.torrent_path = obj.torrent_path
   }
 
-  getThumbnailJSON() {
+  getThumbnailJSON () {
     if (this.thumbnails.length > 0) {
-      
-      return {url: HOST + '/archives/' + encodeURIPath(this.thumbnails[0])}
+      return { url: HOST + '/archives/' + encodeURIPath(this.thumbnails[0]) }
     } else {
       return undefined
     }
   }
 
-  getSubtitlesJSON() {
+  getSubtitlesJSON () {
     let subtitlesArray
     if (this.subtitles) {
       subtitlesArray = LANGS.reduce((res, lang) => {
@@ -66,16 +63,64 @@ class Media {
     return subtitlesArray
   }
 
-  toAPIJSON() {
+  toAPIJSON () {
     const json = JSON.parse(JSON.stringify(this))
+    json.id = json._id
     json.subtitles = this.getSubtitlesJSON()
     json.thumbnail = this.getThumbnailJSON()
-    json.file_url = HOST + '/archives/' + encodeURIPath(this.file_path)
+    json.file_url = Media._urlFromPath(this.file_path)
+    if (this.torrent_path) {
+      json.torrent_url = Media._urlFromPath(this.torrent_path)
+    }
 
     return json
   }
-  
-  static createFromDocument(document) {
+
+  static _urlFromPath (path) {
+    return HOST + '/archives/' + encodeURIPath(path)
+  }
+
+  static create (url, info, archive) {
+    // create the media url following the extractor
+    const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
+    const mediaUrl = (test) ? info.webpage_url : info.ulr
+
+    let subtitlesArray
+    subtitlesArray = LANGS.reduce((res, lang) => {
+      const filePath = archive.subtitlesPath.find(testSub(lang))
+      if (filePath) {
+        res.push({
+          file_path: filePath,
+          lang: lang
+        })
+      }
+      return res
+    }, [])
+
+    const creationDate = new Date().toISOString()
+
+    return new Media({
+      url: url,
+      media_url: mediaUrl,
+      ext: info.ext,
+      mime: Mime.lookup(info.ext),
+      title: info.title,
+      description: info.description,
+      tags: info.tags,
+      uploader: info.uploader,
+      creator: info.creator,
+      channel_id: info.channel_id,
+      channel_url: info.channel_url,
+      creation_date: creationDate,
+      upload_date: info.upload_date,
+      file_path: archive.mediaPath,
+      torrent_path: archive.torrentPath,
+      thumbnails: archive.thumbnailsPath,
+      subtitles: subtitlesArray
+    })
+  }
+
+  static createFromDocument (document) {
     return Media.createFromInfo(document.media_url,
                                 document.url,
                                 document.file_path,
@@ -85,19 +130,8 @@ class Media {
                                 document._id)
   }
 
-  static create(url, info, archive) {
-    const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
-    const mediaId = (test) ? info.webpage_url : info.ulr
-
-    return Media.createFromInfo(mediaId, url,
-                                archive.mediaPath,
-                                archive.thumbnailsPath,
-                                archive.subtitlesPath, info, id)
-  }
-
   static createFromInfo(mediaUrl, url, filepath, thumbnails, subtitles, info, id) {
     const date = new Date()
-    
     const obj = {
       '_id': id,
       'url': url,

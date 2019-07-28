@@ -1,5 +1,4 @@
 const Media = require('./models/Media')
-
 const config = require('./config')
 const MongoDB = require('./mongo-database')
 config.mongo.collections.medias = 'medias'
@@ -32,12 +31,12 @@ let find = function (selector, limit, offset, sort) {
   return links.apply(action)
 }
 
-
 find({}).then(documents => {
-  for(doc of documents) {
+  for (let doc of documents) {
+    // create the media
     const media = Media.createFromDocument(doc)
+    // insert it into the new collection
     media._id = media.id
-    console.log(media)
     insertOne(media)
   }
 })
@@ -53,4 +52,3 @@ let insertOne = function (document) {
   }
   return collections['medias'].apply(action)
 }
-

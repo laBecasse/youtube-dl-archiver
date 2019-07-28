@@ -4,14 +4,17 @@ const MediaDB = require('../models/MediaDB.js')
 const Cache = require('../models/Cache.js')
 const filePath = require('../models/FilePath')
 const Downloader = require('../libs/downloader')
-const Webtorrent = require('../libs/webtorrent')
 const Archive = require('../models/Archive')
 const Media = require('../models/Media')
 
 let handleJson = function (promises, req, res) {
-  promises.then(object => {
-    if (object) {
-      res.json(object)
+  promises.then(medias => {
+    if (medias) {
+      if (medias.length) {
+        res.json(medias.map(media => media.toAPIJSON()))
+      } else {
+        res.json(medias.toAPIJSON())
+      }
     } else {
       res.status(404)
       res.json({ message: 'not found' })
@@ -115,17 +118,15 @@ module.exports = function (router, links, cacheCol) {
       .then(files => {
         const mediaFile = path.basename(info._filename)
         const archive = Archive.create(mediaFile, files)
-
-        const media = new Media.create(archive, info)
-
-        return mediaDB.add(media).then((media) => media)
+        return archive.createTorrent().then(archive => {
+          console.log(files)
+          console.log(archive)
+          const media = Media.create(url, info, archive)
+          console.log(media)
+          return mediaDB.add(media)
+        })
       })
   }
-  
-  let testExt = function (exts) {
-    return (file) => exts.includes(path.extname(file).toLowerCase())
-  }
-
 
   let downError = function (err) {
     if (err.name !== 'eexist') {

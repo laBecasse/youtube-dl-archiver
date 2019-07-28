@@ -16,8 +16,11 @@ module.exports = function (router, links) {
   let handleJson = function (promises, req, res) {
     promises.then(medias => {
       if (medias) {
-        if(medias.length)
+        if (medias.length) {
           res.json(medias.map(media => media.toAPIJSON()))
+        } else {
+          res.json(medias.toAPIJSON())
+        }
       } else {
         res.status(404)
         res.json({message: 'not found'})
