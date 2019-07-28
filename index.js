@@ -9,10 +9,10 @@ const MongoDB = require('./mongo-database')
 const collections = MongoDB(config['mongo'])
 
 // create collections if they don't exist
-collections[config.mongo.collections.links].create().catch(console.error)
+collections['links'].create().catch(console.error)
 const textKeys = ['info.title', 'info.description', 'info.tags', 'info.uploader', 'info.creator']
-collections[config.mongo.collections.links].defineTextIndex(textKeys).catch(console.error)
-collections[config.mongo.collections.cache].create().catch(console.error)
+collections['links'].defineTextIndex(textKeys).catch(console.error)
+collections['links'].create().catch(console.error)
 
 const port = config.port
 const app = express()

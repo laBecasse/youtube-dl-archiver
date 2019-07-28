@@ -69,11 +69,14 @@ function move (info, absDirPath) {
         const fileBasename = removeExt(file)
         return fileBasename === basename
       })
+
+      // promises of file renaming
       const promises = files.map(file => {
         return new Promise((resolve, reject) => {
           const oldFile = path.join(downloadDirPath, file)
           const ext = path.extname(file)
 
+          // for files without .srt extensions
           if (ext !== '.srt') {
             const newFile = path.join(absDirPath, file)
             mkdirp(path.dirname(newFile), function (err) {
@@ -85,6 +88,7 @@ function move (info, absDirPath) {
               })
             })
           } else {
+            // we translate .srt files to .vtt files
             const newFileName = path.basename(file, path.extname(file)) + '.vtt'
             const newFile = path.join(absDirPath, newFileName)
             mkdirp(path.dirname(newFile), function (err) {

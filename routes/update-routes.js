@@ -1,10 +1,12 @@
 const path = require('path')
 const wrapper = require('../libs/wrappers')
-const Media = require('../models/Media.js')
+const MediaDB = require('../models/MediaDB.js')
 const Cache = require('../models/Cache.js')
 const filePath = require('../models/FilePath')
 const Downloader = require('../libs/downloader')
 const Webtorrent = require('../libs/webtorrent')
+const Archive = require('../models/Archive')
+const Media = require('../models/Media')
 
 let handleJson = function (promises, req, res) {
   promises.then(object => {
@@ -28,7 +30,7 @@ let handleError = function (res) {
 
 module.exports = function (router, links, cacheCol) {
   const cache = Cache(cacheCol)
-  const media = Media(links)
+  const mediaDB = MediaDB(links)
 
   router.get('/update', (req, res, next) => {
     wrapper.getLinks()
@@ -88,7 +90,8 @@ module.exports = function (router, links, cacheCol) {
   }
 
   let create = function (url) {
-    return media.findByUrl(url)
+    // create only if the url is new
+    return mediaDB.findByUrl(url)
       .then(res => {
         if (res.length === 0) {
           return Downloader.download(url)
@@ -110,23 +113,19 @@ module.exports = function (router, links, cacheCol) {
 
     return Downloader.move(info, absDirPath)
       .then(files => {
-        const fileExt = path.extname(info._filename)
-        const filepath = filePath.relative(files.filter(testExt([fileExt]))[0])
+        const mediaFile = path.basename(info._filename)
+        const archive = Archive.create(mediaFile, files)
 
-        const thumbnails = files.filter(testExt(['.png', '.jpeg', '.jpg']))
-              .map(filePath.relative)
-        const subtitles = files.filter(testExt(['.vtt']))
-              .map(filePath.relative)
-        const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
-        const mediaId = (test) ? info.webpage_url : info.ulr
+        const media = new Media.create(archive, info)
 
-        return media.add(mediaId, url, filepath, thumbnails, subtitles, info).then((media) => media)
+        return mediaDB.add(media).then((media) => media)
       })
   }
   
   let testExt = function (exts) {
     return (file) => exts.includes(path.extname(file).toLowerCase())
   }
+
 
   let downError = function (err) {
     if (err.name !== 'eexist') {
