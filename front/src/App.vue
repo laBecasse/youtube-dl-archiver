@@ -5,7 +5,7 @@
       <div class="columns is-mobile is-vcentered is-multiline is-centered mobile-nav-columns">
         <div class="column is-narrow">
           <router-link :to="{name: 'ListMedia'}" class="title" id="logo">
-            <img src="logo.svg" class="logo-img">
+            <img src="/logo.svg" class="logo-img">
           </router-link>
         </div>
         <div id="search" class="column is-half">
