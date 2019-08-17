@@ -16,7 +16,7 @@ module.exports = function (router, links) {
   let handleJson = function (promises, req, res) {
     promises.then(medias => {
       if (medias) {
-        if (medias.length) {
+        if (Array.isArray(medias)) {
           res.json(medias.map(media => media.toAPIJSON()))
         } else {
           res.json(medias.toAPIJSON())
@@ -70,8 +70,7 @@ module.exports = function (router, links) {
     const offset = parseInt(req.query.offset) || 0
     const text = req.query.text
     const uploader = req.query.uploader
-    console.log(uploader)
-    
+
     handleJson(media.search(text, uploader, limit, offset), req, res)
   })
 

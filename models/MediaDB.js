@@ -119,11 +119,11 @@ module.exports = function (links) {
       }
     } else {
       selector = {
-        $text: {$search: text},
-        uploader: uploader
+        $text: { $search: text }
       }
     }
-    
+
+    console.log(selector)
     let action = function (collection) {
       return new Promise((resolve, reject) => {
         collection.find(selector)
@@ -147,9 +147,9 @@ module.exports = function (links) {
     limit = limit || 0
     offset = offset || 0
     let selector = {
-      "info.uploader": uploader
+      "uploader": uploader
     }
-    console.log(selector)
+
     let action = function (collection) {
       return new Promise((resolve, reject) => {
         collection.find(selector)
@@ -167,9 +167,9 @@ module.exports = function (links) {
     return links.apply(action)
   }
 
-  let build = function(obj) {
-    if(obj) {
-      if (obj.length) {
+  let build = function (obj) {
+    if (obj) {
+      if (Array.isArray(obj)) {
         return obj.map(o => new Media(o))
       } else {
         return new Media(obj)

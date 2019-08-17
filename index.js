@@ -10,7 +10,7 @@ const collections = MongoDB(config['mongo'])
 
 // create collections if they don't exist
 collections['links'].create().catch(console.error)
-const textKeys = ['info.title', 'info.description', 'info.tags', 'info.uploader', 'info.creator']
+const textKeys = ['title', 'description', 'tags', 'uploader', 'creator']
 collections['links'].defineTextIndex(textKeys).catch(console.error)
 collections['links'].create().catch(console.error)
 
