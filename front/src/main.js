@@ -12,6 +12,13 @@ Vue.use(VueAxios, axios);
 
 import App from './App.vue';
 import ListMedia from './components/ListMedia.vue'
+
+import PouchDB from 'pouchdb'
+import PouchDBFind from 'pouchdb-find'
+console.log(PouchDBFind)
+PouchDB.plugin(PouchDBFind)
+console.log(PouchDB)
+
 const routes = [
   {
     name: 'ListMedia',
@@ -30,13 +37,34 @@ const routes = [
   }
 ]
 
+// database of medias
+const db = new PouchDB("medias")
+db.createIndex({
+  index: {fields: [{creation_date:'desc'}]}
+})
+
+// database of offline medias
+const offlineMedias = new PouchDB("offline_medias")
+const ATTACHMENT_ID = 'media'
+
 const store = new Vuex.Store({
   state: {
-    medias: []
+    medias: [],
+    offset: 0,
+    step: 10,
+    query: '/medias',
+    selector: {},
+    isSingle: false
+  },
+  getters: {
+    contains (state, id) {
+      return state.medias.some(m => m.id === id)
+    }
   },
   mutations: {
     emptyMedias (state) {
       state.medias = []
+      state.offset = 0
     },
     prependMedias (state, list) {
       for(let m of list) {
@@ -52,6 +80,163 @@ const store = new Vuex.Store({
       const index = state.medias.findIndex((m) => m.id === id)
       console.log(index)
       state.medias.splice(index, 1)
+    },
+    setSingle(state, value) {
+
+      // when the single is switched to false
+      // we empty the medias first
+      if (state.isSingle && !value) {
+        state.medias = []
+      }
+      state.isSingle = value
+    },
+    // set the api query
+    setQuery(state, query) {
+      state.query = query
+    },
+    // set the db selector
+    setSelector(state, selector) {
+      state.selector = selector
+      console.log(state.selector)
+    },
+    incrementOffset(state, incr) {
+      state.offset += incr
+    }
+  },
+  actions: {
+    queryStoredMedias(context) {
+      const step = context.state.step
+      const offset = context.state.offset
+      const selector = context.state.selector
+      console.log(selector, offset)
+      //selector.creation_date = {$ne: null}
+      console.log({
+        selector: selector,
+        limit: step,
+        sort: [{'creation_date': 'desc'}],
+        skip: offset
+      })
+      return db.find({
+        selector: selector,
+        limit: step,
+        sort: [{'creation_date': 'desc'}],
+        skip: offset
+      })
+        .then(results => {
+          console.log(results)
+          const medias = results.docs
+          context.commit('setSingle', false)
+          context.commit('appendMedias', medias)
+
+          return medias
+        })
+        .then(medias => context.commit('incrementOffset', medias.length))
+    },
+    queryOneStoredMedia(context, id) {
+      return db.get(id)
+    },
+    queryMedias(context) {
+      const base = process.env.VUE_APP_API_URL
+      const step = context.state.step
+      const offset = context.state.offset
+      const query = context.state.query
+      
+      let fullQuery
+      if (query.includes('?')) {
+        fullQuery = base + query + '&limit=' + step + '&offset='+ offset
+      } else {
+        fullQuery =  base + query + '?limit=' + step + '&offset='+ offset
+      }
+      //return Promise.reject()
+      return axios.get(fullQuery)
+        .then(response => {
+          const medias = response.data
+          console.log(fullQuery)
+          console.log(medias)
+          context.commit('setSingle', false)
+          context.commit('appendMedias', medias)
+          return medias
+        })
+        .then(medias => {
+          return Promise.all(medias.map(m => db.put(m)
+                                        .catch(e => {
+                                          if (e.name !== 'conflict') {
+                                            throw e
+                                          }
+                                        })))
+        })
+        .then(medias => context.commit('incrementOffset', medias.length))
+    },
+    getMoreMedias (context, query) {
+      return context.dispatch('queryMedias')
+        .catch(e => {
+          return context.dispatch('queryMedias')
+            .catch(context.dispatch('queryStoredMedias'))
+        })
+    },
+    getOneMedias (context, id) {
+      const base = process.env.VUE_APP_API_URL
+      
+      if(context.state.medias.length === 0) {
+        return axios.get(base + '/medias/' + id)
+          .then(response => {
+            console.log('/medias/' + id)
+            const media = response.data
+            context.commit('appendMedias', [media])
+            context.commit('setSingle', true)
+          })
+      }
+    },
+    getMediasList (context) {
+      context.commit('setQuery', '/medias')
+      context.commit('emptyMedias')
+      context.commit('setSelector', {})
+      return context.dispatch('queryMedias')
+        .catch(e => {console.log(e);context.dispatch('queryStoredMedias')})
+    },
+    searchText (context, text) {
+      context.commit('setQuery', '/search?text=' + text)
+      context.commit('emptyMedias')
+      context.commit('setSelector', {$and: [{$or: [{title: {$regex: RegExp(text, 'i')}}, {description: {$regex: RegExp(text, 'i')}}]}, {creation_date :{$gt: null}}]})
+      return context.dispatch('queryMedias')
+        .catch(context.dispatch('queryStoredMedias'))
+    },
+    searchUploader (context, uploader) {
+      context.commit('setQuery', '/search?uploader=' + uploader)
+      context.commit('emptyMedias')
+      context.commit('setSelector', {$and: [{uploader: {$eq:uploader}}, {creation_date :{$gt: null}}]})
+      return context.dispatch('queryMedias')
+        .catch(context.dispatch('queryStoredMedias'))
+    },
+    makeOfflineMedia(context, id) {
+      return context.dispatch("queryOneStoredMedia",id)
+            .then(media => {
+          console.log('fetch for ' + id)
+          return fetch(media.file_url)
+            .then(res => res.blob())
+            .then(attachment => {
+              const type = media.mime
+              console.log("blob created for " + id)
+              return offlineMedias.get(id)
+                .then(m => offlineMedias.putAttachment(id, ATTACHMENT_ID, m._rev, attachment, type))
+                .catch(() => offlineMedias.putAttachment(id, ATTACHMENT_ID, attachment, type))
+
+            })
+        })
+    },
+    deleteOfflineMedia(context, id) {
+      console.log('delete ' + id)
+      return offlineMedias.get(id)
+        .then(m => offlineMedias.removeAttachment(m._id, ATTACHMENT_ID, m._rev))
+        .then(() => offlineMedias.viewCleanup())
+        .then(() => offlineMedias.compact())
+    },
+    getOfflineMediaURL(context, id) {
+      return offlineMedias.getAttachment(id, ATTACHMENT_ID)
+        .then(blob => URL.createObjectURL(blob))
+    },
+    removeOfflineMediaURL(context, id) {
+      
     }
   }
 })
@@ -67,19 +252,48 @@ const SHORT_DESCRIPTION_LENGTH = 200
 
 function formatMedia (media) {
   addMediaType(media)
-  addShortDecription(media)
+  addShortDescription(media)
   addFormatedUploadDate(media)
+  addHTMLDescription(media)
   return media
 }
 
-function addShortDecription (media) {
+function urlify(text) {
+  var urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, function(url) {
+    return '<a href="' + url + '">' + url + '</a>';
+  })
+}
+
+function htmlEscape(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+function addHTMLDescription (media) {
+  if (media.description) {
+    let htmlDescription = htmlEscape(media.description)
+    htmlDescription = urlify(htmlDescription)
+    htmlDescription = htmlDescription.replace(/\r\n?|\n/g, "<br>")
+    media.htmlDescription = htmlDescription
+  }
+}
+
+function addShortDescription (media) {
   const description = media.description
   
   if (description) {
-    media.short_description = description.substring(0, SHORT_DESCRIPTION_LENGTH)
+    let shortDescription = description.substring(0, SHORT_DESCRIPTION_LENGTH)
+    shortDescription = urlify(shortDescription)
+    shortDescription = shortDescription.replace(/\r\n?|\n/g, "<br>")
+    
     if (media.description.length > SHORT_DESCRIPTION_LENGTH) {
-      media.short_description += '...'
+      shortDescription += '...'
     }
+    media.short_description = shortDescription
   }
 }
 
@@ -144,6 +358,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
+/*
+ * Ionicons
+ */
+
+require('vue-ionicons/ionicons.css')
 
 /*
  * Service Worker

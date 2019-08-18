@@ -25,17 +25,53 @@
         </div>
       </div>
     </article>
+    <article v-if="this.downloadChoose" class="confirmation message is-medium is-info">
+      <div class="message-header">
+        <p>Télécharger</p>
+      </div>
+      <div class="message-body" >
+        <div class="columns is-vcentered">
+          <div class="column is-full">
+            <p></p>
+            <div class="columns is-centered">
+              <div class="column">
+                <a class="button" v-on:click="toggleDownloadChoose">
+                  Annuler
+                </a>
+              </div>
+              <div class="column">
+                <div class="columns">
+                  <p class="column" v-if="!offlineMediaURL">
+                    <a class="button is-info" v-on:click="createOfflineMedia">
+                      Rendre le média hors ligne
+                    </a>
+                  </p>
+                  <p class="column" v-if="offlineMediaURL">
+                    <a class="button is-danger" v-on:click="removeOfflineMedia">
+                      Supprimer le média hors ligne
+                    </a>
+                  </p>
+                  <p class="column">
+                    <a :href="media.file_url" class="button is-info" title="Télécharger">Télécharger</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
     <div class="media-column-video" v-bind:class="{'column': !expanded}">
       <div class="card-image">
         <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
-          <source v-if="!media.torrent_url" :src="media.file_url" :type="media.mime"/>
+          <source v-if="true || !media.torrent_url" :src="offlineMediaURL || media.file_url" :type="media.mime"/>
           <track v-for="sub in media.subtitles"
                  :src="sub.url"
                  :label="sub.lang"
                  kind="subtitles" :srclang="sub.lang">
         </video>
         <audio v-if="media.type === 'audio'" controls> <!-- preload="none"> -->
-          <source :src="media.file_url" :type="media.mime">
+          <source v-if="true || !media.torrent_url" :src="offlineMediaURL || media.file_url" :type="media.mime">
             <p>Your browser does not support the audio element.</p>
         </audio>
         <img v-if="media.type === 'image'"
@@ -59,11 +95,9 @@
           -
           <span>{{media.formated_creation_date}}</span>
         </p>
-        <p v-if="media.description && !expanded">
-          {{media.short_description}}
+        <p v-if="media.description && !expanded" v-html="media.short_description" class="description">
         </p>
-        <p v-if="media.description && expanded">
-          {{media.description}}
+        <p v-if="media.description && expanded" v-html="media.htmlDescription" class="description">
         </p>
         <a v-bind:href="media.url">lien original</a>
       </div>
@@ -72,42 +106,60 @@
   <footer class="card-footer">
     <!-- <a :href="media.file_url" class="card-footer-item" download>Download</a> -->
     <!-- <a class="card-footer-item"><span class="button"><span class="delete has-text-danger"></span> Delete</span></a> -->
-    <a :href="media.file_url" class="card-footer-item" title="Télécharger" download><ion-icon name="download"></ion-icon></a>
-    <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><ion-icon name="trash"></ion-icon></a>
+    <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
+    <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><TrashIcon/></a>
   </footer>
 </div>
 </template>
 
 <script>
+  import { mapActions, mapGetters } from 'vuex'
+  import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
+    import TrashIcon from 'vue-ionicons/dist/md-trash.vue'
 export default {
   name: 'Media',
   props: ['media', 'expanded'],
+  components: {
+    DownloadIcon,
+    TrashIcon
+  },
   data () {
     return {
-      deleteConfirmation: false
+      deleteConfirmation: false,
+      downloadChoose: false,
+      offlineMediaURL: null
     }
   },
   mounted () {
-    const media = this.media
-    if (media.torrent_url) {
-      const videoCard = this.$el.querySelector('.card-image video')
-      const WebTorrent = require('webtorrent')
-      var client = new WebTorrent()
-
-      client.add(media.torrent_url, function(torrent) {
-        console.log('Client is downloading:', torrent.infoHash)
-        console.log(torrent)
-        torrent.addWebSeed(media.file_url)
-        //torrent.pause()
-        torrent.files.forEach(function (file) {
-          // Display the file by appending it to the DOM. Supports video, audio, images, and
-          // more. Specify a container element (CSS selector or reference to DOM node).
-          file.renderTo(videoCard)
+    this.setOfflineMediaURL()
+    
+    function mediaTorrent() {
+      const media = this.media
+      if (media.torrent_url) {
+        const mediaElt = (media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
+        //console.log(mediaElt)
+        const WebTorrent = require('webtorrent')
+        var client = new WebTorrent()
+        client.add(media.torrent_url, function(torrent) {
+          //console.log('Client is downloading:', torrent.infoHash)
+          //console.log(torrent)
+          torrent.files.forEach(function (file) {
+            // Display the file by appending it to the DOM. Supports video, audio, images, and
+            // more. Specify a container element (CSS selector or reference to DOM node).
+            file.renderTo(mediaElt)
+          })
+          mediaElt.addEventListener("play", function(e){
+            torrent.addWebSeed(media.file_url)
+          })
         })
-      })
+      }
     }
   },
+  watch: {
+    offlineMediaURL: 'reloadMedia'
+  },
   methods: {
+    ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia']),
     toggleDeleteConfirmation () {
       this.deleteConfirmation = !this.deleteConfirmation
     },
@@ -122,6 +174,40 @@ export default {
         .catch((e) => {
           console.error(e)
         })
+    },
+    toggleDownloadChoose() {
+      this.downloadChoose = !this.downloadChoose
+    },
+    createOfflineMedia () {
+      const id = this.media._id
+      this.makeOfflineMedia(id)
+        .then(() => this.setOfflineMediaURL())
+    },
+    removeOfflineMedia () {
+      const id = this.media._id
+      this.deleteOfflineMedia(id)
+        .then(() => {
+          this.offlineMediaURL = null
+          this.downloadChoose = false
+        })
+    },
+    setOfflineMediaURL () {
+      const id = this.media._id
+      return this.getOfflineMediaURL(id)
+        .then(url => {
+          this.offlineMediaURL = url
+          this.downloadChoose = false
+          return url
+        })
+        .catch(e => {
+          if (e.status !== 404) throw e
+        })
+    },
+    reloadMedia () {
+      console.log("reload")
+      // reload the media when changing the source URL
+      const mediaElt = (this.media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
+      mediaElt.load()
     }
   }
 }
@@ -136,6 +222,11 @@ export default {
     position: relative;
     margin-bottom: 0 !important;
 }
+
+.media-card .description{
+    text-align: left;
+}
+
 .confirmation {
     background-color: white;
     position: absolute;

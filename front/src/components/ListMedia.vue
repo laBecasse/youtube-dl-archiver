@@ -9,6 +9,7 @@
 
 <script>
 import Media from './Media.vue'
+import { mapActions, mapGetters } from 'vuex'
 
 // the list of medias is defined by the api query
 // the list is refreshed each time the query change
@@ -49,90 +50,40 @@ export default {
     'query': 'refreshMedias',
     bottom(bottom) {
       if (bottom) {
-        this.offset = this.$store.state.medias.length
-        this.addMediasToList()
+        this.getMoreMedias()
       }
     }
   },
   methods: {
+    ...mapActions(['getMoreMedias', 'getOneMedias', 'getMediasList', 'searchText', 'searchUploader']),
+    ...mapGetters(['contains']),
     updateQuery () {
-      const base = this.$root.$data.API_URL
-      let query
-      this.watch_id = undefined
-      
       if (this.$route.name === 'SearchMedia' &&
           (this.$route.query.text ||
            this.$route.query.uploader)) {
-        query = this.getSearchQuery()
         
+        this.watch_id = undefined
+        
+        if (this.$route.query.text) {
+          const text = this.$route.query.text
+          this.searchText(text)
+        } else {
+          const uploader = this.$route.query.uploader
+          this.searchUploader(uploader)
+        }
       } else if (this.$route.name === 'WatchMedia' &&
                  this.$route.params.id) {
-        this.watch_id = this.$route.params.id
-        if (this.medias.some(m => m.id === this.watch_id)) {
-          // we don't change the query
-          // if the watched media is in the current list
-          query = this.query
-        } else {
-          query = this.getMediaQuery()
+        const id = this.$route.params.id
+        this.watch_id = id
+        if (!this.contains(id))
+          this.getOneMedias(id)
+      } else {
+        if (!this.watch_id) {
+          console.log('list')
+          this.getMediasList()
         }
-      } else {
-        query = this.getAllMediasQuery()
+        this.watch_id = undefined
       }
-      this.query = query
-    },
-    getSearchQuery () {
-      if (this.$route.query.text
-          && this.$route.query.updater) {
-        return '/search?text=' + this.$route.query.text
-          + '&uploader=' + this.$route.query.uploader
-      } else if (this.$route.query.text) {
-        return '/search?text=' + this.$route.query.text
-      } else {
-        return '/search?uploader=' + this.$route.query.uploader
-      }
-    },
-    getMediaQuery () {
-      return '/medias/' + this.$route.params.id
-    },
-    getAllMediasQuery() {
-      return '/medias'
-    },
-    getURIFromQuery (path) {
-      const base = this.$root.$data.API_URL
-      if (this.$route.name === 'WatchMedia') {
-        return base + path
-      } else if (this.$route.name === 'SearchMedia') {
-        return base + path + '&limit='+this.step+'&offset='+this.offset
-      } else {
-        return base + path + '?limit='+this.step+'&offset='+this.offset
-      }
-    },
-    fetchMedias (query) {
-      console.log(query)
-      if(!this.isDownloading) {
-        this.isDownloading = true
-        this.axios.get(query)
-          .then((response) => {
-            const medias = (response.data.length !== undefined) ?
-                  response.data : [response.data]
-            console.log(medias)
-            this.$store.commit('appendMedias', medias)
-            this.isDownloading = false
-          })
-          .catch((e) => {
-            this.isDownloading = false
-            console.error(e)
-          })
-      }
-    },
-    refreshMedias () {
-      this.$store.commit('emptyMedias')
-      this.offset = 0
-      this.addMediasToList()
-    },
-    addMediasToList () {
-      const uri = this.getURIFromQuery(this.query)
-      this.fetchMedias(uri)
     },
     bottomIsClose() {
       const margin = 300
