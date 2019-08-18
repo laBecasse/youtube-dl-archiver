@@ -1,13 +1,14 @@
 const dotenv = require('dotenv')
 const path = require('path')
+
 dotenv.config()
 
 module.exports = {
   port: process.env.PORT,
   host: process.env.HOST,
   youtubedlBin: process.env.YOUTUBE_DL_BIN,
-  archivesDir: path.join(__dirname, process.env.ARCHIVES_DIR),
-  archivesTmpDir: path.join(__dirname, process.env.ARCHIVES_TMP_DIR),
+  archivesDir: (path.isAbsolute(process.env.ARCHIVES_DIR)) ? process.env.ARCHIVES_DIR : path.join(__dirname, process.env.ARCHIVES_DIR),
+  archivesTmpDir: (path.isAbsolute(process.env.ARCHIVES_TMP_DIR)) ? process.env.ARCHIVES_TMP_DIR : path.join(__dirname, process.env.ARCHIVES_TMP_DIR),
   subtitleLangs: process.env.SUBTITLE_LANGS.split(' '),
   mongo: {
     host: process.env.MONGO_HOST,
