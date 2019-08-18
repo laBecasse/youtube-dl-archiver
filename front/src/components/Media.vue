@@ -113,9 +113,10 @@
 </template>
 
 <script>
-  import { mapActions, mapGetters } from 'vuex'
-  import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
-    import TrashIcon from 'vue-ionicons/dist/md-trash.vue'
+import { mapActions, mapGetters } from 'vuex'
+import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
+import TrashIcon from 'vue-ionicons/dist/md-trash.vue'
+
 export default {
   name: 'Media',
   props: ['media', 'expanded'],
@@ -204,7 +205,6 @@ export default {
         })
     },
     reloadMedia () {
-      console.log("reload")
       // reload the media when changing the source URL
       const mediaElt = (this.media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
       mediaElt.load()

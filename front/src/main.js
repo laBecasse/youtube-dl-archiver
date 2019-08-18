@@ -15,9 +15,7 @@ import ListMedia from './components/ListMedia.vue'
 
 import PouchDB from 'pouchdb'
 import PouchDBFind from 'pouchdb-find'
-console.log(PouchDBFind)
 PouchDB.plugin(PouchDBFind)
-console.log(PouchDB)
 
 const routes = [
   {
@@ -50,9 +48,10 @@ const ATTACHMENT_ID = 'media'
 const store = new Vuex.Store({
   state: {
     medias: [],
+    isLocked: false,
     offset: 0,
     step: 10,
-    query: '/medias',
+    query: "",
     selector: {},
     isSingle: false
   },
@@ -78,7 +77,6 @@ const store = new Vuex.Store({
     },
     removeMedia (state, id) {
       const index = state.medias.findIndex((m) => m.id === id)
-      console.log(index)
       state.medias.splice(index, 1)
     },
     setSingle(state, value) {
@@ -97,25 +95,28 @@ const store = new Vuex.Store({
     // set the db selector
     setSelector(state, selector) {
       state.selector = selector
-      console.log(state.selector)
     },
     incrementOffset(state, incr) {
       state.offset += incr
+    },
+    lock(state) {
+      state.isLocked = true
+    },
+    unlock(state) {
+      state.isLocked = false
     }
   },
   actions: {
+    changesQuery(context, query) {
+      const oldQuery = context.state.query
+      context.commit("setQuery", query)
+      return oldQuery !== query
+    },
     queryStoredMedias(context) {
       const step = context.state.step
       const offset = context.state.offset
       const selector = context.state.selector
-      console.log(selector, offset)
-      //selector.creation_date = {$ne: null}
-      console.log({
-        selector: selector,
-        limit: step,
-        sort: [{'creation_date': 'desc'}],
-        skip: offset
-      })
+
       return db.find({
         selector: selector,
         limit: step,
@@ -123,11 +124,10 @@ const store = new Vuex.Store({
         skip: offset
       })
         .then(results => {
-          console.log(results)
           const medias = results.docs
           context.commit('setSingle', false)
           context.commit('appendMedias', medias)
-
+          context.commit('unlock')
           return medias
         })
         .then(medias => context.commit('incrementOffset', medias.length))
@@ -147,32 +147,32 @@ const store = new Vuex.Store({
       } else {
         fullQuery =  base + query + '?limit=' + step + '&offset='+ offset
       }
-      //return Promise.reject()
-      return axios.get(fullQuery)
-        .then(response => {
-          const medias = response.data
-          console.log(fullQuery)
-          console.log(medias)
-          context.commit('setSingle', false)
-          context.commit('appendMedias', medias)
-          return medias
-        })
-        .then(medias => {
-          return Promise.all(medias.map(m => db.put(m)
-                                        .catch(e => {
-                                          if (e.name !== 'conflict') {
-                                            throw e
-                                          }
-                                        })))
-        })
-        .then(medias => context.commit('incrementOffset', medias.length))
+
+      if (!context.state.isLocked) {
+        context.commit('lock')
+        return axios.get(fullQuery)
+          .then(response => {
+            const medias = response.data
+            context.commit('setSingle', false)
+            context.commit('appendMedias', medias)
+            context.commit('unlock')
+            return medias
+          })
+          .then(medias => {
+            return Promise.all(medias.map(m => db.put(m)
+                                          .catch(e => {
+                                            if (e.name !== 'conflict') {
+                                              throw e
+                                            }
+                                          })))
+          })
+          .then(medias => context.commit('incrementOffset', medias.length))
+          .catch(e => context.dispatch('queryStoredMedias'))
+      }
+
     },
     getMoreMedias (context, query) {
       return context.dispatch('queryMedias')
-        .catch(e => {
-          return context.dispatch('queryMedias')
-            .catch(context.dispatch('queryStoredMedias'))
-        })
     },
     getOneMedias (context, id) {
       const base = process.env.VUE_APP_API_URL
@@ -180,7 +180,6 @@ const store = new Vuex.Store({
       if(context.state.medias.length === 0) {
         return axios.get(base + '/medias/' + id)
           .then(response => {
-            console.log('/medias/' + id)
             const media = response.data
             context.commit('appendMedias', [media])
             context.commit('setSingle', true)
@@ -188,35 +187,44 @@ const store = new Vuex.Store({
       }
     },
     getMediasList (context) {
-      context.commit('setQuery', '/medias')
-      context.commit('emptyMedias')
-      context.commit('setSelector', {})
-      return context.dispatch('queryMedias')
-        .catch(e => {console.log(e);context.dispatch('queryStoredMedias')})
+      return context.dispatch('changesQuery', '/medias')
+        .then(changed => {
+          if (changed) {
+            context.commit('emptyMedias')
+            context.commit('setSelector', {})
+            return context.dispatch('queryMedias')
+          }
+        })
     },
     searchText (context, text) {
-      context.commit('setQuery', '/search?text=' + text)
-      context.commit('emptyMedias')
-      context.commit('setSelector', {$and: [{$or: [{title: {$regex: RegExp(text, 'i')}}, {description: {$regex: RegExp(text, 'i')}}]}, {creation_date :{$gt: null}}]})
-      return context.dispatch('queryMedias')
-        .catch(context.dispatch('queryStoredMedias'))
+      return context.dispatch('changesQuery', '/search?text=' + text)
+        .then(changed => {
+          if (changed) {
+            context.commit('emptyMedias')
+            context.commit('setSelector', {$and: [{$or: [{title: {$regex: RegExp(text, 'i')}},
+                                                         {description: {$regex: RegExp(text, 'i')}}]},
+                                                  {creation_date :{$gt: null}}]})
+            return context.dispatch('queryMedias')
+          }
+        })
     },
     searchUploader (context, uploader) {
-      context.commit('setQuery', '/search?uploader=' + uploader)
-      context.commit('emptyMedias')
-      context.commit('setSelector', {$and: [{uploader: {$eq:uploader}}, {creation_date :{$gt: null}}]})
-      return context.dispatch('queryMedias')
-        .catch(context.dispatch('queryStoredMedias'))
+      return context.dispatch('changesQuery', '/search?uploader=' + uploader)
+        .then(changed => {
+          if (changed){
+            context.commit('emptyMedias')
+            context.commit('setSelector', {$and: [{uploader: {$eq:uploader}}, {creation_date :{$gt: null}}]})
+            return context.dispatch('queryMedias')
+          }
+        })
     },
     makeOfflineMedia(context, id) {
       return context.dispatch("queryOneStoredMedia",id)
-            .then(media => {
-          console.log('fetch for ' + id)
+        .then(media => {
           return fetch(media.file_url)
             .then(res => res.blob())
             .then(attachment => {
               const type = media.mime
-              console.log("blob created for " + id)
               return offlineMedias.get(id)
                 .then(m => offlineMedias.putAttachment(id, ATTACHMENT_ID, m._rev, attachment, type))
                 .catch(() => offlineMedias.putAttachment(id, ATTACHMENT_ID, attachment, type))
@@ -225,7 +233,6 @@ const store = new Vuex.Store({
         })
     },
     deleteOfflineMedia(context, id) {
-      console.log('delete ' + id)
       return offlineMedias.get(id)
         .then(m => offlineMedias.removeAttachment(m._id, ATTACHMENT_ID, m._rev))
         .then(() => offlineMedias.viewCleanup())

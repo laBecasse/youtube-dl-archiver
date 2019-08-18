@@ -70,7 +70,6 @@
     </div>
     
   </nav>
-  <p>{{this.offline}}</p>
   <section class="section is-medium">
     <div class="level" v-if="this.$route.name === 'SearchMedia'">
       <h3 class="level-item title" v-if="this.$route.query.uploader">{{this.$route.query.uploader}}</h3>

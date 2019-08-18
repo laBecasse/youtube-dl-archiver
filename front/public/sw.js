@@ -1,6 +1,6 @@
 console.log('------------------------- Hello from sw.js --------------------')
 
-const version = 'v0.01'
+const version = 'v0.02'
 const staticCacheName = 'staticfiles' + version
 const imagesCacheName = 'images'
 
@@ -41,7 +41,7 @@ addEventListener('activate', activateEvent => {
         ); // end return Promise.all
       }) // end keys then
       .then( () => {
-        return clients.claim();
+        return clients.claim()
       }) // end then
   ); // end waitUntil
 }); // end addEventListener
