@@ -1,8 +1,8 @@
-const Media = require('../models/Media.js')
+const MediaDB = require('../models/MediaDB.js')
 const FilePath = require('../models/FilePath')
 
 module.exports = function (router, links) {
-  const media = Media(links)
+  const media = MediaDB(links)
 
   let getByUrl = function (req, res, next) {
     const url = req.query.url
@@ -14,9 +14,13 @@ module.exports = function (router, links) {
   }
 
   let handleJson = function (promises, req, res) {
-    promises.then(object => {
-      if (object) {
-        res.json(object)
+    promises.then(medias => {
+      if (medias) {
+        if (Array.isArray(medias)) {
+          res.json(medias.map(media => media.toAPIJSON()))
+        } else {
+          res.json(medias.toAPIJSON())
+        }
       } else {
         res.status(404)
         res.json({message: 'not found'})
@@ -66,8 +70,7 @@ module.exports = function (router, links) {
     const offset = parseInt(req.query.offset) || 0
     const text = req.query.text
     const uploader = req.query.uploader
-    console.log(uploader)
-    
+
     handleJson(media.search(text, uploader, limit, offset), req, res)
   })
 

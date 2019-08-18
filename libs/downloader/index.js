@@ -4,10 +4,11 @@ const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const mkdirp = require('mkdirp')
 const srt2vtt = require('srt-to-vtt')
+const config = require('../../config')
 
-const tempDownloadDir = process.env.ARCHIVES_TMP_DIR
-const youtubeDl = process.env.YOUTUBE_DL_BIN
-const langs = ['fr', 'en']
+const tempDownloadDir = config.archivesTmpDir
+const youtubeDl = config.youtubedlBin
+const langs = config.subtitleLangs
 
 function createCmdLine (url, langs, dlDirPath) {
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
@@ -68,11 +69,14 @@ function move (info, absDirPath) {
         const fileBasename = removeExt(file)
         return fileBasename === basename
       })
+
+      // promises of file renaming
       const promises = files.map(file => {
         return new Promise((resolve, reject) => {
           const oldFile = path.join(downloadDirPath, file)
           const ext = path.extname(file)
 
+          // for files without .srt extensions
           if (ext !== '.srt') {
             const newFile = path.join(absDirPath, file)
             mkdirp(path.dirname(newFile), function (err) {
@@ -84,6 +88,7 @@ function move (info, absDirPath) {
               })
             })
           } else {
+            // we translate .srt files to .vtt files
             const newFileName = path.basename(file, path.extname(file)) + '.vtt'
             const newFile = path.join(absDirPath, newFileName)
             mkdirp(path.dirname(newFile), function (err) {

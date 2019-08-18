@@ -5,7 +5,10 @@
     "collections": {
       "links": "links",
       "cache": "cache"
-    }
+    },
+    "webtorrent": {
+      "trackers": ["ws://localhost:9000", "udp://localhost:9000"]
+    }   
   },
   "port": 8000
 }

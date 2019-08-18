@@ -6,3 +6,4 @@ archives/
 config.json
 
 front/.env*
+/.env

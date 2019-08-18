@@ -1,6 +1,6 @@
 const path = require('path')
-
-const ARCHIVES_DIR = process.env.ARCHIVES_DIR
+const config = require('../config')
+const ARCHIVES_DIR = config.archivesDir
 
 let getRelPath = function (info) {
   const filename = path.basename(info._filename)
@@ -30,3 +30,4 @@ module.exports.relative = function (p) {
 module.exports.absolute = function (p) {
   return path.join(ARCHIVES_DIR, p)
 }
+

@@ -5,7 +5,7 @@
       <div class="columns is-mobile is-vcentered is-multiline is-centered mobile-nav-columns">
         <div class="column is-narrow">
           <router-link :to="{name: 'ListMedia'}" class="title" id="logo">
-            <img src="logo.svg" class="logo-img">
+            <img src="/logo.svg" class="logo-img">
           </router-link>
         </div>
         <div id="search" class="column is-half">
@@ -15,7 +15,7 @@
                 <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
               </div>
               <div class="control">
-                <button v-if="!(this.$route.name === 'SearchMedia' && this.$route.query.text)" class="button is-info"><ion-icon name="search"></ion-icon></button>
+                <button v-if="!(this.$route.name === 'SearchMedia' && this.$route.query.text)" class="button is-info"><SearchIcon/></button>
                 <router-link :to="{name: 'ListMedia'}" v-if="this.$route.name === 'SearchMedia' && this.$route.query.text" class="button" v-on:click.prevent="lastAdded">❌</router-link>
               </div>
             </div>
@@ -60,7 +60,7 @@
             <input id="update" class="button" type="submit" value="MAJ"/>
           </form>
         </div>
-        
+
       </div>
     </div>
   </nav>
@@ -70,7 +70,7 @@
     </div>
     
   </nav>
-  
+  <p>{{this.offline}}</p>
   <section class="section is-medium">
     <div class="level" v-if="this.$route.name === 'SearchMedia'">
       <h3 class="level-item title" v-if="this.$route.query.uploader">{{this.$route.query.uploader}}</h3>
@@ -81,7 +81,11 @@
 </template>
 
 <script>
+  import SearchIcon from 'vue-ionicons/dist/md-search.vue'
 export default {
+  components: {
+    SearchIcon
+  },
   data () {
     return {
       'bottom': false,
@@ -89,7 +93,16 @@ export default {
       'offset': 0,
       'step': 10,
       'isDownloading': false,
+      'offline': !navigator.onLine
     }
+  },
+  mounted () {
+    window.addEventListener('online',  () => {
+      this.offline = false
+    })
+    window.addEventListener('offline', () => {
+      this.offline = true
+    })
   },
   methods: {
     search () {
@@ -129,4 +142,4 @@ export default {
 .mobile-nav-columns{
     width: 100%;
 }
-</Style>
+</style>
