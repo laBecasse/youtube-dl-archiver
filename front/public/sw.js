@@ -53,7 +53,7 @@ addEventListener('fetch', fetchEvent => {
   //
   if (request.headers.get('Accept').includes('image')) {
     cacheFirst(fetchEvent, imagesCacheName, true)
-  } else {
+  } else if (!request.url.endsWith('.mp4')) {
     cacheFirst(fetchEvent, staticCacheName, false)
   }
 }); // end addEventListener
@@ -74,12 +74,11 @@ function cacheFirst(fetchEvent, cacheName, caching) {
     caches.match(request)
       .then(responseFromCache => {
         if (responseFromCache) {
-          return responseFromCache;
-        } else {
+          return responseFromCache
+        } else if (caching) {
           return fetch(request)
             .then (responseFromFetch => {
-              if (caching) {
-                const copy = responseFromFetch.clone();
+                const copy = responseFromFetch.clone()
                 fetchEvent.waitUntil(
                   // Update the cache
                   caches.open(cacheName)
@@ -87,9 +86,10 @@ function cacheFirst(fetchEvent, cacheName, caching) {
                       return cache.put(request, copy)
                     })
                 )
-              }
               return responseFromFetch
             })
+        } else {
+          return fetch(request)
         }
       }))
 }
