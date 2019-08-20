@@ -1,6 +1,6 @@
 <template>
 <div id="app">
-  <nav class="navbar" role="navigation" aria-label="main navigation">
+  <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
       <div class="columns is-mobile is-vcentered is-multiline is-centered mobile-nav-columns">
         <div class="column is-narrow">

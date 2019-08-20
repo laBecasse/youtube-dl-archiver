@@ -67,12 +67,29 @@ const store = new Vuex.Store({
     },
     prependMedias (state, list) {
       for(let m of list) {
-        state.medias.unshift(formatMedia(m))
+        // insert at right position from the top
+        let i = 0
+        while(i < state.medias.length &&
+              state.medias[i].creation_date >= m.creation_date) {
+          i++
+        }
+        console.log(i)
+        if (i === 0 || state.medias[i - 1]._id !== m._id)
+          state.medias.splice(i, 0, formatMedia(m))
       }
     },
     appendMedias (state, list) {
+      console.log(list)
       for(let m of list) {
-        state.medias.push(formatMedia(m))
+        // insert at right position from the bottom
+        let i = state.medias.length
+        while(i > 0 &&
+              state.medias[i - 1].creation_date <= m.creation_date) {
+          i--
+        }
+        console.log(i)
+        if (i === 0 || state.medias[i - 1]._id !== m._id)
+          state.medias.splice(i, 0, formatMedia(m))
       }
     },
     removeMedia (state, id) {
