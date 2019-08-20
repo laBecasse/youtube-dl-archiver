@@ -70,7 +70,7 @@
                  :label="sub.lang"
                  kind="subtitles" :srclang="sub.lang">
         </video>
-        <audio v-if="media.type === 'audio'" controls> <!-- preload="none"> -->
+        <audio v-if="media.type === 'audio'" controls preload="none">
           <source v-if="true || !media.torrent_url" :src="offlineMediaURL || media.file_url" :type="media.mime">
             <p>Your browser does not support the audio element.</p>
         </audio>
