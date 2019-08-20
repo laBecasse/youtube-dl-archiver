@@ -53,7 +53,12 @@ addEventListener('fetch', fetchEvent => {
   //
   if (request.headers.get('Accept').includes('image')) {
     cacheFirst(fetchEvent, imagesCacheName, true)
-  } else if (!request.url.endsWith('.mp4')) {
+    //else we fetch only content that are not video,
+    // because partial content is not handling by fetch
+    // and not json from the API, because HTTP Basic Auth is not supported 
+  } else if (request.url.endsWith('manifest.json') ||
+             (!request.url.get('Accept').includes('video') &&
+              !request.url.get('Accept').includes('json'))) {
     cacheFirst(fetchEvent, staticCacheName, false)
   }
 }); // end addEventListener
@@ -74,7 +79,8 @@ function cacheFirst(fetchEvent, cacheName, caching) {
     caches.match(request)
       .then(responseFromCache => {
         // see https://stackoverflow.com/questions/37934972/serviceworker-conflict-with-http-basic-auth
-        request.credentials = "same-origin"
+        // but doesn't work
+        //request.credentials = "same-origin"
 
         if (responseFromCache) {
           return responseFromCache
