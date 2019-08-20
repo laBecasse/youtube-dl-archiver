@@ -73,11 +73,13 @@ function cacheFirst(fetchEvent, cacheName, caching) {
   fetchEvent.respondWith(
     caches.match(request)
       .then(responseFromCache => {
+        // see https://stackoverflow.com/questions/37934972/serviceworker-conflict-with-http-basic-auth
+        request.credentials = "same-origin"
+
         if (responseFromCache) {
           return responseFromCache
         } else if (caching) {
-          // see https://stackoverflow.com/questions/37934972/serviceworker-conflict-with-http-basic-auth
-          return fetch(request, {'credentials': 'same-origin'})
+          return fetch(request)
             .then (responseFromFetch => {
                 const copy = responseFromFetch.clone()
                 fetchEvent.waitUntil(
@@ -90,7 +92,7 @@ function cacheFirst(fetchEvent, cacheName, caching) {
               return responseFromFetch
             })
         } else {
-          return fetch(request, {'credentials': 'same-origin'})
+          return fetch(request)
         }
       }))
 }
