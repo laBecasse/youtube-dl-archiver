@@ -57,8 +57,8 @@ addEventListener('fetch', fetchEvent => {
     // because partial content is not handling by fetch
     // and not json from the API, because HTTP Basic Auth is not supported 
   } else if (request.url.endsWith('manifest.json') ||
-             (!request.url.get('Accept').includes('video') &&
-              !request.url.get('Accept').includes('json'))) {
+             (!request.headers.get('Accept').includes('video') &&
+              !request.headers.get('Accept').includes('json'))) {
     cacheFirst(fetchEvent, staticCacheName, false)
   }
 }); // end addEventListener
