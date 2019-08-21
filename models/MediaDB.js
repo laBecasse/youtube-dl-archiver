@@ -29,6 +29,9 @@ module.exports = function (links) {
       .then(conflict => {
         if (conflict.length === 0) {
           return insertOne(media)
+            .then(() => {
+              return findOne(selector)
+            })
         } else {
           const err = new Error('Index Key Error on url : ' + url + '\n mediaUrl ' + mediaUrl)
           err.name = 'DuplicateKey'
@@ -182,7 +185,7 @@ module.exports = function (links) {
   return {
     add: function (media) {
       return insert(media)
-        .then(build)
+        .then(obj => build(obj))
     },
     findByUrl: findUrl,
     findAll: function (limit, offset) {
