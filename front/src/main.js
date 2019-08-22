@@ -84,7 +84,7 @@ const store = new Vuex.Store({
         // insert at right position from the bottom
         let i = state.medias.length
         while(i > 0 &&
-              state.medias[i - 1].creation_date <= m.creation_date) {
+              state.medias[i - 1].creation_date < m.creation_date) {
           i--
         }
         console.log(i)
@@ -113,8 +113,8 @@ const store = new Vuex.Store({
     setSelector(state, selector) {
       state.selector = selector
     },
-    incrementOffset(state, incr) {
-      state.offset += incr
+    refreshOffset(state) {
+      state.offset = state.medias.length
     },
     lock(state) {
       state.isLocked = true
@@ -147,22 +147,22 @@ const store = new Vuex.Store({
           context.commit('unlock')
           return medias
         })
-        .then(medias => context.commit('incrementOffset', medias.length))
+        .then(() => context.commit('refreshOffset'))
     },
     queryOneStoredMedia(context, id) {
       return db.get(id)
     },
-    queryMedias(context) {
+    queryMedias(context, payload) {
       const base = process.env.VUE_APP_API_URL
-      const step = context.state.step
-      const offset = context.state.offset
+      const limit = (payload) ? payload.limit : context.state.step
+      const offset = (payload) ? payload.offset : context.state.offset
       const query = context.state.query
-      
+
       let fullQuery
       if (query.includes('?')) {
-        fullQuery = base + query + '&limit=' + step + '&offset='+ offset
+        fullQuery = base + query + '&limit=' + limit + '&offset='+ offset
       } else {
-        fullQuery =  base + query + '?limit=' + step + '&offset='+ offset
+        fullQuery =  base + query + '?limit=' + limit + '&offset='+ offset
       }
 
       if (!context.state.isLocked) {
@@ -183,13 +183,17 @@ const store = new Vuex.Store({
                                             }
                                           })))
           })
-          .then(medias => context.commit('incrementOffset', medias.length))
+          .then(() => context.commit('refreshOffset'))
           .catch(e => context.dispatch('queryStoredMedias'))
       }
 
     },
-    getMoreMedias (context, query) {
+    getMoreMedias (context) {
       return context.dispatch('queryMedias')
+    },
+    refreshMedias (context) {
+      console.log("refresh")
+      return context.dispatch('queryMedias', {limit: context.state.medias.length, offset: 0})
     },
     getOneMedias (context, id) {
       const base = process.env.VUE_APP_API_URL
@@ -213,7 +217,7 @@ const store = new Vuex.Store({
           }
         })
     },
-    searchText (context, text) {
+    searchText (context, text, refresh) {
       return context.dispatch('changesQuery', '/search?text=' + text)
         .then(changed => {
           if (changed) {
