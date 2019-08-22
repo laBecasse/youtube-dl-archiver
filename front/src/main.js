@@ -66,28 +66,32 @@ const store = new Vuex.Store({
       state.offset = 0
     },
     prependMedias (state, list) {
-      for(let m of list) {
+      const newMedias = state.medias.slice()
+      for(let m of list) {s
         // insert at right position from the top
         let i = 0
-        while(i < state.medias.length &&
-              state.medias[i].creation_date >= m.creation_date) {
+        while(i < newMedias.length &&
+              newMedias[i].creation_date >= m.creation_date) {
           i++
         }
-        if (i === 0 || state.medias[i - 1]._id !== m._id)
-          state.medias.splice(i, 0, formatMedia(m))
-      }
+        if (i === 0 || newMedias[i - 1]._id !== m._id)
+          newMedias.splice(i, 0, formatMedia(m))
+                         }
+      state.medias = newMedias
     },
     appendMedias (state, list) {
+      const newMedias = state.medias.slice()
       for(let m of list) {
         // insert at right position from the bottom
-        let i = state.medias.length
+        let i = newMedias.length
         while(i > 0 &&
-              state.medias[i - 1].creation_date < m.creation_date) {
+              newMedias[i - 1].creation_date < m.creation_date) {
           i--
         }
-        if (i === 0 || state.medias[i - 1]._id !== m._id)
-          state.medias.splice(i, 0, formatMedia(m))
+        if (i === 0 || newMedias[i - 1]._id !== m._id)
+          newMedias.splice(i, 0, formatMedia(m))
       }
+      state.medias = newMedias
     },
     removeMedia (state, id) {
       const index = state.medias.findIndex((m) => m.id === id)

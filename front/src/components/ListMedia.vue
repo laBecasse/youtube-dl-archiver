@@ -57,7 +57,8 @@ export default {
     window.addEventListener('scroll', () => {
       this.bottom = this.bottomIsClose() && !(this.watch_id)
     })
-    console.log(document.querySelector('#list'))
+
+    // initialization of pull to refresh
     const refresh = this.refresh
     pullToRefresh({
       container: document.querySelector('#list'),

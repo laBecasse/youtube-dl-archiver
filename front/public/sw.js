@@ -1,6 +1,6 @@
 console.log('------------------------- Hello from sw.js --------------------')
 
-const version = 'v0.06'
+const version = 'v0.07'
 const staticCacheName = 'staticfiles' + version
 const imagesCacheName = 'images'
 
@@ -20,7 +20,6 @@ addEventListener('install', installEvent => {
           '/style.css',
           '/bulma.min.css',
           '/logo.svg',
-          'https://unpkg.com/ionicons@4.5.5/dist/ionicons.js',
           '/manifest.json',
           '/'
         ]); // end return addAll
