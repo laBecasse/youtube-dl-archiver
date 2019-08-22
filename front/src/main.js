@@ -73,13 +73,11 @@ const store = new Vuex.Store({
               state.medias[i].creation_date >= m.creation_date) {
           i++
         }
-        console.log(i)
         if (i === 0 || state.medias[i - 1]._id !== m._id)
           state.medias.splice(i, 0, formatMedia(m))
       }
     },
     appendMedias (state, list) {
-      console.log(list)
       for(let m of list) {
         // insert at right position from the bottom
         let i = state.medias.length
@@ -87,7 +85,6 @@ const store = new Vuex.Store({
               state.medias[i - 1].creation_date < m.creation_date) {
           i--
         }
-        console.log(i)
         if (i === 0 || state.medias[i - 1]._id !== m._id)
           state.medias.splice(i, 0, formatMedia(m))
       }
@@ -133,7 +130,7 @@ const store = new Vuex.Store({
       const step = context.state.step
       const offset = context.state.offset
       const selector = context.state.selector
-
+      console.timeLog("query")
       return db.find({
         selector: selector,
         limit: step,
@@ -145,6 +142,7 @@ const store = new Vuex.Store({
           context.commit('setSingle', false)
           context.commit('appendMedias', medias)
           context.commit('unlock')
+          console.timeEnd("query")
           return medias
         })
         .then(() => context.commit('refreshOffset'))
@@ -166,6 +164,8 @@ const store = new Vuex.Store({
       }
 
       if (!context.state.isLocked) {
+        console.time("query")
+
         context.commit('lock')
         return axios.get(fullQuery)
           .then(response => {
@@ -173,6 +173,7 @@ const store = new Vuex.Store({
             context.commit('setSingle', false)
             context.commit('appendMedias', medias)
             context.commit('unlock')
+            console.timeEnd("query")
             return medias
           })
           .then(medias => {
