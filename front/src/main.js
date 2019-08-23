@@ -69,7 +69,7 @@ const store = new Vuex.Store({
     },
     prependMedias (state, list) {
       const newMedias = state.medias.slice()
-      for(let m of list) {s
+      for(let m of list) {
                           // insert at right position from the top
                           let i = 0
                           while(i < newMedias.length &&
