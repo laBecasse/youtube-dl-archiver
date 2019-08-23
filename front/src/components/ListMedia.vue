@@ -59,7 +59,7 @@ export default {
     })
 
     // initialization of pull to refresh
-    const refresh = this.refresh
+    const refresh = this.refreshMedias
     pullToRefresh({
       container: document.querySelector('#list'),
       animates: ptrAnimatesMaterial2,
@@ -106,9 +106,6 @@ export default {
         return this.getMediasList(forced)
       }
       return Promise.resolve()
-    },
-    refresh() {
-      return this.refreshMedias()
     },
     bottomIsClose() {
       const margin = 300
