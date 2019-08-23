@@ -17,6 +17,8 @@ import PouchDB from 'pouchdb'
 import PouchDBFind from 'pouchdb-find'
 PouchDB.plugin(PouchDBFind)
 
+import promiseTimeout from './lib/timeout-promise';
+
 const routes = [
   {
     name: 'ListMedia',
@@ -168,10 +170,10 @@ const store = new Vuex.Store({
       }
 
       if (!context.state.isLocked) {
-        console.time("query")
 
         context.commit('lock')
-        return axios.get(fullQuery)
+        console.time("query")
+        const promise =  axios.get(fullQuery)
           .then(response => {
             const medias = response.data
             context.commit('setSingle', false)
@@ -180,9 +182,11 @@ const store = new Vuex.Store({
             console.timeEnd("query")
             return medias
           })
+
+        return promiseTimeout(500, promise)
           .then(medias => context.dispatch('storeMedias', medias))
           .then(() => context.commit('refreshOffset'))
-          .catch(e => context.dispatch('queryStoredMedias'))
+          .catch(e => {console.log(e); return context.dispatch('queryStoredMedias')})
       }
 
     },
