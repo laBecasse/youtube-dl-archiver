@@ -102,11 +102,8 @@ export default {
         if (!this.contains(id))
           return this.getOneMedias(id)
       } else {
-        if (!this.watch_id) {
-          console.log('list')
-          return this.getMediasList(forced)
-        }
         this.watch_id = undefined
+        return this.getMediasList(forced)
       }
       return Promise.resolve()
     },
