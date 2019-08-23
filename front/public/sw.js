@@ -16,7 +16,6 @@ addEventListener('install', installEvent => {
           '/js/chunk-vendors.js',
           '/css/app.css',
           '/css/chunk-vendors.css',
-          '/axios.min.js',
           '/style.css',
           '/bulma.min.css',
           '/logo.svg',
