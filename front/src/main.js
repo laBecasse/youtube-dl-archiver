@@ -209,12 +209,13 @@ const store = new Vuex.Store({
       const base = process.env.VUE_APP_API_URL
       
       if(context.state.medias.length === 0) {
-        return axios.get(base + '/medias/' + id)
-          .then(response => {
-            const media = response.data
-            context.commit('appendMedias', [media])
-            context.commit('setSingle', true)
-          })
+        const promise = axios.get(base + '/medias/' + id)
+              .then(response => {
+                const media = response.data
+                context.commit('appendMedias', [media])
+                context.commit('setSingle', true)
+              })
+        return promiseTimeout(500, promise)
       }
     },
     getMediasList (context) {
