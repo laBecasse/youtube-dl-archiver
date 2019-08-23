@@ -47,8 +47,8 @@
               <div class="control">
                 <input id="post-media-url" class="input" type="text" value="" name="url" placeholder="ajouter une vidéo"/>
               </div>
-              <div class="control" v-bind:class="{'is-loading': isDownloading}">
-                <label for="post-media-url" class="button is-info">+</label>
+              <div class="control" v-bind:class="{'is-loading': isUploading}">
+                <label for="post-media-url" class="button is-info" v-bind:class="{'is-danger': uploadFailed}">+</label>
                 <!-- <button class="button is-info" >+</button> -->
               </div>
             </div>
@@ -80,7 +80,8 @@
 </template>
 
 <script>
-  import SearchIcon from 'vue-ionicons/dist/md-search.vue'
+import SearchIcon from 'vue-ionicons/dist/md-search.vue'
+import { mapActions, mapGetters } from 'vuex'
 export default {
   components: {
     SearchIcon
@@ -91,7 +92,8 @@ export default {
       'API_URL': process.env.VUE_APP_API_URL,
       'offset': 0,
       'step': 10,
-      'isDownloading': false,
+      'isUploading': false,
+      'uploadFailed': false,
       'offline': !navigator.onLine
     }
   },
@@ -104,25 +106,23 @@ export default {
     })
   },
   methods: {
+    ...mapActions(['uploadURL']),
     search () {
       let text = document.getElementById('search-text').value
       this.$router.push({path: '/search', query : {text: text}})
     },
     onSubmit (event) {
+      
       let url = document.getElementById('post-media-url').value
-      let params = new URLSearchParams()
-      
-      params.append('url', url)
-      
-      this.isDownloading = true
-      this.axios.post(this.API_URL + "/medias", params)
-        .then(res => {
-          console.log(res.data)
-          const medias = res.data;
-          this.$store.commit('prependMedias', medias)
-          this.isDownloading = false
+      this.isUploading = true
+      this.uploadFailed = false
+      return this.uploadURL(url)
+        .then(() => {this.isUploading = false})
+        .catch(err => {
+          console.error(err)
+          this.uploadFailed = true
+          this.isUploading = false
         })
-        .catch(err => console.error(err))
     }
   }
 }

@@ -68,14 +68,14 @@ const store = new Vuex.Store({
     prependMedias (state, list) {
       const newMedias = state.medias.slice()
       for(let m of list) {s
-        // insert at right position from the top
-        let i = 0
-        while(i < newMedias.length &&
-              newMedias[i].creation_date >= m.creation_date) {
-          i++
-        }
-        if (i === 0 || newMedias[i - 1]._id !== m._id)
-          newMedias.splice(i, 0, formatMedia(m))
+                          // insert at right position from the top
+                          let i = 0
+                          while(i < newMedias.length &&
+                                newMedias[i].creation_date >= m.creation_date) {
+                            i++
+                          }
+                          if (i === 0 || newMedias[i - 1]._id !== m._id)
+                            newMedias.splice(i, 0, formatMedia(m))
                          }
       state.medias = newMedias
     },
@@ -180,18 +180,19 @@ const store = new Vuex.Store({
             console.timeEnd("query")
             return medias
           })
-          .then(medias => {
-            return Promise.all(medias.map(m => db.put(m)
-                                          .catch(e => {
-                                            if (e.name !== 'conflict') {
-                                              throw e
-                                            }
-                                          })))
-          })
+          .then(medias => context.dispatch('storeMedias', medias))
           .then(() => context.commit('refreshOffset'))
           .catch(e => context.dispatch('queryStoredMedias'))
       }
 
+    },
+    storeMedias(context, medias) {
+      return Promise.all(medias.map(m => db.put(m)
+                                    .catch(e => {
+                                      if (e.name !== 'conflict') {
+                                        throw e
+                                      }
+                                    })))
     },
     getMoreMedias (context) {
       return context.dispatch('queryMedias')
@@ -243,6 +244,18 @@ const store = new Vuex.Store({
             return context.dispatch('queryMedias')
           }
         })
+    },
+    uploadURL(context, url) {
+      const base = process.env.VUE_APP_API_URL
+      const params = new URLSearchParams()
+      params.append('url', url)
+
+      return axios.post(base + "/medias", params)
+        .then(res => {
+          const medias = res.data
+          return context.dispatch('storeMedias', medias)
+        })
+        .then(() => context.dispatch('refreshMedias'))
     },
     makeOfflineMedia(context, id) {
       return context.dispatch("queryOneStoredMedia",id)
