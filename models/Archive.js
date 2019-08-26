@@ -57,24 +57,22 @@ class Archive {
 
   // factory
   // absFiles : absolute files path of the archive
-  // mediaFile : media file name of archive
-  static create (mediaFile, absFilesPath) {
-    const dirPath = path.dirname(Archive.relative(absFilesPath[0]))
-    const mediaPath = path.join(dirPath, mediaFile)
+  // mediaPath : absolute media path of the archive
+  static create (absMediaPath, absFilesPath) {
     const filesPath = absFilesPath.map(Archive.relative)
-
+    const mediaPath = Archive.relative(absMediaPath)
     return new Archive(mediaPath, filesPath)
   }
 
   // dirPath : relative archive path
   static load (mediaPath) {
     const absDirPath = path.dirname(Archive.absolute(mediaPath))
-    const mediaFile = path.basename(Archive.absolute(mediaPath))
+    const absMediaPath = Archive.absolute(mediaPath)
     return new Promise((resolve, reject) => {
       fs.readdir(absDirPath, (err, files) => {
         if (err) return reject(err)
         const absFilesPath = files.map(file => path.join(absDirPath, file))
-        const archive = Archive.create(mediaFile, absFilesPath)
+        const archive = Archive.create(absMediaPath, absFilesPath)
         resolve(archive)
       })
     })

@@ -4,53 +4,80 @@ const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const mkdirp = require('mkdirp')
 const srt2vtt = require('srt-to-vtt')
+const axios = require('axios')
+const downloadTorrent = require('../webtorrent/index.js').download
 const config = require('../../config')
 
 const tempDownloadDir = config.archivesTmpDir
 const youtubeDl = config.youtubedlBin
 const langs = config.subtitleLangs
 
-function createCmdLine (url, langs, dlDirPath) {
+function downloadMedia (infoPath, dlDirPath) {
+  const outputValue = dlDirPath + '/%(title)s.%(ext)s'
+  const cmdFormat = youtubeDl + ' -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4/best" --output "%s" --load-info-json "%s"'
+  const cmdLine = util.format(cmdFormat, outputValue, infoPath)
+
+  return new Promise((resolve, reject) => {
+    fs.readFile(infoPath, (err, data) => {
+      if (err) return reject(err)
+      const info = JSON.parse(data)
+      info._dirname = dlDirPath
+      return resolve(info)
+    })
+  })
+    .then(info => {
+      if (info.extractor !== 'PeerTube') {
+        return exec(cmdLine, { maxBuffer: Infinity })
+          .then(() => info)
+      } else {
+        const base = info.url.split('/static/')[0]
+        const id = info.id
+        const url = base + '/api/v1/videos/' + id
+        return axios.get(url).then(res => res.data)
+          .then(video => {
+            // choose resolution
+            const file = video.files[0]
+            return downloadTorrent(file.torrentUrl, dlDirPath)
+          })
+          .then(() => info)
+      }
+    })
+}
+
+function downloadMetaData (url, dlDirPath) {
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
   const subLangValue = langs.join(',')
-  const cmdFormat = youtubeDl + ' -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4/best" --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
+  const cmdFormat = youtubeDl + ' --skip-download --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
   const cmdLine = util.format(cmdFormat, subLangValue, outputValue, url)
-
-  return cmdLine
+  return exec(cmdLine)
+    .then((data) => {
+      // WARNING goes into sterr :/
+      // if (data.stderr !== '') return Promise.reject(data.stderr)
+      return new Promise((resolve, reject) => {
+        fs.readdir(dlDirPath, (err, files) => {
+          if (err) return reject(err)
+          const infoFiles = files.filter(infoFile => {
+            return path.extname(infoFile).toLowerCase() === '.json'
+          })
+          resolve(infoFiles.map(infoFile => dlDirPath + '/' + infoFile))
+        })
+      })
+    })
 }
 
 function download (url) {
   const downloadDirName = Math.random().toString(36).substring(7)
   const downloadDirPath = path.join(tempDownloadDir, downloadDirName)
-  const cmdLine = createCmdLine(url, langs, downloadDirPath)
-  console.log(cmdLine)
-  return exec(cmdLine, { maxBuffer: Infinity })
-    .then((data) => {
-      // WARNING goes into sterr :/
-      // if (data.stderr !== '') return Promise.reject(data.stderr)
-      return new Promise((resolve, reject) => {
-        fs.readdir(downloadDirPath, (err, files) => {
-          if (err) return reject(err)
-          files = files.filter(file => {
-            return path.extname(file).toLowerCase() === '.json'
-          })
 
-          const promises = files.map(file => {
-            return new Promise((resolve, reject) => {
-              const filePath = path.join(downloadDirPath, file)
-              fs.readFile(filePath, (err, data) => {
-                if (err) return reject(err)
-
-                const info = JSON.parse(data)
-
-                info._dirname = downloadDirPath
-                return resolve(info)
-              })
-            })
-          })
-          return resolve(Promise.all(promises))
-        })
-      })
+  return downloadMetaData(url, downloadDirPath)
+    .then(infoPaths => {
+      let promise = Promise.resolve()
+      let infos = []
+      for (let infoPath of infoPaths) {
+        promise = promise.then(() => downloadMedia(infoPath, downloadDirPath))
+          .then(info => infos.push(info))
+      }
+      return promise.then(() => infos)
     })
 }
 
@@ -69,6 +96,15 @@ function move (info, absDirPath) {
         const fileBasename = removeExt(file)
         return fileBasename === basename
       })
+
+      // add media file in case of peertube extractor
+      if (info.extractor === 'PeerTube') {
+        // need to chose the downloaded format
+        const format = info.formats[info.formats.length - 1]
+        const fileNameArray = format.url.split('/')
+        const fileName = fileNameArray[fileNameArray.length - 1]
+        files.push(fileName)
+      }
 
       // promises of file renaming
       const promises = files.map(file => {

@@ -16,6 +16,29 @@ function seed (path) {
   })
 }
 
+function download(torrentId, dirPath) {
+  return new Promise((resolve, reject) => {
+    const client = new WebTorrent()
+    const options = {
+      path: dirPath
+    }
+    client.add(torrentId, options, torrent => {
+      torrent.on('done', () => {
+        client.destroy(err => {
+          if (err) return reject(err)
+          resolve()
+        })
+      })
+      torrent.on('error', err => {
+        reject(err)
+      })
+    })
+    client.on('error', err => {
+      reject(err)
+    })
+  })
+}
+
 function create (path, torrentFile) {
   return new Promise((resolve, reject) => {
     createTorrent(path, { announceList: trackers }, function (err, tor) {
@@ -34,5 +57,6 @@ function create (path, torrentFile) {
 
 module.exports = {
   'seed': seed,
-  'create': create
+  'create': create,
+  'download': download
 }

@@ -113,16 +113,14 @@ module.exports = function (router, links, cacheCol) {
 
   let createOne = function (url, info) {
     const absDirPath = filePath.getAbsDirPath(info)
-
     return Downloader.move(info, absDirPath)
       .then(files => {
-        const mediaFile = path.basename(info._filename)
+        //const mediaFile = path.basename(info._filename)
+        const mediaFile = files.filter(file => ['.mp4', '.webm', '.mp3', '.m4a'].includes(path.extname(file)))[0]
+
         const archive = Archive.create(mediaFile, files)
         return archive.createTorrent().then(archive => {
-          console.log(files)
-          console.log(archive)
           const media = Media.create(url, info, archive)
-          console.log(media)
           return mediaDB.add(media)
         })
       })

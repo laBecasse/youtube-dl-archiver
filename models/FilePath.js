@@ -19,7 +19,6 @@ module.exports.getAbsPath = function (info) {
 }
 
 module.exports.getAbsDirPath = function (info) {
-  console.log(info._filename)
   return path.dirname(path.join(ARCHIVES_DIR, getRelPath(info)))
 }
 
