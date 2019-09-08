@@ -67,7 +67,8 @@ const store = new Vuex.Store({
       state.medias = []
       state.offset = 0
     },
-    prependMedias (state, list) {
+    //deprecated
+    insertMediasAtTop (state, list) {
       const newMedias = state.medias.slice()
       for(let m of list) {
                           // insert at right position from the top
@@ -81,12 +82,17 @@ const store = new Vuex.Store({
                          }
       state.medias = newMedias
     },
-    appendMedias (state, list) {
+    insertMedias (state, list) {
       const newMedias = state.medias.slice()
       for(let m of list) {
         // insert at right position from the bottom
         let i = newMedias.length
+        // for text search disable insertion
+        // THERE IS STILL A PROBLEM OF DUPLICATED FOR TEXT SEARCH !!!
+        // 2 QUERIES ARE EXECUTED IN PARALLEL 
+        console.log(state.query, state.query.startsWith('/search?text='))
         while(i > 0 &&
+              !state.query.startsWith('/search?text=') &&
               newMedias[i - 1].creation_date < m.creation_date) {
           i--
         }
@@ -146,7 +152,7 @@ const store = new Vuex.Store({
         .then(results => {
           const medias = results.docs
           context.commit('setSingle', false)
-          context.commit('appendMedias', medias)
+          context.commit('insertMedias', medias)
           context.commit('unlock')
           console.timeEnd("query")
           return medias
@@ -177,7 +183,7 @@ const store = new Vuex.Store({
           .then(response => {
             const medias = response.data
             context.commit('setSingle', false)
-            context.commit('appendMedias', medias)
+            context.commit('insertMedias', medias)
             context.commit('unlock')
             console.timeEnd("query")
             return medias
@@ -212,7 +218,7 @@ const store = new Vuex.Store({
         const promise = axios.get(base + '/medias/' + id)
               .then(response => {
                 const media = response.data
-                context.commit('appendMedias', [media])
+                context.commit('insertMedias', [media])
                 context.commit('setSingle', true)
               })
         return promiseTimeout(500, promise)
