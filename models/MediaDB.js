@@ -149,13 +149,18 @@ module.exports = function (links) {
   let findUploader = function (uploader, limit, offset) {
     limit = limit || 0
     offset = offset || 0
+    let sort = {
+      creation_date: -1
+    }
+
     let selector = {
-      "uploader": uploader
+      uploader: uploader
     }
 
     let action = function (collection) {
       return new Promise((resolve, reject) => {
         collection.find(selector)
+          .sort(sort)
           .limit(limit)
           .skip(offset)
           .toArray((err, res) => {

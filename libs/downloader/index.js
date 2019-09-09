@@ -51,10 +51,18 @@ function downloadMedia (infoPath, dlDirPath) {
 function downloadMetaData (url, dlDirPath) {
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
   const subLangValue = langs.join(',')
-  const cmdFormat = youtubeDl + ' --skip-download --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
+  const cmdFormat = youtubeDl + ' --ignore-errors --skip-download --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
   const cmdLine = util.format(cmdFormat, subLangValue, outputValue, url)
   return exec(cmdLine)
-    .then((data) => {
+    .catch(e => {
+      // if any thing have been downloaded
+      // it can append for playlist
+      if (!fs.existsSync(dlDirPath)) {
+        console.log("metadata download of " + url + " failed with " + e)
+        throw e
+      }
+    })
+    .then(() => {
       // WARNING goes into sterr :/
       // if (data.stderr !== '') return Promise.reject(data.stderr)
       return new Promise((resolve, reject) => {
@@ -80,6 +88,7 @@ function download (url) {
       for (let infoPath of infoPaths) {
         promise = promise.then(() => downloadMedia(infoPath, downloadDirPath))
           .then(info => infos.push(info))
+          .catch(e => console.log("download of " + url + " failed with error " + e))
       }
       return promise.then(() => infos)
     })
