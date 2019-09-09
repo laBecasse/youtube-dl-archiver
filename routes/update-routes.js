@@ -119,10 +119,8 @@ module.exports = function (router, links, cacheCol) {
         const mediaFile = files.filter(file => ['.mp4', '.webm', '.mp3', '.m4a'].includes(path.extname(file)))[0]
 
         const archive = Archive.create(mediaFile, files)
-        return archive.createTorrent().then(archive => {
-          const media = Media.create(url, info, archive)
-          return mediaDB.add(media)
-        })
+        const media = Media.create(url, info, archive)
+        return mediaDB.add(media)
       })
   }
 
