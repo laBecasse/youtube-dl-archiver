@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs')
+const https = require('https')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const mkdirp = require('mkdirp')
@@ -38,11 +39,26 @@ function downloadMedia (infoPath, dlDirPath) {
           .then(video => {
             // choose resolution
             const file = video.files[0]
-            console.log('Webtorrent download of ' + file.torrentUrl)
-            return downloadTorrent(file.torrentUrl, dlDirPath)
+            const torrentURL = file.torrentUrl
+            console.log('Webtorrent download of ' + torrentURL)
+
+            const downloadTorrentFile = new Promise((resolve, reject) => {
+              const torrentPath = path.join(dlDirPath, info.title + '.torrent')
+              const file = fs.createWriteStream(torrentPath)
+              const request = https.get(torrentURL, function(response) {
+                response.pipe(file)
+
+                file.on('finish', () => {resolve(torrentPath)})
+                file.on('error', error => {reject(error)})
+              })
+            })
+
+            return downloadTorrentFile
+              .then(torrentPath => downloadTorrent(torrentPath, dlDirPath))
           })
           .then(paths => {
             info._filename = paths[0]
+            return info
           })
       }
     })
@@ -90,6 +106,7 @@ function download (url) {
           .then(info => infos.push(info))
           .catch(e => console.log("download of " + url + " failed with error " + e))
       }
+
       return promise.then(() => infos)
     })
 }
@@ -107,7 +124,7 @@ function move (info, absDirPath) {
       if (err) return reject(err)
       files = files.filter(file => {
         const fileBasename = removeExt(file)
-        return fileBasename === basename
+        return fileBasename === info.title
       })
 
       // add media file in case of peertube extractor
