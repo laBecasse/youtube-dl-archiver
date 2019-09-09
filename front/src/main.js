@@ -13,6 +13,8 @@ Vue.use(VueAxios, axios);
 import App from './App.vue';
 import ListMedia from './components/ListMedia.vue'
 
+import WebTorrent from 'webtorrent'
+
 import PouchDB from 'pouchdb'
 import PouchDBFind from 'pouchdb-find'
 PouchDB.plugin(PouchDBFind)
@@ -55,11 +57,16 @@ const store = new Vuex.Store({
     step: 10,
     query: "",
     selector: {},
-    isSingle: false
+    isSingle: false,
+    webtorrentClient: new WebTorrent(),
+    magnetPerId: {}
   },
   getters: {
     contains (state, id) {
       return state.medias.some(m => m.id === id)
+    },
+    getMagnet: (state) => (id) =>  {
+      return state.magnetPerId[id]
     }
   },
   mutations: {
@@ -130,6 +137,9 @@ const store = new Vuex.Store({
     },
     unlock(state) {
       state.isLocked = false
+    },
+    setMagnetOfId(state, payload) {
+      state.magnetPerId[payload.id] = payload.magnet
     }
   },
   actions: {

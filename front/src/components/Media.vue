@@ -64,14 +64,14 @@
     <div class="media-column-video" v-bind:class="{'column': !expanded}">
       <div class="card-image">
         <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
-          <source v-if="true || !media.torrent_url" :src="offlineMediaURL || media.file_url" :type="media.mime"/>
+          <source :src="offlineMediaURL || media.file_url" :type="media.mime"/>
           <track v-for="sub in media.subtitles"
                  :src="sub.url"
                  :label="sub.lang"
                  kind="subtitles" :srclang="sub.lang">
         </video>
         <audio v-if="media.type === 'audio'" controls preload="none">
-          <source v-if="true || !media.torrent_url" :src="offlineMediaURL || media.file_url" :type="media.mime">
+          <source v-if="!media.torrent_url" :src="offlineMediaURL || media.file_url" :type="media.mime">
             <p>Your browser does not support the audio element.</p>
         </audio>
         <img v-if="media.type === 'image'"
@@ -113,7 +113,7 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapMutations,  mapGetters } from 'vuex'
 import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
 import TrashIcon from 'vue-ionicons/dist/md-trash.vue'
 
@@ -128,38 +128,73 @@ export default {
     return {
       deleteConfirmation: false,
       downloadChoose: false,
-      offlineMediaURL: null
+      offlineMediaURL: null,
+      isTorrentSet: false
     }
   },
   mounted () {
     this.setOfflineMediaURL()
     
-    function mediaTorrent() {
-      const media = this.media
-      if (media.torrent_url) {
-        const mediaElt = (media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
-        //console.log(mediaElt)
-        const WebTorrent = require('webtorrent')
-        var client = new WebTorrent()
-        client.add(media.torrent_url, function(torrent) {
-          //console.log('Client is downloading:', torrent.infoHash)
-          //console.log(torrent)
+    //function mediaTorrent() {
+    const media = this.media
+    const t = this
+    if (media.torrent_url) {
+      
+      var client = this.$store.state.webtorrentClient
+      
+      const mediaElt = (media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
+      
+      const playhandler = function(event) {
+        
+        // if the actual media is not yet served using webtorrent
+        if (!t.isTorrentSet) {
+          mediaElt.pause()
+        } else {
+          // if the webtorrent is set/rendered
+          return;
+        }
+        
+        // try to get the torrent of the media 
+        const torrent = client.get(t.getMagnet()(media.id))
+        if (!torrent) {
+          // download the torrent
+          client.add(media.torrent_url, function(torrent) {
+            // attach a web seed to it
+            const url = media.file_url
+            torrent.addWebSeed(url)
+            // the torrent of the actual media is downloading
+            // for this session
+            t.setMagnetOfId({
+              id: media._id,
+              magnet: torrent.magnetURI
+            })
+            
+            // play as torrent
+            torrent.files.forEach(function (file) {
+              file.renderTo(mediaElt)
+              mediaElt.play()
+            })
+          })
+        } else {
+          // play as torrent
           torrent.files.forEach(function (file) {
-            // Display the file by appending it to the DOM. Supports video, audio, images, and
-            // more. Specify a container element (CSS selector or reference to DOM node).
             file.renderTo(mediaElt)
+            mediaElt.play()
           })
-          mediaElt.addEventListener("play", function(e){
-            torrent.addWebSeed(media.file_url)
-          })
-        })
+        }
+        
+        // the actual media is served using webtorrent
+        t.isTorrentSet = true
       }
+      mediaElt.addEventListener('play', playhandler)
     }
   },
   watch: {
     offlineMediaURL: 'reloadMedia'
   },
   methods: {
+    ...mapGetters(['getMagnet']),
+    ...mapMutations(['setMagnetOfId']),
     ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia']),
     toggleDeleteConfirmation () {
       this.deleteConfirmation = !this.deleteConfirmation
