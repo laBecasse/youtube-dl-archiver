@@ -9,6 +9,7 @@ let encodeURIPath = function (path) {
 
 let testSub = function (lang) {
   return fileName => {
+    console.log('fileName: ' + fileName)
     const re = new RegExp('.' + lang + '.')
     return re.test(fileName)
   }
@@ -47,19 +48,17 @@ class Media {
   getSubtitlesJSON () {
     let subtitlesArray
     if (this.subtitles) {
-      subtitlesArray = LANGS.reduce((res, lang) => {
-        const filePath = this.subtitles.find(testSub(lang))
-        if (filePath) {
+      subtitlesArray = this.subtitles.reduce((res, sub) => {
+        const filePath = sub.file_path
+        const lang = sub.lang
           res.push({
             url: HOST + '/archives/' + encodeURIPath(filePath),
-            file_path: filePath,
-            lang: lang
+            lang: sub.lang
           })
-        }
         return res
       }, [])
     }
-
+    
     return subtitlesArray
   }
 
