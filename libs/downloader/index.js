@@ -22,7 +22,10 @@ function downloadMedia (infoPath, dlDirPath) {
     fs.readFile(infoPath, (err, data) => {
       if (err) return reject(err)
       const info = JSON.parse(data)
+      // tmp directory for download
       info._dirname = dlDirPath
+      // title used in basename for metadata files
+      info._basename = removeExt(info._filename)
       return resolve(info)
     })
   })
@@ -116,7 +119,7 @@ function download (url) {
  * into a new directory
  */
 function move (info, absDirPath) {
-  const basename = removeExt(info._filename)
+  const basename = info._basename
   const downloadDirPath = info._dirname
 
   return new Promise((resolve, reject) => {
@@ -124,7 +127,7 @@ function move (info, absDirPath) {
       if (err) return reject(err)
       files = files.filter(file => {
         const fileBasename = removeExt(file)
-        return fileBasename === info.title
+        return fileBasename === basename
       })
 
       // add media file in case of peertube extractor
