@@ -16,7 +16,7 @@ function seed (path) {
   })
 }
 
-function download(torrentId, dirPath) {
+function download (torrentId, dirPath) {
   return new Promise((resolve, reject) => {
     const client = new WebTorrent()
     const options = {
@@ -26,7 +26,7 @@ function download(torrentId, dirPath) {
       torrent.on('done', () => {
         client.destroy(err => {
           if (err) return reject(err)
-          resolve()
+          resolve(torrent.files.map(f => f.path))
         })
       })
       torrent.on('error', err => {

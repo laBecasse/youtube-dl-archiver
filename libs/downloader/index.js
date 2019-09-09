@@ -27,6 +27,7 @@ function downloadMedia (infoPath, dlDirPath) {
   })
     .then(info => {
       if (info.extractor !== 'PeerTube') {
+        console.log('ydl execution: "' + cmdLine + '"')
         return exec(cmdLine, { maxBuffer: Infinity })
           .then(() => info)
       } else {
@@ -37,9 +38,12 @@ function downloadMedia (infoPath, dlDirPath) {
           .then(video => {
             // choose resolution
             const file = video.files[0]
+            console.log('Webtorrent download of ' + file.torrentUrl)
             return downloadTorrent(file.torrentUrl, dlDirPath)
           })
-          .then(() => info)
+          .then(paths => {
+            info._filename = paths[0]
+          })
       }
     })
 }
