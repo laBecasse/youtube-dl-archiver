@@ -40,28 +40,30 @@ function downloadMedia (infoPath, dlDirPath) {
         const url = base + '/api/v1/videos/' + id
         return axios.get(url).then(res => res.data)
           .then(video => {
-            // choose resolution
-            const file = video.files[0]
+            // choose resolution (expected 720p)
+            const resolution = (video.files.length > 0) ? 1 : 0
+            const file = video.files[resolution]
             const torrentURL = file.torrentUrl
             console.log('Webtorrent download of ' + torrentURL)
 
             const downloadTorrentFile = new Promise((resolve, reject) => {
               const torrentPath = path.join(dlDirPath, info.title + '.torrent')
               const file = fs.createWriteStream(torrentPath)
-              const request = https.get(torrentURL, function(response) {
+              https.get(torrentURL, function (response) {
                 response.pipe(file)
 
-                file.on('finish', () => {resolve(torrentPath)})
-                file.on('error', error => {reject(error)})
+                file.on('finish', () => resolve(torrentPath))
+                file.on('error', error => reject(error))
               })
             })
 
             return downloadTorrentFile
               .then(torrentPath => downloadTorrent(torrentPath, dlDirPath))
-          })
-          .then(paths => {
-            info._filename = paths[0]
-            return info
+              .then(paths => {
+                console.log('paths in dowloader ' + paths)
+                info._filename = paths[0]
+                return info
+              })
           })
       }
     })
@@ -77,7 +79,7 @@ function downloadMetaData (url, dlDirPath) {
       // if any thing have been downloaded
       // it can append for playlist
       if (!fs.existsSync(dlDirPath)) {
-        console.log("metadata download of " + url + " failed with " + e)
+        console.log('metadata download of ' + url + ' failed with ' + e)
         throw e
       }
     })
@@ -107,7 +109,7 @@ function download (url) {
       for (let infoPath of infoPaths) {
         promise = promise.then(() => downloadMedia(infoPath, downloadDirPath))
           .then(info => infos.push(info))
-          .catch(e => console.log("download of " + url + " failed with error " + e))
+          .catch(e => console.log('download of ' + url + ' failed with error ' + e))
       }
 
       return promise.then(() => infos)
@@ -131,12 +133,9 @@ function move (info, absDirPath) {
       })
 
       // add media file in case of peertube extractor
-      if (info.extractor === 'PeerTube') {
-        // need to chose the downloaded format
-        const format = info.formats[info.formats.length - 1]
-        const fileNameArray = format.url.split('/')
-        const fileName = fileNameArray[fileNameArray.length - 1]
-        files.push(fileName)
+      if (info.extractor === 'PeerTube' &&
+          !files.includes(info._filename)) {
+        files.push(info._filename)
       }
 
       // promises of file renaming
