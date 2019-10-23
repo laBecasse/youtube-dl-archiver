@@ -47,11 +47,10 @@ function downloadMedia (infoPath, dlDirPath) {
             console.log('Webtorrent download of ' + torrentURL)
 
             const downloadTorrentFile = new Promise((resolve, reject) => {
-              const torrentPath = path.join(dlDirPath, info.title + '.torrent')
+              const torrentPath = path.join(dlDirPath, info.title.replace('/', '') + '.torrent')
               const file = fs.createWriteStream(torrentPath)
               https.get(torrentURL, function (response) {
                 response.pipe(file)
-
                 file.on('finish', () => resolve(torrentPath))
                 file.on('error', error => reject(error))
               })
@@ -121,22 +120,11 @@ function download (url) {
  * into a new directory
  */
 function move (info, absDirPath) {
-  const basename = info._basename
   const downloadDirPath = info._dirname
 
   return new Promise((resolve, reject) => {
     fs.readdir(downloadDirPath, (err, files) => {
       if (err) return reject(err)
-      files = files.filter(file => {
-        const fileBasename = removeExt(file)
-        return fileBasename === basename
-      })
-
-      // add media file in case of peertube extractor
-      if (info.extractor === 'PeerTube' &&
-          !files.includes(info._filename)) {
-        files.push(info._filename)
-      }
 
       // promises of file renaming
       const promises = files.map(file => {
