@@ -109,6 +109,8 @@
     <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
     <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><TrashIcon/></a>
   </footer>
+  <script v-html="jsonld" type="application/ld+json">
+  </script>
 </div>
 </template>
 
@@ -125,11 +127,22 @@ export default {
     TrashIcon
   },
   data () {
+  const jsonld = {
+    "@context": "https://schema.org/",
+    "@type":"VideoObject",
+    "name": this.media.title,
+    "description": this.media.description,
+    "thumbnailUrl": (this.media.thumbnail) ? this.media.thumbnail.url: null,
+    "uploadDate": this.media.upload_date,
+    "contentUrl": this.media.url
+  }
+
     return {
       deleteConfirmation: false,
       downloadChoose: false,
       offlineMediaURL: null,
-      isTorrentSet: false
+      isTorrentSet: false,
+      jsonld: jsonld
     }
   },
   mounted () {
