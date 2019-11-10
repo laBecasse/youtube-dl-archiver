@@ -17,8 +17,8 @@ module.exports.connection = function (url, credits) {
 module.exports.getLinks = function () {
   return new Promise((resolve, reject) => {
     account.getArticles({
-      'perPage': 1000,
-      'tags': []
+      'perPage': 100,
+      'archive': 0
     })
       .then(function (obj) {
         const ytLinks = []

@@ -23,6 +23,7 @@ module.exports.getLinks = function () {
               links.push(values[i][j])
             }
           }
+
           resolve(links)
         })
         .catch(reject)

@@ -13,5 +13,6 @@
     "credits":{
       "secret" : ""
     }
-  }
+  },
+  "feeds": ["https://shaarli.buron.coffee/?do=atom"] 
 }

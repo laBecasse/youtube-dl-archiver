@@ -1,7 +1,7 @@
 const Client = require('shaarli-client');
 const params = {
   "searchtags": [],
-  "limit": "all",
+  "limit": "100",
   "visibility": "all"
 };
 let account;
