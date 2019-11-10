@@ -38,7 +38,7 @@ module.exports = function (router, links, cacheCol) {
   router.get('/update', (req, res, next) => {
     wrapper.getLinks()
       .then(links => {
-        return bagOfPromises(createOrCache, links, 0)
+        return bagOfPromises(create, links, 0)
       })
       .then(obj => {
         console.log('update finished')
@@ -54,7 +54,7 @@ module.exports = function (router, links, cacheCol) {
   router.post('/medias', (req, res, next) => {
     const url = req.body.url
     if (url) {
-      handleJson(createOrCache(url), req, res)
+      handleJson(create(url, true), req, res)
     } else {
       res.status(400)
       res.json({ message: 'url parameter needed' })
@@ -74,30 +74,12 @@ module.exports = function (router, links, cacheCol) {
       })
   }
 
-  let createOrCache = function (url) {
-    return cache.find(url)
-      .then(obj => {
-        if (!obj) {
-          return create(url)
-        } else {
-          return Promise.resolve(obj)
-        }
-      })
-      .catch(err => {
-        if (err.name !== 'InfoError') {
-          console.error(err.stack)
-        } else {
-          return cache.add(url)
-        }
-      })
-  }
-
-  let create = function (url) {
+  let create = function (url, withDownload = false) {
     // create only if the url is new
     return mediaDB.findByUrl(url)
       .then(res => {
         if (res.length === 0) {
-          return Downloader.download(url)
+          return Downloader.downloadMetadata(url)
         } else {
           return []
         }
@@ -105,7 +87,12 @@ module.exports = function (router, links, cacheCol) {
       .catch(downError)
       .then(infos => {
         const promises = infos.map(info => {
-          return createOne(url, info)
+          if (withDownload) {
+            return Downloader.downloadMedia(info)
+              .then(info => createOne(url, info))
+          } else {
+            return createOne(url, info)
+          }
         })
         return Promise.all(promises)
       })
@@ -115,10 +102,8 @@ module.exports = function (router, links, cacheCol) {
     const absDirPath = filePath.getAbsDirPath(info)
     return Downloader.move(info, absDirPath)
       .then(files => {
-        //const mediaFile = path.basename(info._filename)
-        const mediaFile = files.filter(file => ['.mp4', '.webm', '.mp3', '.m4a'].includes(path.extname(file)))[0]
 
-        const archive = Archive.create(mediaFile, files)
+        const archive = Archive.create(files)
         const media = Media.create(url, info, archive)
         return mediaDB.add(media)
       })

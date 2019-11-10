@@ -1,4 +1,5 @@
 const Mime = require('mime')
+const path = require('path')
 const config = require('../config')
 const HOST = config.host
 const LANGS = config.subtitleLangs
@@ -35,6 +36,8 @@ class Media {
     this.thumbnails = obj.thumbnails
     this.subtitles = obj.subtitles
     this.torrent_path = obj.torrent_path
+    // if archive directory is not set, then media path is set (back compatibility)
+    this.archive_dir = (obj.archive_dir) ? obj.archive_dir : path.dirname(this.file_path)
   }
 
   getThumbnailJSON () {
@@ -67,7 +70,9 @@ class Media {
     json.id = json._id
     json.subtitles = this.getSubtitlesJSON()
     json.thumbnail = this.getThumbnailJSON()
-    json.file_url = Media._urlFromPath(this.file_path)
+    if (this.file_path) {
+      json.file_url = Media._urlFromPath(this.file_path)
+    }
     if (this.torrent_path) {
       json.torrent_url = Media._urlFromPath(this.torrent_path)
     }
@@ -115,71 +120,72 @@ class Media {
       file_path: archive.mediaPath,
       torrent_path: archive.torrentPath,
       thumbnails: archive.thumbnailsPath,
-      subtitles: subtitlesArray
+      subtitles: subtitlesArray,
+      archive_dir: archive.dirpath
     })
   }
 
-  static createFromDocument (document) {
-    return Media.createFromInfo(document.media_url,
-                                document.url,
-                                document.file_path,
-                                document.thumbnails,
-                                document.subtitles,
-                                document.info,
-                                document._id)
-  }
+  // static createFromDocument (document) {
+  //   return Media.createFromInfo(document.media_url,
+  //                               document.url,
+  //                               document.file_path,
+  //                               document.thumbnails,
+  //                               document.subtitles,
+  //                               document.info,
+  //                               document._id)
+  // }
 
-  static createFromInfo(mediaUrl, url, filepath, thumbnails, subtitles, info, id) {
-    const date = new Date()
-    const obj = {
-      '_id': id,
-      'url': url,
-      'media_url': mediaUrl,
-      'file_path': filepath,
-      'thumbnails': thumbnails,
-      'subtitles': subtitles,
-      'info': info,
-      'creation_date': date.toISOString()
-    }
+  // static createFromInfo(mediaUrl, url, filepath, thumbnails, subtitles, info, id) {
+  //   const date = new Date()
+  //   const obj = {
+  //     '_id': id,
+  //     'url': url,
+  //     'media_url': mediaUrl,
+  //     'file_path': filepath,
+  //     'thumbnails': thumbnails,
+  //     'subtitles': subtitles,
+  //     'info': info,
+  //     'creation_date': date.toISOString()
+  //   }
 
-    return Media.createFromObject(obj)
-  }
+  //   return Media.createFromObject(obj)
+  // }
 
-  static createFromObject(obj) {
-    let subtitlesArray
-    if (obj.subtitles) {
-      subtitlesArray = LANGS.reduce((res, lang) => {
-        const filePath = obj.subtitles.find(testSub(lang))
-        if (filePath) {
-          res.push({
-            file_path: filePath,
-            lang: lang
-          })
-        }
-        return res
-      }, [])
-    }
+  // static createFromObject(obj) {
+  //   let subtitlesArray
+  //   if (obj.subtitles) {
+  //     subtitlesArray = LANGS.reduce((res, lang) => {
+  //       const filePath = obj.subtitles.find(testSub(lang))
+  //       if (filePath) {
+  //         res.push({
+  //           file_path: filePath,
+  //           lang: lang
+  //         })
+  //       }
+  //       return res
+  //     }, [])
+  //   }
 
-    return new Media({
-      _id: obj._id,
-      url: obj.url,
-      media_url: obj.media_url,
-      ext: obj.info.ext,
-      mime: Mime.lookup(obj.info.ext),
-      title: obj.info.title,
-      description: obj.info.description,
-      tags: obj.info.tags,
-      uploader: obj.info.uploader,
-      creator: obj.info.creator,
-      channel_id: obj.info.channel_id,
-      channel_url: obj.info.channel_url,
-      creation_date: obj.creation_date,
-      upload_date: obj.info.upload_date,
-      file_url: HOST + '/archives/' + encodeURIPath(obj.file_path),
-      file_path: obj.file_path,
-      thumbnails: obj.thumbnails,
-      subtitles: subtitlesArray
-    })
-  }
+  //   return new Media({
+  //     _id: obj._id,
+  //     url: obj.url,
+  //     media_url: obj.media_url,
+  //     ext: obj.info.ext,
+  //     mime: Mime.lookup(obj.info.ext),
+  //     title: obj.info.title,
+  //     description: obj.info.description,
+  //     tags: obj.info.tags,
+  //     uploader: obj.info.uploader,
+  //     creator: obj.info.creator,
+  //     channel_id: obj.info.channel_id,
+  //     channel_url: obj.info.channel_url,
+  //     creation_date: obj.creation_date,
+  //     upload_date: obj.info.upload_date,
+  //     file_url: HOST + '/archives/' + encodeURIPath(obj.file_path),
+  //     file_path: obj.file_path,
+  //     thumbnails: obj.thumbnails,
+  //     subtitles: subtitlesArray,
+  //   })
+  // }
 }
 module.exports = Media

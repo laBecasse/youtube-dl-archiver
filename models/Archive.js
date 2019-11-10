@@ -6,11 +6,12 @@ const ARCHIVES_DIR = config.archivesDir
 
 class Archive {
   // every path is relative
-  constructor (mediaPath, filesPath) {
+  constructor (filesPath) {
     // relative directory path
-    this.dirpath = path.dirname(mediaPath)
+    this.dirpath = path.dirname(filesPath[0])
     // media file path
-    this.mediaPath = mediaPath
+    const mediaPaths = filesPath.filter(_testMedia)
+    this.mediaPath = (mediaPaths.length !== 0) ? mediaPaths[0] : null
 
     this.filesPath = filesPath
 
@@ -37,6 +38,8 @@ class Archive {
   }
 
   createTorrent () {
+    if (!this.mediaPath) return Promise.reject(new Error('torrent creation require media to be downloaded.'))
+    
     const torrentPath = this.mediaPath.substr(0, this.mediaPath.lastIndexOf('.')) + '.torrent'
     const absTorrentPath = Archive.absolute(torrentPath)
     const creation = WebTorrent.create(Archive.absolute(this.mediaPath), absTorrentPath)
@@ -45,8 +48,13 @@ class Archive {
       this.torrentPath = torrentPath
       return this
     })
+
   }
 
+  isMediaDownloaded () {
+    return this.mediaPath !== null
+  }
+  
   static relative (p) {
     return path.relative(ARCHIVES_DIR, p)
   }
@@ -57,22 +65,22 @@ class Archive {
 
   // factory
   // absFiles : absolute files path of the archive
-  // mediaPath : absolute media path of the archive
-  static create (absMediaPath, absFilesPath) {
+  static create (absFilesPath) {
+    if (absFilesPath.length === 0) {
+      throw new Error('an archive can not be empty')
+    }
+    
     const filesPath = absFilesPath.map(Archive.relative)
-    const mediaPath = Archive.relative(absMediaPath)
-    return new Archive(mediaPath, filesPath)
+    return new Archive(filesPath)
   }
 
-  // dirPath : relative archive path
-  static load (mediaPath) {
-    const absDirPath = path.dirname(Archive.absolute(mediaPath))
-    const absMediaPath = Archive.absolute(mediaPath)
+  static load (media) {
+    const absDirPath = Archive.absolute(media.archive_dir)
     return new Promise((resolve, reject) => {
       fs.readdir(absDirPath, (err, files) => {
         if (err) return reject(err)
         const absFilesPath = files.map(file => path.join(absDirPath, file))
-        const archive = Archive.create(absMediaPath, absFilesPath)
+        const archive = Archive.create(absFilesPath)
         resolve(archive)
       })
     })
@@ -82,6 +90,8 @@ class Archive {
 function testExt (exts) {
   return (file) => exts.includes(path.extname(file).toLowerCase())
 }
+
+const _testMedia = testExt(['.mp4', '.webm', '.mp3', '.m4a'])
 
 const _testTumbnails = testExt(['.png', '.jpeg', '.jpg'])
 

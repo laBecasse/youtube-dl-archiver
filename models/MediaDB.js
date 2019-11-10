@@ -108,7 +108,6 @@ module.exports = function (links) {
       ]
     }
     return find(selector)
-      .then(res => res.map(Media.createFromDocument))
   }
 
   let searchText = function (text, uploader, limit, offset) {
@@ -126,7 +125,6 @@ module.exports = function (links) {
       }
     }
 
-    console.log(selector)
     let action = function (collection) {
       return new Promise((resolve, reject) => {
         collection.find(selector)
@@ -192,7 +190,10 @@ module.exports = function (links) {
       return insert(media)
         .then(obj => build(obj))
     },
-    findByUrl: findUrl,
+    findByUrl: function (url) {
+      return findUrl(url)
+        .then(build)
+    },
     findAll: function (limit, offset) {
       let selector = {}
       let sort = {

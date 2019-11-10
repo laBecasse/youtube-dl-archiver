@@ -29,7 +29,7 @@ module.exports = function (router, links) {
     const promise = mediaDB.removeById(dbId).then(media => {
       // if one media have been removed
       if (media) {
-        return Archive.load(media.file_path)
+        return Archive.load(media)
           .then(archive => {
             archive.remove()
             return media
