@@ -10,7 +10,7 @@ const Media = require('../models/Media')
 let handleJson = function (promises, req, res) {
   promises.then(medias => {
     if (medias) {
-      if (medias.length) {
+      if (medias.length !== null) {
         res.json(medias.map(media => media.toAPIJSON()))
       } else {
         res.json(medias.toAPIJSON())
@@ -36,15 +36,17 @@ module.exports = function (router, links, cacheCol) {
   const mediaDB = MediaDB(links)
 
   router.get('/update', (req, res, next) => {
+    console.log('update')
     wrapper.getLinks()
       .then(links => {
-        return bagOfPromises(create, links, 0)
+        return bagOfPromises(url => createOrCache(url, false), links, 0)
       })
       .then(obj => {
         console.log('update finished')
       })
       .catch(err => {
-        if (err) return next(err)
+        if (err) console.log(err)
+        return Promise.resolve()
       })
 
     console.log('update started')
@@ -64,7 +66,7 @@ module.exports = function (router, links, cacheCol) {
   let bagOfPromises = function (promise, args, start) {
     const step = 3
     const list = args.slice(start, start + step)
-    return Promise.all(list.map(promise))
+    return Promise.all(list.map(promise)).catch(e => Promise.resolve())
       .then(() => {
         if (args.length > start + step) {
           return bagOfPromises(promise, args, start + step)
@@ -74,7 +76,27 @@ module.exports = function (router, links, cacheCol) {
       })
   }
 
-  let create = function (url, withDownload = false) {
+  let createOrCache = function (url, withDownload = false) {
+    return cache.find(url)
+      .then(obj => {
+        if (!obj) {
+          return create(url, withDownload)
+        } else {
+          return Promise.resolve(null)
+        }
+      })
+      .catch(err => {
+        if (err.name !== 'InfoError') {
+          console.error(err.stack)
+          return cache.add(url)
+        } else {
+          return cache.add(url)
+        }
+      })
+  }
+
+  
+  let create = function (url, withDownload) {
     // create only if the url is new
     return mediaDB.findByUrl(url)
       .then(res => {

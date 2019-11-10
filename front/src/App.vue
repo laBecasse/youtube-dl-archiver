@@ -56,9 +56,7 @@
         </div>
         
         <div class="navbar-item">
-          <form action="/update" method="get">
-            <input id="update" class="button" type="submit" value="MAJ"/>
-          </form>
+          <a :href="this.API_URL + '/update'" id="update" class="button" type="submit">MAJ</a>
         </div>
 
       </div>

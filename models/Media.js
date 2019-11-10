@@ -21,6 +21,7 @@ class Media {
     this._id = obj._id
     this.url = obj.url
     this.media_url = obj.media_url
+    this.original_file = obj.original_file
     this.ext = obj.ext
     this.mime = obj.mime
     this.title = obj.title
@@ -101,6 +102,13 @@ class Media {
       return res
     }, [])
 
+
+    let original_file = {
+      url: info.url,
+      ext: info.ext,
+      mime: Mime.lookup(info.ext)
+    }
+
     const creationDate = new Date().toISOString()
 
     return new Media({
@@ -108,6 +116,7 @@ class Media {
       media_url: mediaUrl,
       ext: info.ext,
       mime: Mime.lookup(info.ext),
+      original_file: original_file,
       title: info.title,
       description: info.description,
       tags: info.tags,

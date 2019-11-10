@@ -64,20 +64,23 @@
     <div class="media-column-video" v-bind:class="{'column': !expanded}">
       <div class="card-image">
         <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
-          <source :src="offlineMediaURL || media.file_url" :type="media.mime"/>
+          <source v-if="media.file_url" :src="offlineMediaURL || media.file_url" :type="media.mime"/>
+          <source v-if="media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
           <track v-for="sub in media.subtitles"
                  :src="sub.url"
                  :label="sub.lang"
                  kind="subtitles" :srclang="sub.lang">
+            <p>Your browser does not support the video element.</p>
         </video>
         <audio v-if="media.type === 'audio'" controls preload="none">
           <source v-if="!media.torrent_url" :src="offlineMediaURL || media.file_url" :type="media.mime">
+            <source v-if="media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
             <p>Your browser does not support the audio element.</p>
         </audio>
         <img v-if="media.type === 'image'"
-             :src="media.file_url"/>
+             :src="media.file_url||media.original_file.url"/>
         <a v-if="media.type === 'other'"
-           :href="media.file_url">media</a>
+           :href="media.file_url||media.original_file.url">media</a>
       </div>
     </div>
     <div class="is-primary" v-bind:class="{'column': !expanded}">

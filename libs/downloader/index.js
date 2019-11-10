@@ -11,7 +11,7 @@ const config = require('../../config')
 
 const tempDownloadDir = config.archivesTmpDir
 const youtubeDl = config.youtubedlBin
-const formatDl = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4/best"
+const formatDl = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4/bestvideo+bestaudio/best"
 const langs = config.subtitleLangs
 
 /*
@@ -101,12 +101,18 @@ function loadInfo (dlDirPath, infoFileName, fileNames) {
       info._basename = removeExt(info._filename)
       // path of the info file
       info._selfPath = infoPath
+
+      info._original_format = {
+        'url': info.url,
+        'ext': info.ext
+      }
+
       // related file are files downloaded with the info
       // concerning the same media
       const relatedFileNames = fileNames.filter(file => {
-        return removeExt(file) === info.title
+        return removeExt(file) === info._basename
       })
-      info._fileNames=relatedFileNames
+          info._fileNames=relatedFileNames
       return resolve(info)
     })
   })
@@ -130,7 +136,7 @@ function downloadMetadata (url) {
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
   const subLangValue = langs.join(',')
   const cmdFormat = youtubeDl + ' -f "%s" --ignore-errors --skip-download --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
-  const cmdLine = util.format(cmdFormat, formatDl, subLangValue, outputValue, url)
+  const cmdLine = util.format(cmdFormat, 'best[tbr<=500]/best/bestvideo+bestaudio', subLangValue, outputValue, url)
   return exec(cmdLine)
     .catch(e => {
       // if any thing have been downloaded
@@ -146,7 +152,6 @@ function downloadMetadata (url) {
       return new Promise((resolve, reject) => {
         fs.readdir(dlDirPath, (err, files) => {
           if (err) return reject(err)
-          console.log(files)
           const infoFiles = files.filter(file => {
             return path.extname(file).toLowerCase() === '.json'
           })
