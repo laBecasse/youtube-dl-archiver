@@ -47,11 +47,13 @@
               <div class="control">
                 <input id="post-media-url" class="input" type="text" value="" name="url" placeholder="ajouter une vidéo"/>
               </div>
+              <div class="control">
+                <input type="checkbox" id="withdownload" name="withdownload" class="hidden" value="" checked/>
+                <label for="withdownload" class="button has-text-grey withdownload"><DownloadIcon/></label>
+              </div>
               <div class="control" v-bind:class="{'is-loading': isUploading}">
-                <label for="post-media-url" class="button is-info" v-bind:class="{'is-danger': uploadFailed}">+</label>
-                <label for="post-media-url" class="button is-info" v-bind:class="{'is-danger': uploadFailed}">*</label>
-
-                <!-- <button class="button is-info" >+</button> -->
+                <label for="post-media-url-submit" class="button is-info" v-bind:class="{'is-danger': uploadFailed}">></label>
+                <input type="submit" id="post-media-url-submit" class="hidden"/>
               </div>
             </div>
           </form>
@@ -60,7 +62,6 @@
         <div class="navbar-item">
           <a :href="this.API_URL + '/update'" id="update" class="button" type="submit">MAJ</a>
         </div>
-
       </div>
     </div>
   </nav>
@@ -80,11 +81,13 @@
 </template>
 
 <script>
+import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
 import SearchIcon from 'vue-ionicons/dist/md-search.vue'
 import { mapActions, mapGetters } from 'vuex'
 export default {
   components: {
-    SearchIcon
+    SearchIcon,
+    DownloadIcon
   },
   data () {
     return {
@@ -112,11 +115,11 @@ export default {
       this.$router.push({path: '/search', query : {text: text}})
     },
     onSubmit (event) {
-      
-      let url = document.getElementById('post-media-url').value
+      const url = document.getElementById('post-media-url').value
+      const withDownload = document.getElementById('withdownload').checked
       this.isUploading = true
       this.uploadFailed = false
-      return this.uploadURL(url)
+      return this.uploadURL({url: url, withDownload: withDownload})
         .then(() => {this.isUploading = false})
         .catch(err => {
           console.error(err)
@@ -140,5 +143,11 @@ export default {
 
 .mobile-nav-columns{
     width: 100%;
+}
+
+#withdownload:checked ~ .withdownload {
+    background-color:black;
+    color: white !important;
+    border-color: black;
 }
 </style>

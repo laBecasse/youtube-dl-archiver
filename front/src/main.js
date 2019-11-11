@@ -57,11 +57,24 @@ const store = new Vuex.Store({
     step: 10,
     query: "",
     selector: {},
+    sort: {},
     isSingle: false,
     webtorrentClient: new WebTorrent(),
     magnetPerId: {}
   },
   getters: {
+    first (state) {
+      return state.medias[0]
+    },
+    before: (state) => (id) => {
+      const index = state.medias.findIndex(m => (m.id == id))
+      return state.medias[index - 1]
+    },
+    after: (state) => (id) => {
+      const index = state.medias.findIndex(m => (m.id == id))
+      console.log(index)
+      return state.medias[index + 1]
+    },
     contains (state, id) {
       return state.medias.some(m => m.id === id)
     },
@@ -125,9 +138,10 @@ const store = new Vuex.Store({
     setQuery(state, query) {
       state.query = query
     },
-    // set the db selector
-    setSelector(state, selector) {
-      state.selector = selector
+    // set the 
+    setPouchDBQuery(state, payload) {
+      state.selector = payload.selector
+      state.sort = payload.sort || {}
     },
     refreshOffset(state) {
       state.offset = state.medias.length
@@ -143,6 +157,18 @@ const store = new Vuex.Store({
     }
   },
   actions: {
+    applyOnAll(context, payload) {
+      const medias = context.state.medias
+      const action = payload.action
+      let promises = []
+
+      for(let m of medias) {
+        payload.id = m._id
+        promises.push(context.dispatch(action, payload))
+      }
+
+      return Promise.all(promises)
+    },
     changesQuery(context, query) {
       const oldQuery = context.state.query
       context.commit("setQuery", query)
@@ -152,7 +178,7 @@ const store = new Vuex.Store({
       const step = context.state.step
       const offset = context.state.offset
       const selector = context.state.selector
-      console.time("query")
+      const sort = context.state.sort
       return db.find({
         selector: selector,
         limit: step,
@@ -164,7 +190,6 @@ const store = new Vuex.Store({
           context.commit('setSingle', false)
           context.commit('insertMedias', medias)
           context.commit('unlock')
-          console.timeEnd("query")
           return medias
         })
         .then(() => context.commit('refreshOffset'))
@@ -186,7 +211,6 @@ const store = new Vuex.Store({
       }
 
       if (!context.state.isLocked) {
-
         context.commit('lock')
         console.time('query')
         const promise =  axios.get(fullQuery)
@@ -207,25 +231,25 @@ const store = new Vuex.Store({
 
     },
     storeMedias(context, medias) {
-       Promise.all(medias.map(m => {
-          return db.get(m._id)
-            .then(doc => {
-              m._rev = doc._rev
+      Promise.all(medias.map(m => {
+        return db.get(m._id)
+          .then(doc => {
+            m._rev = doc._rev
+            return db.put(m)
+          })
+          .catch(e => {
+            if(e.status === 404) {
               return db.put(m)
-            })
-           .catch(e => {
-             if(e.status === 404) {
-               return db.put(m)
-             }
-           })
+            }
+          })
         // db.put(m)
         //   .catch(e => {
         //     if (e.name !== 'conflict') {
         //       throw e
         //     } else {
-              
+        
         //     }
-          
+        
         //   })
       }))
     },
@@ -254,19 +278,27 @@ const store = new Vuex.Store({
         .then(changed => {
           if (changed) {
             context.commit('emptyMedias')
-            context.commit('setSelector', {})
+            context.commit('setPouchDBQuery',
+                           {'selector': {},
+                            'sort': {'creation_date': -1}})
             return context.dispatch('queryMedias')
           }
         })
     },
     searchText (context, text, refresh) {
+      if (text[0] === '#') {
+        return context.dispatch('searchTag', text.substring(1, text.length))
+      }
+      
       return context.dispatch('changesQuery', '/search?text=' + text)
         .then(changed => {
           if (changed) {
             context.commit('emptyMedias')
-            context.commit('setSelector', {$and: [{$or: [{title: {$regex: RegExp(text, 'i')}},
-                                                         {description: {$regex: RegExp(text, 'i')}}]},
-                                                  {creation_date :{$gt: null}}]})
+            context.commit('setPouchDBQuery',
+                           {'selector': {$and: [{$or: [{title: {$regex: RegExp(text, 'i')}},
+                                                       {description: {$regex: RegExp(text, 'i')}}]},
+                                                {creation_date :{$gt: null}}]},
+                            'sort': {'creation_date': -1}})
             return context.dispatch('queryMedias')
           }
         })
@@ -276,15 +308,31 @@ const store = new Vuex.Store({
         .then(changed => {
           if (changed){
             context.commit('emptyMedias')
-            context.commit('setSelector', {$and: [{uploader: {$eq:uploader}}, {creation_date :{$gt: null}}]})
+            context.commit('setPouchDBQuery',
+                           {'selector': {$and: [{uploader: {$eq:uploader}}, {creation_date :{$gt: null}}]},
+                            'sort': {'creation_date': -1}})
+
             return context.dispatch('queryMedias')
           }
         })
     },
-    uploadURL(context, url) {
+    searchTag (context, tag) {
+      return context.dispatch('changesQuery', '/tags/' + tag)
+        .then(changed => {
+          if (changed){
+            context.commit('emptyMedias')
+            context.commit('setPouchDBQuery', {'selector': {tags: {$in: [tag]}}})
+
+            return context.dispatch('queryMedias')
+          }
+        })
+    },
+    uploadURL(context, payload) {
+      const {url, withDownload} = payload
       const base = process.env.VUE_APP_API_URL
       const params = new URLSearchParams()
       params.append('url', url)
+      params.append('withdownload', withDownload)
 
       return axios.post(base + "/medias", params)
         .then(res => {
@@ -292,6 +340,31 @@ const store = new Vuex.Store({
           return context.dispatch('storeMedias', medias)
         })
         .then(() => context.dispatch('refreshMedias'))
+    },
+    deleteMedia (context, payload) {
+      const base = process.env.VUE_APP_API_URL
+      const id = payload.id
+      const query = base + '/medias/' + id
+      console.log(query)
+      return axios.delete(query)
+        .then((response) => {
+          context.commit('removeMedia', id)
+        })
+        .catch((e) => {
+          console.error(e)
+        })
+    },
+    downloadMedia(context, payload) {
+      const id = payload.id
+      const base = process.env.VUE_APP_API_URL
+      return axios.put(base + '/medias/download/' + id)
+        .then(res => {
+          const media = res.data
+          console.log(media)
+          context.commit('removeMedia', media._id)
+          context.commit('insertMedias', [media])
+          return context.dispatch('storeMedias', [media])
+        })
     },
     makeOfflineMedia(context, id) {
       return context.dispatch("queryOneStoredMedia",id)
@@ -319,17 +392,6 @@ const store = new Vuex.Store({
     },
     removeOfflineMediaURL(context, id) {
       
-    },
-    downloadMedia(context, id) {
-      const base = process.env.VUE_APP_API_URL
-      return axios.put(base + '/medias/download/' + id)
-        .then(res => {
-          const media = res.data
-          console.log(media)
-          context.commit('removeMedia', media._id)
-          context.commit('insertMedias', [media])
-          return context.dispatch('storeMedias', [media])
-        })
     }
   }
 })
@@ -379,7 +441,8 @@ function addShortDescription (media) {
   const description = media.description
   
   if (description) {
-    let shortDescription = description.substring(0, SHORT_DESCRIPTION_LENGTH)
+    let shortDescription = description.split('\n\n')[0]
+    shortDescription = shortDescription.substring(0, SHORT_DESCRIPTION_LENGTH)
     shortDescription = urlify(shortDescription)
     shortDescription = shortDescription.replace(/\r\n?|\n/g, "<br>")
     

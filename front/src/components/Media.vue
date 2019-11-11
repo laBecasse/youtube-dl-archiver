@@ -16,7 +16,7 @@
                 </a>
               </div>
               <div class="column">
-                <a class="button is-danger" v-on:click="deleteMedia">
+                <a class="button is-danger" v-on:click="deleteThis">
                   Supprimer
                 </a>
               </div>
@@ -72,7 +72,7 @@
       <div class="card-image">
         <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
           <source v-if="media.file_url" :src="offlineMediaURL || media.file_url" :type="media.mime"/>
-          <source v-if="media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
+          <source v-if="!media.file_url && media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
           <track v-for="sub in media.subtitles"
                  :src="sub.url"
                  :label="sub.lang"
@@ -105,6 +105,11 @@
           -
           <span>{{media.formated_creation_date}}</span>
         </p>
+        <!-- <ul> -->
+          <!--   <li v-if="media.tags.length" v-for="tag in media.tags" class="description"> -->
+            <!--     #{{tag}} -->
+            <!--   </li> -->
+          <!-- </ul> -->
         <p v-if="media.description && !expanded" v-html="media.short_description" class="description">
         </p>
         <p v-if="media.description && expanded" v-html="media.htmlDescription" class="description">
@@ -156,6 +161,20 @@ export default {
     }
   },
   mounted () {
+    // play state communication with list
+    
+    const mediaElt = this.getMediaElt()
+    if (mediaElt) {
+      const listener = () => {
+        this.$emit('playEnded')
+      }
+      mediaElt.addEventListener('ended', listener)
+      
+      mediaElt.addEventListener('play', () => {
+        this.$parent.playOneId(this.media.id)
+      })
+    }
+    // offline state initialization
     this.setOfflineMediaURL()
     
     //function mediaTorrent() {
@@ -165,7 +184,7 @@ export default {
       
       var client = this.$store.state.webtorrentClient
       
-      const mediaElt = (media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
+      const mediaElt = this.getMediaElt()
       
       const playhandler = function(event) {
         
@@ -213,26 +232,24 @@ export default {
     }
   },
   watch: {
-    offlineMediaURL: 'reloadMedia'
+    offlineMediaURL: 'reloadMedia',
+    'media.file_url': 'reloadMedia'
   },
   methods: {
     ...mapGetters(['getMagnet']),
     ...mapMutations(['setMagnetOfId']),
-    ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia', 'downloadMedia']),
+    ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia', 'downloadMedia', 'deleteMedia']),
     toggleDeleteConfirmation () {
       this.deleteConfirmation = !this.deleteConfirmation
     },
-    deleteMedia () {
-      const base = this.$root.$data.API_URL
-      const query = base + '/medias/' + this.media.id
-      console.log(query)
-      this.axios.delete(query)
-        .then((response) => {
-          this.$store.commit('removeMedia', this.media.id)
-        })
-        .catch((e) => {
-          console.error(e)
-        })
+    /* getters */
+    getMediaElt () {
+      const mediaElt = (this.media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
+      return mediaElt
+    },
+    /* control handlers */
+    deleteThis () {
+      return this.deleteMedia({id: this.media.id})
     },
     toggleDownloadChoose() {
       this.downloadChoose = !this.downloadChoose
@@ -265,11 +282,16 @@ export default {
     download () {
       const id = this.media._id
       return this.downloadMedia(id)
+        .then(() => this.toggleDownloadChoose())
+    },
+    /* play states */
+    play () {
+      const mediaElt = this.getMediaElt()
+      mediaElt.play()
     },
     reloadMedia () {
       // reload the media when changing the source URL
-      const mediaElt = (this.media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
-      mediaElt.load()
+      this.getMediaElt().load()
     }
   }
 }
