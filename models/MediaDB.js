@@ -54,29 +54,6 @@ module.exports = function (links) {
       })
   }
 
-  let find = function (selector, limit, offset, sort) {
-    limit = limit || 0
-    offset = offset || 0
-    sort = sort || {}
-
-    let action = function (collection) {
-      return new Promise((resolve, reject) => {
-        collection.find(selector)
-          .limit(limit)
-          .skip(offset)
-          .sort(sort)
-          .toArray((err, res) => {
-            if (err) {
-              reject(err)
-            } else {
-              resolve(res)
-            }
-          })
-      })
-    }
-    return links.apply(action)
-  }
-
   let findOne = function (selector) {
     let action = function (collection) {
       return new Promise((resolve, reject) => {
@@ -112,6 +89,46 @@ module.exports = function (links) {
     return links.apply(action)
   }
 
+  /*
+   * FIND METHODS
+   */
+  
+  let find = function (selector, limit, offset, sort) {
+    limit = limit || 0
+    offset = offset || 0
+    sort = sort || {}
+
+    let action = function (collection) {
+      return new Promise((resolve, reject) => {
+        collection.find(selector)
+          .limit(limit)
+          .skip(offset)
+          .sort(sort)
+          .toArray((err, res) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve(res)
+            }
+          })
+      })
+    }
+    return links.apply(action)
+  }
+
+  let findUploader = function (uploader, limit, offset) {
+    limit = limit || 0
+    offset = offset || 0
+    let sort = {
+      creation_date: -1
+    }
+
+    let selector = {
+      uploader: uploader
+    }
+    return find(selector, limit, offset, sort)
+  }
+  
   let findUrl = function (url) {
     const selector = {
       $or: [
@@ -157,35 +174,6 @@ module.exports = function (links) {
     return links.apply(action)
   }
 
-  let findUploader = function (uploader, limit, offset) {
-    limit = limit || 0
-    offset = offset || 0
-    let sort = {
-      creation_date: -1
-    }
-
-    let selector = {
-      uploader: uploader
-    }
-
-    let action = function (collection) {
-      return new Promise((resolve, reject) => {
-        collection.find(selector)
-          .sort(sort)
-          .limit(limit)
-          .skip(offset)
-          .toArray((err, res) => {
-            if (err) {
-              reject(err)
-            } else {
-              resolve(res)
-            }
-          })
-      })
-    }
-    return links.apply(action)
-  }
-
   let build = function (obj) {
     if (obj) {
       if (Array.isArray(obj)) {
@@ -205,6 +193,13 @@ module.exports = function (links) {
     },
     findByUrl: function (url) {
       return findUrl(url)
+        .then(build)
+    },
+    findByTag: function (tag, limit, offset) {
+      let selector = {
+        'tags': { '$in': [tag]}
+      }
+      return find(selector, limit, offset)
         .then(build)
     },
     findAll: function (limit, offset) {

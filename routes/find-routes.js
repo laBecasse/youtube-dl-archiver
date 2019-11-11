@@ -2,12 +2,12 @@ const MediaDB = require('../models/MediaDB.js')
 const FilePath = require('../models/FilePath')
 
 module.exports = function (router, links) {
-  const media = MediaDB(links)
+  const mediaDB = MediaDB(links)
 
   let getByUrl = function (req, res, next) {
     const url = req.query.url
     if (url) {
-      handleJson(media.findByUrl(url), req, res)
+      handleJson(mediaDB.findByUrl(url), req, res)
     } else {
       next()
     }
@@ -40,7 +40,7 @@ module.exports = function (router, links) {
   let handleFile = function (getFilePath, req, res, next) {
     const dbId = req.params.id
 
-    media.findById(dbId)
+    mediaDB.findById(dbId)
       .then(m => {
         let filepath
         if (m && (filepath = getFilePath(m))) {
@@ -62,7 +62,7 @@ module.exports = function (router, links) {
   router.get('/medias', getByUrl, (req, res) => {
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0
-    handleJson(media.findAll(limit, offset), req, res)
+    handleJson(mediaDB.findAll(limit, offset), req, res)
   })
 
   router.get('/search', getByUrl, (req, res) => {
@@ -71,46 +71,51 @@ module.exports = function (router, links) {
     const text = req.query.text
     const uploader = req.query.uploader
 
-    handleJson(media.search(text, uploader, limit, offset), req, res)
+    handleJson(mediaDB.search(text, uploader, limit, offset), req, res)
   })
 
   router.get('/medias/:id', (req, res) => {
     const dbId = req.params.id
-    handleJson(media.findById(dbId), req, res)
+    handleJson(mediaDB.findById(dbId), req, res)
   })
 
-  router.get('/medias/:id/file', (req, res, next) => {
-    function getFilePath (m) {
-      return FilePath.absolute(m.file_path)
-    }
+  // router.get('/medias/:id/file', (req, res, next) => {
+  //   function getFilePath (m) {
+  //     return FilePath.absolute(m.file_path)
+  //   }
 
-    return handleFile(getFilePath, req, res, next)
-  })
+  //   return handleFile(getFilePath, req, res, next)
+  // })
 
-  router.get('/medias/:id/thumbnail', (req, res, next) => {
-    function getFilePath (m) {
-      if (m.thumbnail) {
-        return FilePath.absolute(m.thumbnail.file_path)
-      } else {
-        return undefined
-      }
-    }
+  // router.get('/medias/:id/thumbnail', (req, res, next) => {
+  //   function getFilePath (m) {
+  //     if (m.thumbnail) {
+  //       return FilePath.absolute(m.thumbnail.file_path)
+  //     } else {
+  //       return undefined
+  //     }
+  //   }
 
-    return handleFile(getFilePath, req, res, next)
-  })
+  //   return handleFile(getFilePath, req, res, next)
+  // })
 
-  router.get('/medias/:id/subtitle/:lang', (req, res, next) => {
-    const lang = req.params.lang
+  // router.get('/medias/:id/subtitle/:lang', (req, res, next) => {
+  //   const lang = req.params.lang
 
-    function getFilePath (m) {
-      const subres = m.subtitles.find(sub => sub.lang === lang)
-      if (subres) {
-        return FilePath.absolute(subres.file_path)
-      } else {
-        return undefined
-      }
-    }
+  //   function getFilePath (m) {
+  //     const subres = m.subtitles.find(sub => sub.lang === lang)
+  //     if (subres) {
+  //       return FilePath.absolute(subres.file_path)
+  //     } else {
+  //       return undefined
+  //     }
+  //   }
 
-    return handleFile(getFilePath, req, res, next)
+  //   return handleFile(getFilePath, req, res, next)
+  // })
+
+  router.get('/tags/:tag', (req, res, next) => {
+    const tag = req.params.tag
+    handleJson(mediaDB.findByTag(tag), req, res)
   })
 }

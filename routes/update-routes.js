@@ -55,8 +55,10 @@ module.exports = function (router, links, cacheCol) {
 
   router.post('/medias', (req, res, next) => {
     const url = req.body.url
+    const withDownload = req.body.withdownload == 'true'
+        
     if (url) {
-      handleJson(create(url, true), req, res)
+      handleJson(create(url, withDownload), req, res)
     } else {
       res.status(400)
       res.json({ message: 'url parameter needed' })
@@ -100,7 +102,6 @@ module.exports = function (router, links, cacheCol) {
       })
   }
 
-  
   let create = function (url, withDownload) {
     // create only if the url is new
     return mediaDB.findByUrl(url)
