@@ -7,6 +7,19 @@ const LANGS = config.subtitleLangs
 
 module.exports = function (links) {
 
+  let replace = function(media) {
+    let action = function (collection) {
+      return new Promise((resolve, reject) => {
+        collection.replaceOne({_id: links.ObjectID(media._id)}, media, (err, res) => {
+          if (err) return reject(err)
+          return resolve(media)
+        }) 
+      })
+    }
+    
+    return links.apply(action)
+  }
+  
   let insertOne = function (document) {
     let action = function (collection) {
       return new Promise((resolve, reject) => {
@@ -218,6 +231,7 @@ module.exports = function (links) {
     removeById: function (id) {
       return remove(id)
         .then(build)
-    }
+    },
+    replace: replace
   }
 }

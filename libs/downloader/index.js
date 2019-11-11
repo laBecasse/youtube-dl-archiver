@@ -90,13 +90,28 @@ function downloadTorrentFile (info) {
  *                    the info object
  */
 function loadInfo (dlDirPath, infoFileName, fileNames) {
+  const infoPath = path.join(dlDirPath, infoFileName)
+
+  return createInfo(infoPath)
+    .then(info => {
+      // related file are files downloaded with the info
+      // concerning the same media
+      const relatedFileNames = fileNames.filter(file => {
+        return removeExt(file) === info._basename
+      })
+      info._fileNames = info._fileNames.concat(relatedFileNames)
+
+      return info
+    })
+}
+
+function createInfo(infoPath) {
   return new Promise((resolve, reject) => {
-    const infoPath = path.join(dlDirPath, infoFileName)
     fs.readFile(infoPath, (err, data) => {
       if (err) return reject(err)
       const info = JSON.parse(data)
       // tmp directory for download
-      info._dirname = dlDirPath
+      info._dirname = path.dirname(infoPath)
       // title used in basename for metadata files
       info._basename = removeExt(info._filename)
       // path of the info file
@@ -107,12 +122,8 @@ function loadInfo (dlDirPath, infoFileName, fileNames) {
         'ext': info.ext
       }
 
-      // related file are files downloaded with the info
-      // concerning the same media
-      const relatedFileNames = fileNames.filter(file => {
-        return removeExt(file) === info._basename
-      })
-          info._fileNames=relatedFileNames
+      info._fileNames = []
+
       return resolve(info)
     })
   })
@@ -181,6 +192,7 @@ function move (info, absDirPath) {
     // promises of file renaming
     const promises = info._fileNames.map(file => {
       return new Promise((resolve, reject) => {
+
         const oldFile = path.join(downloadDirPath, file)
         const ext = path.extname(file)
 
@@ -229,5 +241,6 @@ function removeExt (file) {
 module.exports = {
   'downloadMetadata': downloadMetadata,
   'downloadMedia': downloadMedia,
+  'createInfo': createInfo,
   'move': move
 }

@@ -78,15 +78,15 @@ const store = new Vuex.Store({
     insertMediasAtTop (state, list) {
       const newMedias = state.medias.slice()
       for(let m of list) {
-                          // insert at right position from the top
-                          let i = 0
-                          while(i < newMedias.length &&
-                                newMedias[i].creation_date >= m.creation_date) {
-                            i++
-                          }
-                          if (i === 0 || newMedias[i - 1]._id !== m._id)
-                            newMedias.splice(i, 0, formatMedia(m))
-                         }
+        // insert at right position from the top
+        let i = 0
+        while(i < newMedias.length &&
+              newMedias[i].creation_date >= m.creation_date) {
+          i++
+        }
+        if (i === 0 || newMedias[i - 1]._id !== m._id)
+          newMedias.splice(i, 0, formatMedia(m))
+      }
       state.medias = newMedias
     },
     insertMedias (state, list) {
@@ -152,7 +152,7 @@ const store = new Vuex.Store({
       const step = context.state.step
       const offset = context.state.offset
       const selector = context.state.selector
-      console.timeLog("query")
+      console.time("query")
       return db.find({
         selector: selector,
         limit: step,
@@ -188,16 +188,16 @@ const store = new Vuex.Store({
       if (!context.state.isLocked) {
 
         context.commit('lock')
-        console.time("query")
+        console.time('query')
         const promise =  axios.get(fullQuery)
-          .then(response => {
-            const medias = response.data
-            context.commit('setSingle', false)
-            context.commit('insertMedias', medias)
-            context.commit('unlock')
-            console.timeEnd("query")
-            return medias
-          })
+              .then(response => {
+                const medias = response.data
+                context.commit('setSingle', false)
+                context.commit('insertMedias', medias)
+                context.commit('unlock')
+                console.timeEnd('query')
+                return medias
+              })
 
         return promiseTimeout(500, promise)
           .then(medias => context.dispatch('storeMedias', medias))
@@ -207,12 +207,27 @@ const store = new Vuex.Store({
 
     },
     storeMedias(context, medias) {
-      return Promise.all(medias.map(m => db.put(m)
-                                    .catch(e => {
-                                      if (e.name !== 'conflict') {
-                                        throw e
-                                      }
-                                    })))
+       Promise.all(medias.map(m => {
+          return db.get(m._id)
+            .then(doc => {
+              m._rev = doc._rev
+              return db.put(m)
+            })
+           .catch(e => {
+             if(e.status === 404) {
+               return db.put(m)
+             }
+           })
+        // db.put(m)
+        //   .catch(e => {
+        //     if (e.name !== 'conflict') {
+        //       throw e
+        //     } else {
+              
+        //     }
+          
+        //   })
+      }))
     },
     getMoreMedias (context) {
       return context.dispatch('queryMedias')
@@ -304,6 +319,17 @@ const store = new Vuex.Store({
     },
     removeOfflineMediaURL(context, id) {
       
+    },
+    downloadMedia(context, id) {
+      const base = process.env.VUE_APP_API_URL
+      return axios.put(base + '/medias/download/' + id)
+        .then(res => {
+          const media = res.data
+          console.log(media)
+          context.commit('removeMedia', media._id)
+          context.commit('insertMedias', [media])
+          return context.dispatch('storeMedias', [media])
+        })
     }
   }
 })

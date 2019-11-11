@@ -49,6 +49,8 @@
               </div>
               <div class="control" v-bind:class="{'is-loading': isUploading}">
                 <label for="post-media-url" class="button is-info" v-bind:class="{'is-danger': uploadFailed}">+</label>
+                <label for="post-media-url" class="button is-info" v-bind:class="{'is-danger': uploadFailed}">*</label>
+
                 <!-- <button class="button is-info" >+</button> -->
               </div>
             </div>

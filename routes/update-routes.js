@@ -10,7 +10,7 @@ const Media = require('../models/Media')
 let handleJson = function (promises, req, res) {
   promises.then(medias => {
     if (medias) {
-      if (medias.length !== null) {
+      if (Array.isArray(medias)) {
         res.json(medias.map(media => media.toAPIJSON()))
       } else {
         res.json(medias.toAPIJSON())
@@ -61,6 +61,11 @@ module.exports = function (router, links, cacheCol) {
       res.status(400)
       res.json({ message: 'url parameter needed' })
     }
+  })
+
+  router.put('/medias/download/:id', (req, res, next) => {
+    const dbId = req.params.id
+    handleJson(downloadOne(dbId), req, res)
   })
 
   let bagOfPromises = function (promise, args, start) {
@@ -128,6 +133,27 @@ module.exports = function (router, links, cacheCol) {
         const archive = Archive.create(files)
         const media = Media.create(url, info, archive)
         return mediaDB.add(media)
+      })
+  }
+
+  let downloadOne = function(id) {
+    return mediaDB.findById(id)
+      .then(media => {
+        if (media.file_path === null) {
+          return Archive.load(media)
+            .then(archive => Downloader.createInfo(Archive.absolute(archive.infoPath)))
+            .then(info => Downloader.downloadMedia(info))
+            .then(info => {
+              return Archive.load(media)
+                .then(newArchive => {
+                  const updatedMedia = Media.update(media, info, newArchive)
+                  return mediaDB.replace(updatedMedia)
+                })
+            })
+        } else {
+          console.log('media already downloaded')
+          return Promise.resolve(media)
+        }
       })
   }
 

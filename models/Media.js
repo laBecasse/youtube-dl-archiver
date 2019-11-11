@@ -55,10 +55,10 @@ class Media {
       subtitlesArray = this.subtitles.reduce((res, sub) => {
         const filePath = sub.file_path
         const lang = sub.lang
-          res.push({
-            url: HOST + '/archives/' + encodeURIPath(filePath),
-            lang: sub.lang
-          })
+        res.push({
+          url: HOST + '/archives/' + encodeURIPath(filePath),
+          lang: sub.lang
+        })
         return res
       }, [])
     }
@@ -133,7 +133,15 @@ class Media {
       archive_dir: archive.dirpath
     })
   }
+  
+  static update (media, info, archive) {
+    const updatedMedia = Media.create(media.url, info, archive)
+    updatedMedia._id = media._id
+    updatedMedia.creation_date = media.creation_date
 
+    return updatedMedia
+  }
+  
   // static createFromDocument (document) {
   //   return Media.createFromInfo(document.media_url,
   //                               document.url,

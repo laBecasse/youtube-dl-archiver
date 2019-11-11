@@ -30,31 +30,38 @@
         <p>Télécharger</p>
       </div>
       <div class="message-body" >
-        <div class="columns is-vcentered">
-          <div class="column is-full">
-            <p></p>
-            <div class="columns is-centered">
+        <div class="columns is-centered">
+          <div class="column">
+            <a class="button" v-on:click="toggleDownloadChoose">
+              Annuler
+            </a>
+          </div>
+          <div class="column">
+            <div class="columns">
               <div class="column">
-                <a class="button" v-on:click="toggleDownloadChoose">
-                  Annuler
-                </a>
+                <p v-if="media.file_path && !offlineMediaURL" class="field">
+                  <a class="button is-info" v-on:click="createOfflineMedia" >
+                    Rendre le média hors ligne
+                  </a>
+                </p>
+                <p v-if="offlineMediaURL" class="field">
+                  <a class="button is-danger" v-on:click="removeOfflineMedia">
+                    Supprimer le média hors ligne
+                  </a>
+                </p>
+                <p v-if="!media.file_path" class="field">
+                  <a class="button is-info" v-on:click="download">
+                    Télécharger sur le serveur
+                  </a>
+                </p>
               </div>
               <div class="column">
-                <div class="columns">
-                  <p class="column" v-if="!offlineMediaURL">
-                    <a class="button is-info" v-on:click="createOfflineMedia">
-                      Rendre le média hors ligne
-                    </a>
-                  </p>
-                  <p class="column" v-if="offlineMediaURL">
-                    <a class="button is-danger" v-on:click="removeOfflineMedia">
-                      Supprimer le média hors ligne
-                    </a>
-                  </p>
-                  <p class="column">
-                    <a :href="media.file_url" class="button is-info" title="Télécharger">Télécharger</a>
-                  </p>
-                </div>
+                <p class="field">
+                  <a :href="media.file_url" class="button is-info" title="Télécharger" download>Télécharger</a>
+                </p>
+                <p v-if="media.torrent_url" class="field">
+                  <a :href="media.torrent_url" class="button is-info" title="Télécharger" download>Télécharger Torrent</a>
+                </p>
               </div>
             </div>
           </div>
@@ -109,7 +116,7 @@
   <footer class="card-footer">
     <!-- <a :href="media.file_url" class="card-footer-item" download>Download</a> -->
     <!-- <a class="card-footer-item"><span class="button"><span class="delete has-text-danger"></span> Delete</span></a> -->
-    <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
+    <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL, 'has-background-black': media.file_url, 'has-text-white': media.file_url}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
     <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><TrashIcon/></a>
   </footer>
   <script v-html="jsonld" type="application/ld+json">
@@ -130,16 +137,16 @@ export default {
     TrashIcon
   },
   data () {
-  const jsonld = {
-    "@context": "https://schema.org/",
-    "@type":"VideoObject",
-    "name": this.media.title,
-    "description": this.media.description,
-    "thumbnailUrl": (this.media.thumbnail) ? this.media.thumbnail.url: null,
-    "uploadDate": this.media.upload_date,
-    "contentUrl": this.media.url
-  }
-
+    const jsonld = {
+      "@context": "https://schema.org/",
+      "@type":"VideoObject",
+      "name": this.media.title,
+      "description": this.media.description,
+      "thumbnailUrl": (this.media.thumbnail) ? this.media.thumbnail.url: null,
+      "uploadDate": this.media.upload_date,
+      "contentUrl": this.media.url
+    }
+    
     return {
       deleteConfirmation: false,
       downloadChoose: false,
@@ -211,7 +218,7 @@ export default {
   methods: {
     ...mapGetters(['getMagnet']),
     ...mapMutations(['setMagnetOfId']),
-    ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia']),
+    ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia', 'downloadMedia']),
     toggleDeleteConfirmation () {
       this.deleteConfirmation = !this.deleteConfirmation
     },
@@ -254,6 +261,10 @@ export default {
         .catch(e => {
           if (e.status !== 404) throw e
         })
+    },
+    download () {
+      const id = this.media._id
+      return this.downloadMedia(id)
     },
     reloadMedia () {
       // reload the media when changing the source URL

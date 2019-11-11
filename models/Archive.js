@@ -13,6 +13,8 @@ class Archive {
     const mediaPaths = filesPath.filter(_testMedia)
     this.mediaPath = (mediaPaths.length !== 0) ? mediaPaths[0] : null
 
+    this.infoPath = filesPath.filter(_testInfo)[0]
+
     this.filesPath = filesPath
 
     this.thumbnailsPath = filesPath
@@ -98,5 +100,7 @@ const _testTumbnails = testExt(['.png', '.jpeg', '.jpg'])
 const _testSubtitles = testExt(['.vtt'])
 
 const _testTorrent = testExt(['.torrent'])
+
+const _testInfo = testExt(['.json'])
 
 module.exports = Archive
