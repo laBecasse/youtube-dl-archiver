@@ -282,7 +282,7 @@ export default {
     download () {
       const id = this.media._id
       return this.downloadMedia({id: id})
-        .then(() => this.toggleDownloadChoose())
+        .then(() => {this.downloadChoose = false})
     },
     /* play states */
     play () {
