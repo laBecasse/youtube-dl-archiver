@@ -356,12 +356,11 @@ const store = new Vuex.Store({
     },
     downloadMedia(context, payload) {
       const id = payload.id
-      const base = process.env.VUE_APP_API_URL
+       const base = process.env.VUE_APP_API_URL
       return axios.put(base + '/medias/download/' + id)
         .then(res => {
           const media = res.data
-          console.log(media)
-          context.commit('removeMedia', media._id)
+           context.commit('removeMedia', media._id)
           context.commit('insertMedias', [media])
           return context.dispatch('storeMedias', [media])
         })
