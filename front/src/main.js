@@ -12,6 +12,7 @@ Vue.use(VueAxios, axios);
 
 import App from './App.vue';
 import ListMedia from './components/ListMedia.vue'
+import Settings from './components/Settings.vue'
 
 import WebTorrent from 'webtorrent'
 
@@ -36,6 +37,11 @@ const routes = [
     name: 'WatchMedia',
     path: '/medias/:id',
     component: ListMedia
+  },
+  {
+    name: 'Settings',
+    path: '/settings',
+    component: Settings
   }
 ]
 
@@ -60,7 +66,8 @@ const store = new Vuex.Store({
     sort: {},
     isSingle: false,
     webtorrentClient: new WebTorrent(),
-    magnetPerId: {}
+    magnetPerId: {},
+    settings: {}
   },
   getters: {
     first (state) {
@@ -154,6 +161,9 @@ const store = new Vuex.Store({
     },
     setMagnetOfId(state, payload) {
       state.magnetPerId[payload.id] = payload.magnet
+    },
+    setSettings(state, settings) {
+      state.settings = settings
     }
   },
   actions: {
@@ -356,11 +366,11 @@ const store = new Vuex.Store({
     },
     downloadMedia(context, payload) {
       const id = payload.id
-       const base = process.env.VUE_APP_API_URL
+      const base = process.env.VUE_APP_API_URL
       return axios.put(base + '/medias/download/' + id)
         .then(res => {
           const media = res.data
-           context.commit('removeMedia', media._id)
+          context.commit('removeMedia', media._id)
           context.commit('insertMedias', [media])
           return context.dispatch('storeMedias', [media])
         })

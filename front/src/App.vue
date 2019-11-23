@@ -1,5 +1,5 @@
 <template>
-<div id="app">
+<div id="app" v-bind:class="{'has-background-dark': darkMode}">
   <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
       <div class="columns is-mobile is-vcentered is-multiline is-centered mobile-nav-columns">
@@ -83,11 +83,17 @@
 <script>
 import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
 import SearchIcon from 'vue-ionicons/dist/md-search.vue'
+
 import { mapActions, mapGetters } from 'vuex'
 export default {
   components: {
     SearchIcon,
     DownloadIcon
+  },
+  computed: {
+    darkMode() {
+      return this.$store.state.settings.darkMode
+    }
   },
   data () {
     return {
@@ -100,6 +106,15 @@ export default {
       'offline': !navigator.onLine
     }
   },
+watch: {
+darkMode () {
+if (this.darkMode) {
+  document.body.classList.add('has-background-dark')
+} else {
+  document.body.classList.remove('has-background-dark')
+}
+}
+},
   mounted () {
     window.addEventListener('online',  () => {
       this.offline = false
@@ -132,13 +147,17 @@ export default {
 </script>
 
 <style>
+html, body {
+  height: 100%;
+}
+
 #app {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #2c3e50;
-    margin-top: .5em;
+    height: 100%;
 }
 
 .mobile-nav-columns{
