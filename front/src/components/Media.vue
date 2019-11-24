@@ -73,10 +73,10 @@
         <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
           <source v-if="media.file_url" :src="offlineMediaURL || media.file_url" :type="media.mime"/>
           <source v-if="!media.file_url && media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
-          <track v-for="sub in media.subtitles"
+          <track v-for="sub in media.subtitles" :key="sub.url"
                  :src="sub.url"
                  :label="sub.lang"
-                 kind="subtitles" :srclang="sub.lang">
+                 kind="subtitles" :srclang="sub.lang"/>
             <p>Your browser does not support the video element.</p>
         </video>
         <audio v-if="media.type === 'audio'" controls preload="none">
@@ -186,7 +186,7 @@ export default {
       
       const mediaElt = this.getMediaElt()
       
-      const playhandler = function(event) {
+      const playhandler = function() {
         
         // if the actual media is not yet served using webtorrent
         if (!t.isTorrentSet) {
@@ -238,7 +238,7 @@ export default {
   methods: {
     ...mapGetters(['getMagnet']),
     ...mapMutations(['setMagnetOfId']),
-    ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia', 'downloadMedia', 'deleteMedia']),
+    ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia', 'downloadMedia']),
     toggleDeleteConfirmation () {
       this.deleteConfirmation = !this.deleteConfirmation
     },
@@ -249,7 +249,7 @@ export default {
     },
     /* control handlers */
     deleteThis () {
-      return this.deleteMedia({id: this.media.id})
+      return this.$store.dispatch('delete', {id: this.media.id})
     },
     toggleDownloadChoose() {
       this.downloadChoose = !this.downloadChoose

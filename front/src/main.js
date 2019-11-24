@@ -20,7 +20,8 @@ import PouchDB from 'pouchdb'
 import PouchDBFind from 'pouchdb-find'
 PouchDB.plugin(PouchDBFind)
 
-import promiseTimeout from './lib/timeout-promise';
+import MediaDB from './lib/MediaDB'
+const mediaDB = new MediaDB(process.env.VUE_APP_API_URL)
 
 const routes = [
   {
@@ -45,12 +46,6 @@ const routes = [
   }
 ]
 
-// database of medias
-const db = new PouchDB("medias")
-db.createIndex({
-  index: {fields: [{creation_date:'desc'}]}
-})
-
 // database of offline medias
 const offlineMedias = new PouchDB("offline_medias")
 const ATTACHMENT_ID = 'media'
@@ -58,12 +53,10 @@ const ATTACHMENT_ID = 'media'
 const store = new Vuex.Store({
   state: {
     medias: [],
-    isLocked: false,
     offset: 0,
     step: 10,
-    query: "",
-    selector: {},
-    sort: {},
+    queryName: 'find',
+    input: '',
     isSingle: false,
     webtorrentClient: new WebTorrent(),
     magnetPerId: {},
@@ -79,7 +72,6 @@ const store = new Vuex.Store({
     },
     after: (state) => (id) => {
       const index = state.medias.findIndex(m => (m.id == id))
-      console.log(index)
       return state.medias[index + 1]
     },
     contains (state, id) {
@@ -94,21 +86,6 @@ const store = new Vuex.Store({
       state.medias = []
       state.offset = 0
     },
-    //deprecated
-    insertMediasAtTop (state, list) {
-      const newMedias = state.medias.slice()
-      for(let m of list) {
-        // insert at right position from the top
-        let i = 0
-        while(i < newMedias.length &&
-              newMedias[i].creation_date >= m.creation_date) {
-          i++
-        }
-        if (i === 0 || newMedias[i - 1]._id !== m._id)
-          newMedias.splice(i, 0, formatMedia(m))
-      }
-      state.medias = newMedias
-    },
     insertMedias (state, list) {
       const newMedias = state.medias.slice()
       for(let m of list) {
@@ -117,20 +94,23 @@ const store = new Vuex.Store({
         // for text search disable insertion
         // THERE IS STILL A PROBLEM OF DUPLICATED FOR TEXT SEARCH !!!
         // 2 QUERIES ARE EXECUTED IN PARALLEL 
-        console.log(state.query, state.query.startsWith('/search?text='))
         while(i > 0 &&
-              !state.query.startsWith('/search?text=') &&
-              newMedias[i - 1].creation_date < m.creation_date) {
+              //              !state.query.startsWith('/search?text=') &&
+              newMedias[i - 1].creation_date <= m.creation_date &&
+              newMedias[i - 1]._id !== m._id) {
           i--
         }
+
         if (i === 0 || newMedias[i - 1]._id !== m._id)
           newMedias.splice(i, 0, formatMedia(m))
       }
       state.medias = newMedias
+      state.offset = state.medias.length
     },
-    removeMedia (state, id) {
+    remove (state, id) {
       const index = state.medias.findIndex((m) => m.id === id)
       state.medias.splice(index, 1)
+      state.offset = state.medias.length
     },
     setSingle(state, value) {
 
@@ -141,23 +121,15 @@ const store = new Vuex.Store({
       }
       state.isSingle = value
     },
-    // set the api query
-    setQuery(state, query) {
-      state.query = query
+    // set the query name
+    setQueryName(state, name) {
+      state.queryName = name
     },
-    // set the 
-    setPouchDBQuery(state, payload) {
-      state.selector = payload.selector
-      state.sort = payload.sort || {}
+    setInput(state, input) {
+      state.input = input
     },
-    refreshOffset(state) {
-      state.offset = state.medias.length
-    },
-    lock(state) {
-      state.isLocked = true
-    },
-    unlock(state) {
-      state.isLocked = false
+    setOffset(state, offset) {
+      state.offset = offset
     },
     setMagnetOfId(state, payload) {
       state.magnetPerId[payload.id] = payload.magnet
@@ -179,204 +151,67 @@ const store = new Vuex.Store({
 
       return Promise.all(promises)
     },
-    changesQuery(context, query) {
-      const oldQuery = context.state.query
-      context.commit("setQuery", query)
-      return oldQuery !== query
+    query (context, payload) {
+      const queryName = payload.queryName
+      const input = payload.input
+      context.commit('setQueryName', queryName)
+      context.commit('setInput', input)
+      context.commit('emptyMedias')
+      return context.dispatch('getMore')
     },
-    queryStoredMedias(context) {
-      const step = context.state.step
+    getMore(context) {
+      const queryName = context.state.queryName
+      const input = context.state.input
+      const limit = context.state.step
       const offset = context.state.offset
-      const selector = context.state.selector
-      const sort = context.state.sort
-      return db.find({
-        selector: selector,
-        limit: step,
-        sort: [{'creation_date': 'desc'}],
-        skip: offset
-      })
-        .then(results => {
-          const medias = results.docs
+
+      return mediaDB[queryName](input, limit, offset)
+        .then(medias => {
           context.commit('setSingle', false)
           context.commit('insertMedias', medias)
-          context.commit('unlock')
           return medias
         })
-        .then(() => context.commit('refreshOffset'))
-    },
-    queryOneStoredMedia(context, id) {
-      return db.get(id)
-    },
-    queryMedias(context, payload) {
-      const base = process.env.VUE_APP_API_URL
-      const limit = (payload) ? payload.limit : context.state.step
-      const offset = (payload) ? payload.offset : context.state.offset
-      const query = context.state.query
 
-      let fullQuery
-      if (query.includes('?')) {
-        fullQuery = base + query + '&limit=' + limit + '&offset='+ offset
-      } else {
-        fullQuery =  base + query + '?limit=' + limit + '&offset='+ offset
-      }
-
-      if (!context.state.isLocked) {
-        context.commit('lock')
-        console.time('query')
-        const promise =  axios.get(fullQuery)
-              .then(response => {
-                const medias = response.data
-                context.commit('setSingle', false)
-                context.commit('insertMedias', medias)
-                context.commit('unlock')
-                console.timeEnd('query')
-                return medias
-              })
-
-        return promiseTimeout(500, promise)
-          .then(medias => context.dispatch('storeMedias', medias))
-          .then(() => context.commit('refreshOffset'))
-          .catch(e => {console.log(e); return context.dispatch('queryStoredMedias')})
-      }
-
-    },
-    storeMedias(context, medias) {
-      Promise.all(medias.map(m => {
-        return db.get(m._id)
-          .then(doc => {
-            m._rev = doc._rev
-            return db.put(m)
-          })
-          .catch(e => {
-            if(e.status === 404) {
-              return db.put(m)
-            }
-          })
-        // db.put(m)
-        //   .catch(e => {
-        //     if (e.name !== 'conflict') {
-        //       throw e
-        //     } else {
-        
-        //     }
-        
-        //   })
-      }))
-    },
-    getMoreMedias (context) {
-      return context.dispatch('queryMedias')
     },
     refreshMedias (context) {
-      console.log("refresh")
-      return context.dispatch('queryMedias', {limit: context.state.medias.length, offset: 0})
+      context.commit('setOffset', 0)
+      return context.dispatch('getMore')
     },
-    getOneMedias (context, id) {
-      const base = process.env.VUE_APP_API_URL
-      
-      if(context.state.medias.length === 0) {
-        const promise = axios.get(base + '/medias/' + id)
-              .then(response => {
-                const media = response.data
-                context.commit('insertMedias', [media])
-                context.commit('setSingle', true)
-              })
-        return promiseTimeout(500, promise)
-      }
-    },
-    getMediasList (context) {
-      return context.dispatch('changesQuery', '/medias')
-        .then(changed => {
-          if (changed) {
-            context.commit('emptyMedias')
-            context.commit('setPouchDBQuery',
-                           {'selector': {},
-                            'sort': {'creation_date': -1}})
-            return context.dispatch('queryMedias')
-          }
-        })
-    },
-    searchText (context, text, refresh) {
-      if (text[0] === '#') {
-        return context.dispatch('searchTag', text.substring(1, text.length))
-      }
-      
-      return context.dispatch('changesQuery', '/search?text=' + text)
-        .then(changed => {
-          if (changed) {
-            context.commit('emptyMedias')
-            context.commit('setPouchDBQuery',
-                           {'selector': {$and: [{$or: [{title: {$regex: RegExp(text, 'i')}},
-                                                       {description: {$regex: RegExp(text, 'i')}}]},
-                                                {creation_date :{$gt: null}}]},
-                            'sort': {'creation_date': -1}})
-            return context.dispatch('queryMedias')
-          }
-        })
-    },
-    searchUploader (context, uploader) {
-      return context.dispatch('changesQuery', '/search?uploader=' + uploader)
-        .then(changed => {
-          if (changed){
-            context.commit('emptyMedias')
-            context.commit('setPouchDBQuery',
-                           {'selector': {$and: [{uploader: {$eq:uploader}}, {creation_date :{$gt: null}}]},
-                            'sort': {'creation_date': -1}})
-
-            return context.dispatch('queryMedias')
-          }
-        })
-    },
-    searchTag (context, tag) {
-      return context.dispatch('changesQuery', '/tags/' + tag)
-        .then(changed => {
-          if (changed){
-            context.commit('emptyMedias')
-            context.commit('setPouchDBQuery', {'selector': {tags: {$in: [tag]}}})
-
-            return context.dispatch('queryMedias')
-          }
+    getOneMedia (context, id) {
+      return mediaDB.getOne(id)
+        .then(media => {
+          const a = (media) ? [media] : []
+          context.commit('insertMedias', a)
+          context.commit('setSingle', true)
         })
     },
     uploadURL(context, payload) {
       const {url, withDownload} = payload
-      const base = process.env.VUE_APP_API_URL
-      const params = new URLSearchParams()
-      params.append('url', url)
-      params.append('withdownload', withDownload)
-
-      return axios.post(base + "/medias", params)
-        .then(res => {
-          const medias = res.data
-          return context.dispatch('storeMedias', medias)
-        })
+      mediaDB.uploadURL(url, withDownload)
         .then(() => context.dispatch('refreshMedias'))
     },
-    deleteMedia (context, payload) {
-      const base = process.env.VUE_APP_API_URL
+    delete (context, payload) {
       const id = payload.id
-      const query = base + '/medias/' + id
-      console.log(query)
-      return axios.delete(query)
-        .then((response) => {
-          context.commit('removeMedia', id)
+      return mediaDB.delete(id)
+        .then(() => {
+          context.commit('remove', id)
         })
-        .catch((e) => {
+        .catch(e => {
           console.error(e)
         })
     },
     downloadMedia(context, payload) {
       const id = payload.id
-      const base = process.env.VUE_APP_API_URL
-      return axios.put(base + '/medias/download/' + id)
-        .then(res => {
-          const media = res.data
-          context.commit('removeMedia', media._id)
+      mediaDB
+        .download(id)
+        .then(media => {
+          context.commit('remove', media._id)
           context.commit('insertMedias', [media])
-          return context.dispatch('storeMedias', [media])
+          return [media]
         })
     },
     makeOfflineMedia(context, id) {
-      return context.dispatch("queryOneStoredMedia",id)
+      return mediaDB.getOne(id)
         .then(media => {
           return fetch(media.file_url)
             .then(res => res.blob())
@@ -398,9 +233,6 @@ const store = new Vuex.Store({
     getOfflineMediaURL(context, id) {
       return offlineMedias.getAttachment(id, ATTACHMENT_ID)
         .then(blob => URL.createObjectURL(blob))
-    },
-    removeOfflineMediaURL(context, id) {
-      
     }
   }
 })
