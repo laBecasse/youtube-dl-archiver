@@ -84,7 +84,6 @@
 import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
 import SearchIcon from 'vue-ionicons/dist/md-search.vue'
 
-import { mapActions, mapGetters } from 'vuex'
 export default {
   components: {
     SearchIcon,
@@ -124,7 +123,6 @@ if (this.darkMode) {
     })
   },
   methods: {
-    ...mapActions(['uploadURL']),
     search () {
       let text = document.getElementById('search-text').value
       this.$router.push({path: '/search', query : {text: text}})
@@ -134,10 +132,9 @@ if (this.darkMode) {
       const withDownload = document.getElementById('withdownload').checked
       this.isUploading = true
       this.uploadFailed = false
-      return this.uploadURL({url: url, withDownload: withDownload})
+      return this.$store.dispatch('uploadURL', ({url: url, withDownload: withDownload}))
         .then(() => {this.isUploading = false})
         .catch(err => {
-          console.error(err)
           this.uploadFailed = true
           this.isUploading = false
         })
