@@ -1,5 +1,7 @@
 <template>
 <div id="app" v-bind:class="{'has-background-dark': darkMode}">
+  <notification
+    :options.sync="this.notificationOpt"></notification>
   <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
       <div class="columns is-mobile is-vcentered is-multiline is-centered mobile-nav-columns">
@@ -45,7 +47,7 @@
           <form v-on:submit.prevent="onSubmit" action="/medias" method="post">
             <div class="field has-addons">
               <div class="control">
-                <input id="post-media-url" class="input" type="text" value="" name="url" placeholder="ajouter une vidéo"/>
+                <input id="post-media-url" class="input" type="text" value="" name="url" placeholder="ajouter un média"/>
               </div>
               <div class="control">
                 <input type="checkbox" id="withdownload" name="withdownload" class="hidden" value="" checked/>
@@ -83,12 +85,13 @@
 <script>
 import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
 import SearchIcon from 'vue-ionicons/dist/md-search.vue'
+import Notification from './components/Notification'
 
-import { mapActions, mapGetters } from 'vuex'
 export default {
   components: {
     SearchIcon,
-    DownloadIcon
+    DownloadIcon,
+    Notification
   },
   computed: {
     darkMode() {
@@ -103,44 +106,69 @@ export default {
       'step': 10,
       'isUploading': false,
       'uploadFailed': false,
-      'offline': !navigator.onLine
+      'offline': !navigator.onLine,
+      'notificationOpt': {
+      }
     }
   },
-watch: {
-darkMode () {
-if (this.darkMode) {
-  document.body.classList.add('has-background-dark')
-} else {
-  document.body.classList.remove('has-background-dark')
-}
-}
-},
+  watch: {
+    darkMode () {
+      if (this.darkMode) {
+        document.body.classList.add('has-background-dark')
+      } else {
+        document.body.classList.remove('has-background-dark')
+      }
+    }
+  },
   mounted () {
     window.addEventListener('online',  () => {
+      this.showInfo("Tu es ligne, bienvenue sur les internets")
       this.offline = false
     })
     window.addEventListener('offline', () => {
       this.offline = true
+      this.showInfo("Tu es hors ligne ! <br/> Les seuls médias visibles sont ceux que tu as déjà vu")
     })
   },
   methods: {
-    ...mapActions(['uploadURL']),
     search () {
       let text = document.getElementById('search-text').value
       this.$router.push({path: '/search', query : {text: text}})
     },
-    onSubmit (event) {
+    onSubmit () {
+
+      if(this.offline) {
+        return this.showWarning('Tu ne peux pas ajouter de média en étant hors ligne')
+      }
+      
       const url = document.getElementById('post-media-url').value
       const withDownload = document.getElementById('withdownload').checked
       this.isUploading = true
       this.uploadFailed = false
-      return this.uploadURL({url: url, withDownload: withDownload})
+
+      return this.$store.dispatch('uploadURL', {url: url, withDownload: withDownload})
         .then(() => {this.isUploading = false})
         .catch(err => {
-          console.error(err)
           this.uploadFailed = true
           this.isUploading = false
         })
+    },
+    showInfo(content) {
+      this.notificationOpt = {
+        autoClose: true,
+        backgroundColor: '#769FCD',
+        content: content,
+        countdownBar: true,
+        barColor: '#415F77'
+      }
+    },
+    showWarning(content) {
+      this.notificationOpt = {
+        autoClose: false,
+        backgroundColor: '#fbff7c',
+        textColor: '#92253f',
+        content: content
+      }
     }
   }
 }
@@ -148,7 +176,7 @@ if (this.darkMode) {
 
 <style>
 html, body {
-  height: 100%;
+    height: 100%;
 }
 
 #app {
