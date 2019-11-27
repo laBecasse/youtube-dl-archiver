@@ -73,7 +73,7 @@
     </div>
     
   </nav>
-  <section class="section is-medium">
+  <section class="section">
     <div class="level" v-if="this.$route.name === 'SearchMedia'">
       <h3 class="level-item title" v-if="this.$route.query.uploader">{{this.$route.query.uploader}}</h3>
     </div>
@@ -185,6 +185,10 @@ html, body {
     text-align: center;
     color: #2c3e50;
     height: 100%;
+}
+
+section {
+    margin-top: 1rem;
 }
 
 .mobile-nav-columns{
