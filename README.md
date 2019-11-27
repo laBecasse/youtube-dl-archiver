@@ -1,21 +1,21 @@
 # Youtube-dl Archiver
 
-Youtube-dl Archiver is a web tools which archives medias (video, audio). The aim is to have a tools that enables to archive, organize and share medias from the web. We can imagine it as [Wallabag](https://wallabag.org/) for medias.
+Youtube-dl Archiver is a web tools which archives medias (video, audio). The aim is to have a tools that enables to archive, organize and share medias from the web. We can think of it as [Wallabag](https://wallabag.org/) for medias.
 
 Disclaimer: the project is currently in building stage. 
 
 ## Current Functionalities
 
 In back-end:
-    1. download using [youtube-dl](http://ytdl-org.github.io/youtube-dl/)
-    2. download of the metadata only, with the possibility to download later
-    3. support of audio and video with thumbnail and subtitles
-    4. support of webtorrent download from peertube instance
+1. download using [youtube-dl](http://ytdl-org.github.io/youtube-dl/)
+2. download of the metadata only, with the possibility to download later
+3. support of audio and video with thumbnail and subtitles
+4. support of webtorrent download from peertube instance
 
 In front-end:
-    1. support of webtorrent in the browser
-    2. Progressive Web Application with offline support for media list
-    3. Support of media download in browser (experimental)
+1. support of webtorrent in the browser
+2. Progressive Web Application with offline support for media list
+3. Support of media download in browser (experimental)
     
 
 ## Configuration 
