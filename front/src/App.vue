@@ -51,7 +51,7 @@
               </div>
               <div class="control">
                 <input type="checkbox" id="withdownload" name="withdownload" class="hidden" value="" checked/>
-                <label for="withdownload" class="button has-text-grey withdownload"><DownloadIcon/></label>
+                <label for="withdownload" class="button has-text-grey withdownload" title="Activer le téléchargement des médias"><DownloadIcon/></label>
               </div>
               <div class="control" v-bind:class="{'is-loading': isUploading}">
                 <label for="post-media-url-submit" class="button is-info" v-bind:class="{'is-danger': uploadFailed}">></label>
