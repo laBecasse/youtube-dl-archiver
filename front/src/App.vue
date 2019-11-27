@@ -145,7 +145,6 @@ export default {
       const withDownload = document.getElementById('withdownload').checked
       this.isUploading = true
       this.uploadFailed = false
-
       return this.$store.dispatch('uploadURL', {url: url, withDownload: withDownload})
         .then(() => {this.isUploading = false})
         .catch(err => {

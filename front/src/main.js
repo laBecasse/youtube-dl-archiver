@@ -187,7 +187,7 @@ const store = new Vuex.Store({
     },
     uploadURL(context, payload) {
       const {url, withDownload} = payload
-      mediaDB.uploadURL(url, withDownload)
+      return mediaDB.uploadURL(url, withDownload)
         .then(() => context.dispatch('refreshMedias'))
     },
     delete (context, payload) {
