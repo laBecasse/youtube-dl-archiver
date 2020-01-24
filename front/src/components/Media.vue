@@ -257,7 +257,13 @@ export default {
     createOfflineMedia () {
       const id = this.media._id
       this.makeOfflineMedia(id)
-        .then(() => this.setOfflineMediaURL())
+      .then(() => this.setOfflineMediaURL())
+      .catch(e => {
+        if (e.status !== 404) {
+          this.$root.showWarning('Une erreur est survenue à la mise hors-ligne de la vidéo:<br/>: '+e)
+          }
+        })
+
     },
     removeOfflineMedia () {
       const id = this.media._id
@@ -266,6 +272,10 @@ export default {
           this.offlineMediaURL = null
           this.downloadChoose = false
         })
+        .catch(e => {
+          this.$root.showWarning('Une erreur est survenue à la suppression de la vidéo hors-ligne :<br/>: '+e)
+        })
+
     },
     setOfflineMediaURL () {
       const id = this.media._id
