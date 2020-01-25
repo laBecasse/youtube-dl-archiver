@@ -79,41 +79,6 @@ module.exports = function (router, links) {
     handleJson(mediaDB.findById(dbId), req, res)
   })
 
-  // router.get('/medias/:id/file', (req, res, next) => {
-  //   function getFilePath (m) {
-  //     return FilePath.absolute(m.file_path)
-  //   }
-
-  //   return handleFile(getFilePath, req, res, next)
-  // })
-
-  // router.get('/medias/:id/thumbnail', (req, res, next) => {
-  //   function getFilePath (m) {
-  //     if (m.thumbnail) {
-  //       return FilePath.absolute(m.thumbnail.file_path)
-  //     } else {
-  //       return undefined
-  //     }
-  //   }
-
-  //   return handleFile(getFilePath, req, res, next)
-  // })
-
-  // router.get('/medias/:id/subtitle/:lang', (req, res, next) => {
-  //   const lang = req.params.lang
-
-  //   function getFilePath (m) {
-  //     const subres = m.subtitles.find(sub => sub.lang === lang)
-  //     if (subres) {
-  //       return FilePath.absolute(subres.file_path)
-  //     } else {
-  //       return undefined
-  //     }
-  //   }
-
-  //   return handleFile(getFilePath, req, res, next)
-  // })
-
   router.get('/tags/:tag', (req, res, next) => {
     const tag = req.params.tag
     handleJson(mediaDB.findByTag(tag), req, res)
