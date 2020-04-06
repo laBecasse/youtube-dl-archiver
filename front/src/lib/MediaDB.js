@@ -25,7 +25,7 @@ const queries = {
                             {description: {$regex: RegExp(text, 'i')}}]},
                      {creation_date :{$gt: null}}]}
     },
-    sort: []
+    sort: null
   },
   searchUploader: {
     api: uploader => '/search?uploader=' + uploader,
@@ -39,7 +39,7 @@ const queries = {
     selector: tag => {
       return {tags: {$in: [tag]}}
     },
-    sort: []
+    sort: null
   }
 }
 
@@ -154,8 +154,7 @@ export default class {
   }
 
   isSortedByCreationDate(queryName) {
-    console.log(queries[queryName].sort.length !== 0)
-    return queries[queryName].sort.length !== 0
+    return queries[queryName].sort !== null
   }
 
   getOne(id) {
