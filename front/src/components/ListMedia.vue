@@ -47,11 +47,14 @@
             </div>
             
             <span v-if="medias.length === 0" class="loading">Pas de résultat</span>
-            <div v-for="(medias, day, index) in mediasByDay">
+            <div v-if="isSortedByCreationDate" v-for="(medias, day, index) in mediasByDay">
                 <h4 class="creation_date" v-if="!watch_id">{{dateFormater.format(new Date(day))}}</h4>
                 <div v-for="media in medias" :key="media.id" class="is-6">
                     <Media :media="media" :expanded="!(!watch_id)" v-if="!watch_id || media.id === watch_id" :ref="media.id"></Media>
                 </div>
+            </div>
+            <div v-if="!isSortedByCreationDate" v-for="media in this.medias" :key="media.id" class="is-6">
+                <Media :media="media" :expanded="!(!watch_id)" v-if="!watch_id || media.id === watch_id" :ref="media.id"></Media>
             </div>
         </div>
     </div>
@@ -93,6 +96,9 @@
                  }
                  return r
              }, {})
+         },
+         isSortedByCreationDate() {
+             return this.$store.state.sortedByCreationDate
          }
      },
      data() {

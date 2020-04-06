@@ -52,6 +52,7 @@ const ATTACHMENT_ID = 'media'
 
 const store = new Vuex.Store({
   state: {
+    sortedByCreationDate: true,
     medias: [],
     offset: 0,
     step: 10,
@@ -95,6 +96,7 @@ const store = new Vuex.Store({
         // THERE IS STILL A PROBLEM OF DUPLICATED FOR TEXT SEARCH !!!
         // 2 QUERIES ARE EXECUTED IN PARALLEL 
         while(i > 0 &&
+              state.isSortedByCreationDate &&
               //              !state.query.startsWith('/search?text=') &&
               newMedias[i - 1].creation_date <= m.creation_date &&
               newMedias[i - 1]._id !== m._id) {
@@ -124,6 +126,7 @@ const store = new Vuex.Store({
     // set the query name
     setQueryName(state, name) {
       state.queryName = name
+     state.sortedByCreationDate = mediaDB.isSortedByCreationDate(name)
     },
     setInput(state, input) {
       state.input = input

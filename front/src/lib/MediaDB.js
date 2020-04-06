@@ -25,7 +25,7 @@ const queries = {
                             {description: {$regex: RegExp(text, 'i')}}]},
                      {creation_date :{$gt: null}}]}
     },
-    sort: [{'creation_date': 'desc'}]
+    sort: []
   },
   searchUploader: {
     api: uploader => '/search?uploader=' + uploader,
@@ -39,7 +39,7 @@ const queries = {
     selector: tag => {
       return {tags: {$in: [tag]}}
     },
-    sort: null
+    sort: []
   }
 }
 
@@ -151,6 +151,11 @@ export default class {
     for (let queryName in queries) {
       this[queryName] = queryWithOffline(base, queryName)
     }
+  }
+
+  isSortedByCreationDate(queryName) {
+    console.log(queries[queryName].sort.length !== 0)
+    return queries[queryName].sort.length !== 0
   }
 
   getOne(id) {
