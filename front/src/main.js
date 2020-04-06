@@ -54,6 +54,7 @@ const store = new Vuex.Store({
   state: {
     sortedByCreationDate: true,
     medias: [],
+    isLocked: false,
     offset: 0,
     step: 10,
     queryName: 'find',
@@ -137,6 +138,10 @@ const store = new Vuex.Store({
     setMagnetOfId(state, payload) {
       state.magnetPerId[payload.id] = payload.magnet
     },
+    toggleLock(state) {
+      state.isLocked = !state.isLocked
+      console.log('lock ' + state.isLocked)
+    },
     setSettings(state, settings) {
       state.settings = settings
     }
@@ -157,6 +162,7 @@ const store = new Vuex.Store({
     query (context, payload) {
       const queryName = payload.queryName
       const input = payload.input
+
       context.commit('setQueryName', queryName)
       context.commit('setInput', input)
       context.commit('emptyMedias')
@@ -167,14 +173,22 @@ const store = new Vuex.Store({
       const input = context.state.input
       const limit = context.state.step
       const offset = context.state.offset
-
+      if (!context.state.isLocked) {
+        console.log(queryName, input, limit, offset)
+        context.commit('toggleLock')
       return mediaDB[queryName](input, limit, offset)
-        .then(medias => {
+          .then(medias => {
+            console.log(medias)
           context.commit('setSingle', false)
           context.commit('insertMedias', medias)
+          context.commit('toggleLock')
           return medias
-        })
-
+          }).catch(e => {
+            console.log(e)
+            context.commit('toggleLock')
+            throw e
+          })
+      }
     },
     refreshMedias (context) {
       context.commit('setOffset', 0)

@@ -115,6 +115,8 @@ function buildTimeoutSwitch(apiQuery, offlineQuery) {
   // wait before switch to offline db
   return promiseTimeout.build(TIMEOUT, apiQuery)
     .catch(e => {
+      console.log('API query fails')
+
       // if there is timeout or any error fail back to offline db
       return offlineQuery
         .then(medias => {
@@ -124,8 +126,10 @@ function buildTimeoutSwitch(apiQuery, offlineQuery) {
               && (medias == null
                   || (Array.isArray(medias)
                       && medias.length == 0))) {
+            console.log('continue with API query')
             return apiQuery
           } else {
+            console.log('continue with offline query')
             return medias
           }
         })
