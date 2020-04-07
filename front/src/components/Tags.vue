@@ -1,8 +1,6 @@
 <template>
     <div class="tags" >
-        <a class="tag is-link is-small" v-for="tag in tags">
-            {{tag}}
-        </a>
+        <router-link class="tag is-link is-small" v-for="tag in tags" :to="{name: 'MediaTag', params: {tag: tag}}">{{tag}}</router-link>
     </div>
 </template>
 

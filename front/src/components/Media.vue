@@ -98,7 +98,7 @@
                 </div>
                 <div class="card-content">
                     <p class="media-meta">
-                        <router-link :to="{name: 'SearchMedia', query: {uploader: media.uploader}}" class="has-text-dark">
+                        <router-link :to="{name: 'Uploader', params: {uploader: media.uploader}}" class="has-text-dark">
                             <span v-if="media.creator">{{media.creator}}</span>
                             <span v-if="!media.creator && media.uploader">{{media.uploader}}</span>
                         </router-link>
@@ -167,11 +167,11 @@
          if (!t.mediaObj) {
              
              t.mediaPromise = t.$store.dispatch('getOneMedia', t.mediaId).then(media => {
-                 t.media = media
+                 t.media = formatMedia(media)
                  t.fileUrl = media.file_url
              })
          } else {
-             t.media = t.mediaObj
+             t.media = formatMedia(t.mediaObj)
              t.fileUrl = t.media.file_url
          }
      },
@@ -339,6 +339,92 @@
              this.isInitialized = true
          }
      }
+ }
+
+ /*
+  * Format media functions
+  */
+
+ const SHORT_DESCRIPTION_LENGTH = 200
+
+ function formatMedia (media) {
+     addMediaType(media)
+     addShortDescription(media)
+     addFormatedUploadDate(media)
+     addHTMLDescription(media)
+     return media
+ }
+
+ function urlify(text) {
+     var urlRegex = /(https?:\/\/[^\s]+)/g;
+     return text.replace(urlRegex, function(url) {
+         return '<a href="' + url + '">' + url + '</a>';
+     })
+ }
+
+ function htmlEscape(text) {
+     return text
+         .replace(/&/g, '&amp;')
+         .replace(/</g, '&lt;')
+         .replace(/"/g, '&quot;')
+         .replace(/'/g, '&#039;')
+ }
+
+ function addHTMLDescription (media) {
+     if (media.description) {
+         let htmlDescription = htmlEscape(media.description)
+         htmlDescription = urlify(htmlDescription)
+         htmlDescription = htmlDescription.replace(/\r\n?|\n/g, "<br>")
+         media.htmlDescription = htmlDescription
+     }
+ }
+
+ function addShortDescription (media) {
+     const description = media.description
+     
+     if (description) {
+         let shortDescription = description.split('\n\n')[0]
+         shortDescription = shortDescription.substring(0, SHORT_DESCRIPTION_LENGTH)
+         shortDescription = urlify(shortDescription)
+         shortDescription = shortDescription.replace(/\r\n?|\n/g, "<br>")
+         
+         if (media.description.length > SHORT_DESCRIPTION_LENGTH) {
+             shortDescription += '...'
+         }
+         media.short_description = shortDescription
+     }
+ }
+
+ function addMediaType (media) {
+     const reV = new RegExp('video')
+     const reI = new RegExp('image')
+     const reA = new RegExp('audio')
+     media.type = 'other'
+     if (reV.test(media.mime)) {
+         media.type = 'video'
+     }
+     if (reI.test(media.mime)) {
+         media.type = 'image'
+     }
+     if (reA.test(media.mime)) {
+         media.type = 'audio'
+     }
+ }
+
+ function addFormatedUploadDate (media) {
+     if (media.upload_date) {
+         const date = parseUploadDate(media)
+         media.formated_creation_date = new Intl.DateTimeFormat().format(date)
+     }
+ }
+
+ function parseUploadDate (media) {
+     const dateString = media.upload_date
+     const year = dateString.substring(0, 4)
+     const month = parseInt(dateString.substring(4, 6))
+     const day = dateString.substring(6, 8)
+     
+     return new Date(year, month - 1, day)
  }
 </script>
 

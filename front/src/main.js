@@ -11,7 +11,7 @@ import axios from 'axios';
 Vue.use(VueAxios, axios);
 
 import App from './App.vue';
-import ListMedia from './components/ListMedia.vue'
+import MediaList from './components/MediaList.vue'
 import Media from './components/Media.vue'
 import Settings from './components/Settings.vue'
 
@@ -23,17 +23,63 @@ PouchDB.plugin(PouchDBFind)
 
 import MediaDB from './lib/MediaDB'
 const mediaDB = new MediaDB(process.env.VUE_APP_API_URL)
+import View from './lib/View'
+
 
 const routes = [
   {
     name: 'ListMedia',
     path: '/',
-    component: ListMedia
+    component: MediaList,
+    props: {
+      'params': {
+        'queryName': 'find',
+        'input': {},
+        'isSortedByCreationDate': true
+      }
+    }
   },
   {
     name: 'SearchMedia',
     path: '/search',
-    component: ListMedia
+    component: MediaList,
+    props: (route) => {
+      return {
+        params: {
+          queryName: 'searchText',
+          input: route.query.text,
+          isSortedByCreationDate: false
+        }
+      }
+    }
+  },
+  {
+    name: 'Uploader',
+    path: '/uploader/:uploader',
+    component: MediaList,
+    props: (route) => {
+      return {
+        params: {
+          queryName: 'searchUploader',
+          input: route.params.uploader,
+          isSortedByCreationDate: false
+        }
+      }
+    }
+  },
+  {
+    name: 'MediaTag',
+    path: '/tag/:tag',
+    component: MediaList,
+    props: (route) => {
+      return {
+        params: {
+          queryName: 'searchTag',
+          input: route.params.tag,
+          isSortedByCreationDate: true
+        }
+      }
+    }
   },
   {
     name: 'WatchMedia',
@@ -67,7 +113,8 @@ const store = new Vuex.Store({
     isSingle: false,
     webtorrentClient: new WebTorrent(),
     magnetPerId: {},
-    settings: {}
+    settings: {},
+    lists: {}
   },
   getters: {
     first (state) {
@@ -84,36 +131,31 @@ const store = new Vuex.Store({
     contains (state, id) {
       return state.medias.some(m => m.id === id)
     },
+    getView(state) {
+      return (params) => {
+        return state.lists[View.getHashFromParams(params)]
+      }
+    },
+    getViewMedias(state) {
+      return (params) => {
+        return state.lists[View.getHashFromParams(params)].medias
+      }
+    },
     getMagnet: (state) => (id) =>  {
       return state.magnetPerId[id]
     }
   },
   mutations: {
-    emptyMedias (state) {
-      state.medias = []
-      state.offset = 0
-    },
-    insertMedias (state, list) {
-      const newMedias = state.medias.slice()
-      for(let m of list) {
-        // insert at right position from the bottom
-        let i = newMedias.length
-        // for text search disable insertion
-        // THERE IS STILL A PROBLEM OF DUPLICATED FOR TEXT SEARCH !!!
-        // 2 QUERIES ARE EXECUTED IN PARALLEL 
-        while(i > 0 &&
-              state.isSortedByCreationDate &&
-              //              !state.query.startsWith('/search?text=') &&
-              newMedias[i - 1].creation_date <= m.creation_date &&
-              newMedias[i - 1]._id !== m._id) {
-          i--
-        }
-
-        if (i === 0 || newMedias[i - 1]._id !== m._id)
-          newMedias.splice(i, 0, formatMedia(m))
+    registerView(state, params) {
+      const key = View.getHashFromParams(params)
+      if (!state.lists[key]) {
+        const view = new View(params)
+        console.log('new view', params, key)
+        Vue.set(state.lists, view.getHash(), view)
       }
-      state.medias = newMedias
-      state.offset = state.medias.length
+    },
+    emptyView (state, params) {
+      
     },
     remove (state, id) {
       const index = state.medias.findIndex((m) => m.id === id)
@@ -173,24 +215,23 @@ const store = new Vuex.Store({
       context.commit('emptyMedias')
       return context.dispatch('getMore')
     },
-    getMore(context, payload) {
-      const queryName = context.state.queryName
-      const input = context.state.input
+    getMore(context, params) {
+      const queryName = params.queryName
+      const input = params.input
       const limit = context.state.step
-      const offset = context.state.offset
-      if (!context.state.isLocked) {
-        console.log(queryName, input, limit, offset)
-        context.commit('toggleLock')
-      return mediaDB[queryName](input, limit, offset)
+      const view = context.getters.getView(params)
+      const offset = view.medias.length
+
+      if (!view.isLocked()) {
+        view.toggleLock()
+        return mediaDB[queryName](input, limit, offset)
           .then(medias => {
-            console.log(medias)
-          context.commit('setSingle', false)
-          context.commit('insertMedias', medias)
-          context.commit('toggleLock')
-          return medias
+            view.insertMedias(medias)
+            view.toggleLock()
+            return medias
           }).catch(e => {
             console.log(e)
-            context.commit('toggleLock')
+            view.toggleLock()
             throw e
           })
       }
@@ -205,7 +246,7 @@ const store = new Vuex.Store({
           const a = (media) ? [media] : []
           //context.commit('insertMedias', a)
           context.commit('setSingle', true)
-          return formatMedia(media)
+          return media
         })
     },
     uploadURL(context, payload) {
@@ -276,91 +317,6 @@ const store = new Vuex.Store({
 const router = new VueRouter({ mode: 'history', routes: routes});
 new Vue(Vue.util.extend({ router, store }, App)).$mount('#app');
 
-/*
- * Format media functions
- */
-
-const SHORT_DESCRIPTION_LENGTH = 200
-
-function formatMedia (media) {
-  addMediaType(media)
-  addShortDescription(media)
-  addFormatedUploadDate(media)
-  addHTMLDescription(media)
-  return media
-}
-
-function urlify(text) {
-  var urlRegex = /(https?:\/\/[^\s]+)/g;
-  return text.replace(urlRegex, function(url) {
-    return '<a href="' + url + '">' + url + '</a>';
-  })
-}
-
-function htmlEscape(text) {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-}
-
-function addHTMLDescription (media) {
-  if (media.description) {
-    let htmlDescription = htmlEscape(media.description)
-    htmlDescription = urlify(htmlDescription)
-    htmlDescription = htmlDescription.replace(/\r\n?|\n/g, "<br>")
-    media.htmlDescription = htmlDescription
-  }
-}
-
-function addShortDescription (media) {
-  const description = media.description
-  
-  if (description) {
-    let shortDescription = description.split('\n\n')[0]
-    shortDescription = shortDescription.substring(0, SHORT_DESCRIPTION_LENGTH)
-    shortDescription = urlify(shortDescription)
-    shortDescription = shortDescription.replace(/\r\n?|\n/g, "<br>")
-    
-    if (media.description.length > SHORT_DESCRIPTION_LENGTH) {
-      shortDescription += '...'
-    }
-    media.short_description = shortDescription
-  }
-}
-
-function addMediaType (media) {
-  const reV = new RegExp('video')
-  const reI = new RegExp('image')
-  const reA = new RegExp('audio')
-  media.type = 'other'
-  if (reV.test(media.mime)) {
-    media.type = 'video'
-  }
-  if (reI.test(media.mime)) {
-    media.type = 'image'
-  }
-  if (reA.test(media.mime)) {
-    media.type = 'audio'
-  }
-}
-
-function addFormatedUploadDate (media) {
-  if (media.upload_date) {
-    const date = parseUploadDate(media)
-    media.formated_creation_date = new Intl.DateTimeFormat().format(date)
-  }
-}
-
-function parseUploadDate (media) {
-  const dateString = media.upload_date
-  const year = dateString.substring(0, 4)
-  const month = parseInt(dateString.substring(4, 6))
-  const day = dateString.substring(6, 8)
-  
-  return new Date(year, month - 1, day)
-}
 
 /*
  * Nav burger 
