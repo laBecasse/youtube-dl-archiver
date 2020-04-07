@@ -284,7 +284,7 @@
                          // if the webtorrent is set/rendered
                          return;
                      }
-                     
+                     console.log('torrent stuff')
                      // try to get the torrent of the media 
                      const torrent = client.get(t.getMagnet()(media.id))
                      if (!torrent) {

@@ -82,6 +82,19 @@ function updateOrCreateOffline(medias) {
   }))
 }
 
+function deleteOffline(id) {
+  return db.get(id)
+    .then(m => {
+      return db.remove(m)
+    })
+    .catch(e => {
+      if (e.status === 404) {
+        console.log(media, ' was not in the offline, so not deleted')
+      }
+    })
+  
+}
+
 /* API querying */
 
 function queryMedias(base, queryName, input, limit, offset) {
@@ -200,6 +213,7 @@ export default class {
     return axios.delete(query)
       .then(() => {
         // remove the id offline too
+        return deleteOffline(id)
       })
   }
 }

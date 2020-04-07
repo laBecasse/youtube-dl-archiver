@@ -114,7 +114,7 @@ const store = new Vuex.Store({
     webtorrentClient: new WebTorrent(),
     magnetPerId: {},
     settings: {},
-    lists: {}
+    views: {}
   },
   getters: {
     first (state) {
@@ -133,12 +133,15 @@ const store = new Vuex.Store({
     },
     getView(state) {
       return (params) => {
-        return state.lists[View.getHashFromParams(params)]
+        return state.views[View.getHashFromParams(params)]
       }
+    },
+    getViews: (state) => () => {
+      return Object.values(state.views)
     },
     getViewMedias(state) {
       return (params) => {
-        return state.lists[View.getHashFromParams(params)].medias
+        return state.views[View.getHashFromParams(params)].medias
       }
     },
     getMagnet: (state) => (id) =>  {
@@ -148,19 +151,19 @@ const store = new Vuex.Store({
   mutations: {
     registerView(state, params) {
       const key = View.getHashFromParams(params)
-      if (!state.lists[key]) {
+      if (!state.views[key]) {
         const view = new View(params)
         console.log('new view', params, key)
-        Vue.set(state.lists, view.getHash(), view)
+        Vue.set(state.views, view.getHash(), view)
       }
     },
     emptyView (state, params) {
       
     },
-    remove (state, id) {
-      const index = state.medias.findIndex((m) => m.id === id)
-      state.medias.splice(index, 1)
-      state.offset = state.medias.length
+    delete (state, id) {
+      for (let key in state.views) {
+        state.views[key].delete(id)
+      }
     },
     setSingle(state, value) {
 
@@ -206,21 +209,27 @@ const store = new Vuex.Store({
 
       return Promise.all(promises)
     },
-    query (context, payload) {
-      const queryName = payload.queryName
-      const input = payload.input
-
-      context.commit('setQueryName', queryName)
-      context.commit('setInput', input)
-      context.commit('emptyMedias')
-      return context.dispatch('getMore')
-    },
     getMore(context, params) {
       const queryName = params.queryName
       const input = params.input
       const limit = context.state.step
       const view = context.getters.getView(params)
-      const offset = view.medias.length
+      const offset = view.getSize()
+
+      const payload = {}
+      payload.params = params
+      payload.offset = offset
+      payload.limit = limit
+
+      return context.dispatch('fillView', payload)
+    },
+    fillView(context, payload) {
+      const limit = payload.limit
+      const offset = payload.offset
+      const params = payload.params
+      const view = context.getters.getView(params)
+      const queryName = params.queryName
+      const input = params.input
 
       if (!view.isLocked()) {
         view.toggleLock()
@@ -235,10 +244,16 @@ const store = new Vuex.Store({
             throw e
           })
       }
+
     },
     refreshMedias (context) {
-      context.commit('setOffset', 0)
-      return context.dispatch('getMore')
+      return Promise.all(context.getters.getViews().map(v => {
+        const payload = {}
+        payload.params = v.params
+        payload.limit = v.getSize()
+        payload.offset = 0
+        return context.dispatch('fillView', payload)
+      }))
     },
     getOneMedia (context, id) {
       return mediaDB.getOne(id)
@@ -251,18 +266,16 @@ const store = new Vuex.Store({
     },
     uploadURL(context, payload) {
       const {url, withDownload} = payload
+      console.log("upload")
       return mediaDB.uploadURL(url, withDownload)
-        .then(() => context.dispatch('refreshMedias'))
+            .then(medias => {
+              return context.dispatch('refreshMedias')
+            })
     },
-    delete (context, payload) {
-      const id = payload.id
-      return mediaDB.delete(id)
-        .then(() => {
-          context.commit('remove', id)
-        })
-        .catch(e => {
-          console.error(e)
-        })
+    delete (context, media) {
+      mediaDB.delete(media.id).then(() => {
+        context.commit('delete', media.id)
+      })
     },
     downloadMedia(context, payload) {
       const id = payload.id
