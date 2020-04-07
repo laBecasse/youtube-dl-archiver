@@ -12,6 +12,7 @@ Vue.use(VueAxios, axios);
 
 import App from './App.vue';
 import ListMedia from './components/ListMedia.vue'
+import Media from './components/Media.vue'
 import Settings from './components/Settings.vue'
 
 import WebTorrent from 'webtorrent'
@@ -37,7 +38,11 @@ const routes = [
   {
     name: 'WatchMedia',
     path: '/medias/:id',
-    component: ListMedia
+    component: Media,
+    props: (route) => ({
+      expanded: true,
+      mediaId: route.params.id
+    })
   },
   {
     name: 'Settings',
@@ -127,7 +132,7 @@ const store = new Vuex.Store({
     // set the query name
     setQueryName(state, name) {
       state.queryName = name
-     state.sortedByCreationDate = mediaDB.isSortedByCreationDate(name)
+      state.sortedByCreationDate = mediaDB.isSortedByCreationDate(name)
     },
     setInput(state, input) {
       state.input = input
@@ -168,7 +173,7 @@ const store = new Vuex.Store({
       context.commit('emptyMedias')
       return context.dispatch('getMore')
     },
-    getMore(context) {
+    getMore(context, payload) {
       const queryName = context.state.queryName
       const input = context.state.input
       const limit = context.state.step
@@ -198,8 +203,9 @@ const store = new Vuex.Store({
       return mediaDB.getOne(id)
         .then(media => {
           const a = (media) ? [media] : []
-          context.commit('insertMedias', a)
+          //context.commit('insertMedias', a)
           context.commit('setSingle', true)
+          return formatMedia(media)
         })
     },
     uploadURL(context, payload) {

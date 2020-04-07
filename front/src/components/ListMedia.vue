@@ -2,7 +2,7 @@
     <div>
         <!-- list controllers -->
         
-        <div class="field is-grouped" v-if="!this.watch_id">
+        <div class="field is-grouped">
             <p class="control" >
                 <a class="button is-danger" v-on:click="deleteAll">
                     Supprimer tout
@@ -48,13 +48,13 @@
             
             <span v-if="medias.length === 0" class="loading">Pas de résultat</span>
             <div v-if="isSortedByCreationDate" v-for="(medias, day, index) in mediasByDay">
-                <h4 class="creation_date" v-if="!watch_id">{{dateFormater.format(new Date(day))}}</h4>
+                <h4 class="creation_date">{{dateFormater.format(new Date(day))}}</h4>
                 <div v-for="media in medias" :key="media.id" class="is-6">
-                    <Media :media="media" :expanded="!(!watch_id)" v-if="!watch_id || media.id === watch_id" :ref="media.id"></Media>
+                    <Media :mediaId="media.id" :mediaObj="media" :ref="media.id"></Media>
                 </div>
             </div>
             <div v-if="!isSortedByCreationDate" v-for="media in this.medias" :key="media.id" class="is-6">
-                <Media :media="media" :expanded="!(!watch_id)" v-if="!watch_id || media.id === watch_id" :ref="media.id"></Media>
+                <Media :mediaId="media.id" :mediaObj="media" :ref="media.id"></Media>
             </div>
         </div>
     </div>
@@ -68,10 +68,6 @@
  // Material 2
  import ptrAnimatesMaterial2 from 'mobile-pull-to-refresh/dist/styles/material2/animates'
  import 'mobile-pull-to-refresh/dist/styles/material2/style.css'
- // the list of medias is defined by the api query
- // the list is refreshed each time the query change
- // watch_id defines the id of only media displayed
-
 
  export default {
      name: 'ListMedia',
@@ -104,7 +100,6 @@
      data() {
          return{
              dateFormater: new Intl.DateTimeFormat('default',{ year: 'numeric', month: 'long', day: 'numeric'}),
-             watch_id: undefined,
              playing_id: undefined,
              autoplay: true,
              bottom: false,
@@ -116,7 +111,7 @@
          this.updateQuery()
          this.$store.commit("emptyMedias")
          window.addEventListener('scroll', () => {
-             this.bottom = this.bottomIsClose() && !(this.watch_id)
+             this.bottom = this.bottomIsClose()
          })
 
          // initialization of pull to refresh
@@ -136,11 +131,7 @@
          // call again the method if the route changes
          '$route': 'updateRoute',
          'playing_id': function() {
-             if (this.playing_id && this.watch_id) {
-                 this.$router.push({name:'WatchMedia', params: {id: this.playing_id}})
-             } else {
-                 this.playCurrent()
-             }
+             this.playCurrent()
          },
          bottom(bottom) {
              if (bottom) {
@@ -221,7 +212,6 @@
                  (this.$route.query.text ||
                   this.$route.query.uploader)) {
 
-                 this.watch_id = undefined
                  this.playing_id = undefined
                  if (this.$route.query.text) {
                      const text = this.$route.query.text
@@ -241,12 +231,10 @@
              } else if (this.$route.name === 'WatchMedia' &&
                         this.$route.params.id) {
                  const id = this.$route.params.id
-                 this.watch_id = id
                  if (!this.contains(id))
                      return this.$store.dispatch('getOneMedia', id)
 
              } else {
-                 this.watch_id = undefined
                  this.playing_id = undefined
                  const payload = {
                      queryName: 'find',

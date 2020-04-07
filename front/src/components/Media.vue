@@ -1,336 +1,371 @@
 <template>
-<div class="card media-card">
-  <section class="is-gapless" v-bind:class="{'columns': !expanded}">
-    <article v-if="this.deleteConfirmation" class="confirmation message is-medium is-danger">
-      <div class="message-header">
-        <p>Confirmation</p>
-      </div>
-      <div class="message-body" >
-        <div class="columns is-vcentered">
-          <div class="column is-full">
-            <p>Êtes-vous sûr de vouloir supprimer ?</p>
-            <div class="columns is-centered">
-              <div class="column">
-                <a class="button" v-on:click="toggleDeleteConfirmation">
-                  Annuler
-                </a>
-              </div>
-              <div class="column">
-                <a class="button is-danger" v-on:click="deleteThis">
-                  Supprimer
-                </a>
-              </div>
+    <div class="card media-card">
+        <section v-if="media" class="is-gapless" v-bind:class="{'columns': !expanded}">
+            <article v-if="this.deleteConfirmation" class="confirmation message is-medium is-danger">
+                <div class="message-header">
+                    <p>Confirmation</p>
+                </div>
+                <div class="message-body" >
+                    <div class="columns is-vcentered">
+                        <div class="column is-full">
+                            <p>Êtes-vous sûr de vouloir supprimer ?</p>
+                            <div class="columns is-centered">
+                                <div class="column">
+                                    <a class="button" v-on:click="toggleDeleteConfirmation">
+                                        Annuler
+                                    </a>
+                                </div>
+                                <div class="column">
+                                    <a class="button is-danger" v-on:click="deleteThis">
+                                        Supprimer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            <article v-if="media && this.downloadChoose" class="confirmation message is-medium is-info">
+                <div class="message-header">
+                    <p>Télécharger</p>
+                </div>
+                <div class="message-body" >
+                    <div class="columns is-centered">
+                        <div class="column">
+                            <a class="button" v-on:click="toggleDownloadChoose">
+                                Annuler
+                            </a>
+                        </div>
+                        <div class="column">
+                            <div class="columns">
+                                <div class="column">
+                                    <p v-if="media && media.file_path && !offlineMediaURL" class="field">
+                                        <a class="button is-info" v-on:click="createOfflineMedia" >
+                                            Rendre le média hors ligne
+                                        </a>
+                                    </p>
+                                    <p v-if="offlineMediaURL" class="field">
+                                        <a class="button is-danger" v-on:click="removeOfflineMedia">
+                                            Supprimer le média hors ligne
+                                        </a>
+                                    </p>
+                                    <p v-if="!media.file_path" class="field">
+                                        <a class="button is-info" v-on:click="download">
+                                            Télécharger sur le serveur
+                                        </a>
+                                    </p>
+                                </div>
+                                <div class="column">
+                                    <p class="field">
+                                        <a :href="fileUrl" class="button is-info" title="Télécharger" download>Télécharger</a>
+                                    </p>
+                                    <p v-if="media.torrent_url" class="field">
+                                        <a :href="media.torrent_url" class="button is-info" title="Télécharger" download>Télécharger Torrent</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            <div v-if="media" class="media-column-video" v-bind:class="{'column': !expanded}">
+                <div class="card-image">
+                    <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
+                        <source v-if="fileUrl" :src="offlineMediaURL || fileUrl" :type="media.mime"/>
+                        <source v-if="!fileUrl && media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
+                        <track v-for="sub in media.subtitles" :key="sub.url"
+                               :src="sub.url"
+                               :label="sub.lang"
+                               kind="subtitles" :srclang="sub.lang"/>
+                        <p>Your browser does not support the video element.</p>
+                    </video>
+                    <audio v-if="media.type === 'audio'" controls preload="none">
+                        <source v-if="!media.torrent_url" :src="offlineMediaURL || fileUrl" :type="media.mime">
+                        <source v-if="media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
+                        <p>Your browser does not support the audio element.</p>
+                    </audio>
+                    <img v-if="media.type === 'image'"
+                         :src="fileUrl||media.original_file.url"/>
+                    <a v-if="media.type === 'other'"
+                       :href="fileUrl||media.original_file.url">media</a>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </article>
-    <article v-if="this.downloadChoose" class="confirmation message is-medium is-info">
-      <div class="message-header">
-        <p>Télécharger</p>
-      </div>
-      <div class="message-body" >
-        <div class="columns is-centered">
-          <div class="column">
-            <a class="button" v-on:click="toggleDownloadChoose">
-              Annuler
-            </a>
-          </div>
-          <div class="column">
-            <div class="columns">
-              <div class="column">
-                <p v-if="media.file_path && !offlineMediaURL" class="field">
-                  <a class="button is-info" v-on:click="createOfflineMedia" >
-                    Rendre le média hors ligne
-                  </a>
-                </p>
-                <p v-if="offlineMediaURL" class="field">
-                  <a class="button is-danger" v-on:click="removeOfflineMedia">
-                    Supprimer le média hors ligne
-                  </a>
-                </p>
-                <p v-if="!media.file_path" class="field">
-                  <a class="button is-info" v-on:click="download">
-                    Télécharger sur le serveur
-                  </a>
-                </p>
-              </div>
-              <div class="column">
-                <p class="field">
-                  <a :href="media.file_url" class="button is-info" title="Télécharger" download>Télécharger</a>
-                </p>
-                <p v-if="media.torrent_url" class="field">
-                  <a :href="media.torrent_url" class="button is-info" title="Télécharger" download>Télécharger Torrent</a>
-                </p>
-              </div>
+            <div class="is-primary" v-bind:class="{'column': !expanded}">
+                <div class="card-header">
+                    <h4 class="card-header-title is-2">
+                        <router-link :to="{name: 'WatchMedia', params: {id: media.id}}" class="has-text-dark">{{media.title}}</router-link>
+                    </h4>
+                </div>
+                <div class="card-content">
+                    <p class="media-meta">
+                        <router-link :to="{name: 'SearchMedia', query: {uploader: media.uploader}}" class="has-text-dark">
+                            <span v-if="media.creator">{{media.creator}}</span>
+                            <span v-if="!media.creator && media.uploader">{{media.uploader}}</span>
+                        </router-link>
+                        -
+                        <span>{{media.formated_creation_date}}</span>
+                    </p>
+                    <Tags v-if="media.tags" :tags="media.tags"/>
+                    <p v-if="media.description && !expanded" v-html="media.short_description" class="description">
+                    </p>
+                    <p v-if="media.description && expanded" v-html="media.htmlDescription" class="description">
+                    </p>
+                    <a v-bind:href="media.url">lien original</a>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </article>
-    <div class="media-column-video" v-bind:class="{'column': !expanded}">
-      <div class="card-image">
-        <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
-          <source v-if="media.file_url" :src="offlineMediaURL || media.file_url" :type="media.mime"/>
-          <source v-if="!media.file_url && media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
-          <track v-for="sub in media.subtitles" :key="sub.url"
-                 :src="sub.url"
-                 :label="sub.lang"
-                 kind="subtitles" :srclang="sub.lang"/>
-            <p>Your browser does not support the video element.</p>
-        </video>
-        <audio v-if="media.type === 'audio'" controls preload="none">
-          <source v-if="!media.torrent_url" :src="offlineMediaURL || media.file_url" :type="media.mime">
-            <source v-if="media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
-            <p>Your browser does not support the audio element.</p>
-        </audio>
-        <img v-if="media.type === 'image'"
-             :src="media.file_url||media.original_file.url"/>
-        <a v-if="media.type === 'other'"
-           :href="media.file_url||media.original_file.url">media</a>
-      </div>
+        </section>
+        <footer v-if="media" class="card-footer">
+            <!-- <a :href="fileUrl" class="card-footer-item" download>Download</a> -->
+            <!-- <a class="card-footer-item"><span class="button"><span class="delete has-text-danger"></span> Delete</span></a> -->
+            <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL, 'has-background-black': fileUrl, 'has-text-white': fileUrl}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
+            <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><TrashIcon/></a>
+        </footer>
+        <script v-html="jsonld" type="application/ld+json">
+        </script>
     </div>
-    <div class="is-primary" v-bind:class="{'column': !expanded}">
-      <div class="card-header">
-        <h4 class="card-header-title is-2">
-          <router-link :to="{name: 'WatchMedia', params: {id: media.id}}" class="has-text-dark">{{media.title}}</router-link>
-        </h4>
-      </div>
-      <div class="card-content">
-        <p class="media-meta">
-          <router-link :to="{name: 'SearchMedia', query: {uploader: media.uploader}}" class="has-text-dark">
-            <span v-if="media.creator">{{media.creator}}</span>
-            <span v-if="!media.creator && media.uploader">{{media.uploader}}</span>
-          </router-link>
-          -
-          <span>{{media.formated_creation_date}}</span>
-        </p>
-        <!-- <ul> -->
-          <!--   <li v-if="media.tags.length" v-for="tag in media.tags" class="description"> -->
-            <!--     #{{tag}} -->
-            <!--   </li> -->
-          <!-- </ul> -->
-        <p v-if="media.description && !expanded" v-html="media.short_description" class="description">
-        </p>
-        <p v-if="media.description && expanded" v-html="media.htmlDescription" class="description">
-        </p>
-        <a v-bind:href="media.url">lien original</a>
-      </div>
-    </div>
-  </section>
-  <footer class="card-footer">
-    <!-- <a :href="media.file_url" class="card-footer-item" download>Download</a> -->
-    <!-- <a class="card-footer-item"><span class="button"><span class="delete has-text-danger"></span> Delete</span></a> -->
-    <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL, 'has-background-black': media.file_url, 'has-text-white': media.file_url}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
-    <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><TrashIcon/></a>
-  </footer>
-  <script v-html="jsonld" type="application/ld+json">
-  </script>
-</div>
 </template>
 
 <script>
-import { mapActions, mapMutations,  mapGetters } from 'vuex'
-import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
-import TrashIcon from 'vue-ionicons/dist/md-trash.vue'
+ import { mapActions, mapMutations,  mapGetters } from 'vuex'
+ import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
+ import TrashIcon from 'vue-ionicons/dist/md-trash.vue'
+ import Tags from './Tags.vue'
 
-export default {
-  name: 'Media',
-  props: ['media', 'expanded'],
-  components: {
-    DownloadIcon,
-    TrashIcon
-  },
-  data () {
-    const jsonld = {
-      "@context": "https://schema.org/",
-      "@type":"VideoObject",
-      "name": this.media.title,
-      "description": this.media.description,
-      "thumbnailUrl": (this.media.thumbnail) ? this.media.thumbnail.url: null,
-      "uploadDate": this.media.upload_date,
-      "contentUrl": this.media.url
-    }
-    
-    return {
-      deleteConfirmation: false,
-      downloadChoose: false,
-      offlineMediaURL: null,
-      isTorrentSet: false,
-      jsonld: jsonld
-    }
-  },
-  mounted () {
-    // play state communication with list
-    
-    const mediaElt = this.getMediaElt()
-    if (mediaElt) {
-      const listener = () => {
-        this.$emit('playEnded')
-      }
-      mediaElt.addEventListener('ended', listener)
-      
-      mediaElt.addEventListener('play', () => {
-        this.$parent.playOneId(this.media.id)
-      })
-    }
-    // offline state initialization
-    this.setOfflineMediaURL()
-    
-    //function mediaTorrent() {
-    const media = this.media
-    const t = this
-    if (media.torrent_url) {
-      
-      var client = this.$store.state.webtorrentClient
-      
-      const mediaElt = this.getMediaElt()
-      
-      const playhandler = function() {
-        
-        // if the actual media is not yet served using webtorrent
-        if (!t.isTorrentSet) {
-          mediaElt.pause()
-        } else {
-          // if the webtorrent is set/rendered
-          return;
-        }
-        
-        // try to get the torrent of the media 
-        const torrent = client.get(t.getMagnet()(media.id))
-        if (!torrent) {
-          // download the torrent
-          client.add(media.torrent_url, function(torrent) {
-            // attach a web seed to it
-            const url = media.file_url
-            torrent.addWebSeed(url)
-            // the torrent of the actual media is downloading
-            // for this session
-            t.setMagnetOfId({
-              id: media._id,
-              magnet: torrent.magnetURI
-            })
-            
-            // play as torrent
-            torrent.files.forEach(function (file) {
-              file.renderTo(mediaElt)
-              mediaElt.play()
-            })
-          })
-        } else {
-          // play as torrent
-          torrent.files.forEach(function (file) {
-            file.renderTo(mediaElt)
-            mediaElt.play()
-          })
-        }
-        
-        // the actual media is served using webtorrent
-        t.isTorrentSet = true
-      }
-      mediaElt.addEventListener('play', playhandler)
-    }
-  },
-  watch: {
-    offlineMediaURL: 'reloadMedia',
-    'media.file_url': 'reloadMedia'
-  },
-  methods: {
-    ...mapGetters(['getMagnet']),
-    ...mapMutations(['setMagnetOfId']),
-    ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia', 'downloadMedia']),
-    toggleDeleteConfirmation () {
-      this.deleteConfirmation = !this.deleteConfirmation
-    },
-    /* getters */
-    getMediaElt () {
-      const mediaElt = (this.media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
-      return mediaElt
-    },
-    /* control handlers */
-    deleteThis () {
-      return this.$store.dispatch('delete', {id: this.media.id})
-    },
-    toggleDownloadChoose() {
-      this.downloadChoose = !this.downloadChoose
-    },
-    createOfflineMedia () {
-      const id = this.media._id
-      this.makeOfflineMedia(id)
-      .then(() => this.setOfflineMediaURL())
-      .catch(e => {
-        if (e.status !== 404) {
-          this.$root.showWarning('Une erreur est survenue à la mise hors-ligne de la vidéo:<br/>: '+e)
-          }
-        })
+ export default {
+     name: 'Media',
+     props: ['mediaObj', 'mediaId', 'expanded'],
+     components: {
+         DownloadIcon,
+         TrashIcon,
+         Tags
+     },
+     data () {
+         /* const jsonld = {
+          *   "@context": "https://schema.org/",
+          *   "@type":"VideoObject",
+          *   "name": this.media.title,
+          *   "description": this.media.description,
+          *   "thumbnailUrl": (this.media.thumbnail) ? this.media.thumbnail.url: null,
+          *   "uploadDate": this.media.upload_date,
+          *   "contentUrl": this.media.url
+          * }
+          *  */
+         return {
+             deleteConfirmation: false,
+             downloadChoose: false,
+             offlineMediaURL: null,
+             isTorrentSet: false,
+             jsonld: {},
+             media: null,
+             mediaPromise: null,
+             fileUrl: null,
+             isInitialized: false
+         }
+     },
+     created () {
+         const t = this
+         if (!t.mediaObj) {
+             
+             t.mediaPromise = t.$store.dispatch('getOneMedia', t.mediaId).then(media => {
+                 t.media = media
+                 t.fileUrl = media.file_url
+             })
+         } else {
+             t.media = t.mediaObj
+             t.fileUrl = t.media.file_url
+         }
+     },
+     updated () {
+         console.log('updated ')
+         // if the media is loading or finished 
+         if (!this.isInitialized && this.mediaPromise) {
+             this.mediaPromise
+                 .then(() => {
+                     this.init()
+                     this.mediaPromise = null
+                 })
+         }
+     },
+     mounted () {
+         if (!this.isInitialized && this.media) {
+             this.init()
+         }
+     },
+     watch: {
+         offlineMediaURL: 'reloadMedia',
+         'fileUrl': 'reloadMedia'
+     },
+     methods: {
+         ...mapGetters(['getMagnet']),
+         ...mapMutations(['setMagnetOfId']),
+         ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia', 'downloadMedia']),
+         toggleDeleteConfirmation () {
+             this.deleteConfirmation = !this.deleteConfirmation
+         },
+         /* getters */
+         getMediaElt () {
+             const mediaElt = (this.media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
+             return mediaElt
+         },
+         /* control handlers */
+         deleteThis () {
+             return this.$store.dispatch('delete', {id: this.media.id})
+         },
+         toggleDownloadChoose() {
+             this.downloadChoose = !this.downloadChoose
+         },
+         createOfflineMedia () {
+             const id = this.media._id
+             this.makeOfflineMedia(id)
+                            .then(() => this.setOfflineMediaURL())
+                            .catch(e => {
+                                if (e.status !== 404) {
+                                    this.$root.showWarning('Une erreur est survenue à la mise hors-ligne de la vidéo:<br/>: '+e)
+                                }
+                            })
 
-    },
-    removeOfflineMedia () {
-      const id = this.media._id
-      this.deleteOfflineMedia(id)
-        .then(() => {
-          this.offlineMediaURL = null
-          this.downloadChoose = false
-        })
-        .catch(e => {
-          this.$root.showWarning('Une erreur est survenue à la suppression de la vidéo hors-ligne :<br/>: '+e)
-        })
+         },
+         removeOfflineMedia () {
+             const id = this.media._id
+             this.deleteOfflineMedia(id)
+                            .then(() => {
+                                this.offlineMediaURL = null
+                                this.downloadChoose = false
+                            })
+                            .catch(e => {
+                                this.$root.showWarning('Une erreur est survenue à la suppression de la vidéo hors-ligne :<br/>: '+e)
+                            })
 
-    },
-    setOfflineMediaURL () {
-      const id = this.media._id
-      return this.getOfflineMediaURL(id)
-        .then(url => {
-          this.offlineMediaURL = url
-          this.downloadChoose = false
-          return url
-        })
-        .catch(e => {
-          if (e.status !== 404) throw e
-        })
-    },
-    download () {
-      const id = this.media._id
-      return this.downloadMedia({id: id})
-        .then(() => {this.downloadChoose = false})
-    },
-    /* play states */
-    play () {
-      const mediaElt = this.getMediaElt()
-      mediaElt.play()
-    },
-    reloadMedia () {
-      // reload the media when changing the source URL
-      this.getMediaElt().load()
-    }
-  }
-}
+         },
+         setOfflineMediaURL () {
+             const id = this.media._id
+             return this.getOfflineMediaURL(id)
+                        .then(url => {
+                            this.offlineMediaURL = url
+                            this.downloadChoose = false
+                            return url
+                        })
+                        .catch(e => {
+                            if (e.status !== 404) throw e
+                        })
+         },
+         download () {
+             const id = this.media._id
+             return this.downloadMedia({id: id})
+                        .then(() => {this.downloadChoose = false})
+         },
+         /* play states */
+         play () {
+             const mediaElt = this.getMediaElt()
+             mediaElt.play()
+         },
+         reloadMedia () {
+             if (this.isInitialized) {
+                 // reload the media when changing the source URL
+                 this.getMediaElt().load()
+             }
+         },
+         init() {
+
+             const media = this.media
+             const t = this
+             if (media.torrent_url) {
+                 
+                 var client = this.$store.state.webtorrentClient
+                 
+                 const mediaElt = this.getMediaElt()
+                 
+                 const playhandler = function() {
+                     
+                     // if the actual media is not yet served using webtorrent
+                     if (!t.isTorrentSet) {
+                         mediaElt.pause()
+                     } else {
+                         // if the webtorrent is set/rendered
+                         return;
+                     }
+                     
+                     // try to get the torrent of the media 
+                     const torrent = client.get(t.getMagnet()(media.id))
+                     if (!torrent) {
+                         // download the torrent
+                         client.add(media.torrent_url, function(torrent) {
+                             // attach a web seed to it
+                             const url = media.file_url
+                             torrent.addWebSeed(url)
+                             // the torrent of the actual media is downloading
+                             // for this session
+                             t.setMagnetOfId({
+                                 id: media._id,
+                                 magnet: torrent.magnetURI
+                             })
+                             
+                             // play as torrent
+                             torrent.files.forEach(function (file) {
+                                 file.renderTo(mediaElt)
+                                 mediaElt.play()
+                             })
+                         })
+                     } else {
+                         // play as torrent
+                         torrent.files.forEach(function (file) {
+                             file.renderTo(mediaElt)
+                             mediaElt.play()
+                         })
+                     }
+                     
+                     // the actual media is served using webtorrent
+                     t.isTorrentSet = true
+                 }
+                 mediaElt.addEventListener('play', playhandler)
+
+             }
+             const mediaElt = this.getMediaElt()
+             if (mediaElt) {
+                 console.log('found media elt')
+                 const listener = () => {
+                     this.$emit('playEnded')
+                 }
+                 mediaElt.addEventListener('ended', listener)
+                 
+                 mediaElt.addEventListener('play', () => {
+                     if (this.$parent.playOneId)
+                         this.$parent.playOneId(this.media.id)
+                 })
+                 // offline state initialization
+                 this.setOfflineMediaURL()
+                 /* torrentInit() */
+             }
+             this.isInitialized = true
+         }
+     }
+ }
 </script>
 
 <style>
-.media-card a:hover {
-    text-decoration: underline;
-}
+ .media-card a:hover {
+     text-decoration: underline;
+ }
 
-.media-card section{
-    position: relative;
-    margin-bottom: 0 !important;
-}
+ .media-card section{
+     position: relative;
+     margin-bottom: 0 !important;
+ }
 
-.media-card .description{
-    text-align: left;
-}
+ .media-card .description{
+     text-align: left;
+ }
 
-.confirmation {
-    background-color: white;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: 2;
-}
+ .confirmation {
+     background-color: white;
+     position: absolute;
+     width: 100%;
+     height: 100%;
+     z-index: 2;
+ }
 
-.is-vertical-center {
-    display: flex;
-    align-items: center;
-}
+ .is-vertical-center {
+     display: flex;
+     align-items: center;
+ }
 </style>
