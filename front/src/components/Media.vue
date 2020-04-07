@@ -176,7 +176,6 @@
          }
      },
      updated () {
-         console.log('updated ')
          // if the media is loading or finished 
          if (!this.isInitialized && this.mediaPromise) {
              this.mediaPromise
@@ -284,7 +283,6 @@
                          // if the webtorrent is set/rendered
                          return;
                      }
-                     console.log('torrent stuff')
                      // try to get the torrent of the media 
                      const torrent = client.get(t.getMagnet()(media.id))
                      if (!torrent) {
@@ -322,7 +320,6 @@
              }
              const mediaElt = this.getMediaElt()
              if (mediaElt) {
-                 console.log('found media elt')
                  const listener = () => {
                      this.$emit('playEnded')
                  }

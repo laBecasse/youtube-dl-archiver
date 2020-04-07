@@ -153,7 +153,6 @@ const store = new Vuex.Store({
       const key = View.getHashFromParams(params)
       if (!state.views[key]) {
         const view = new View(params)
-        console.log('new view', params, key)
         Vue.set(state.views, view.getHash(), view)
       }
     },
@@ -190,7 +189,6 @@ const store = new Vuex.Store({
     },
     toggleLock(state) {
       state.isLocked = !state.isLocked
-      console.log('lock ' + state.isLocked)
     },
     setSettings(state, settings) {
       state.settings = settings
@@ -239,7 +237,6 @@ const store = new Vuex.Store({
             view.toggleLock()
             return medias
           }).catch(e => {
-            console.log(e)
             view.toggleLock()
             throw e
           })
@@ -266,7 +263,6 @@ const store = new Vuex.Store({
     },
     uploadURL(context, payload) {
       const {url, withDownload} = payload
-      console.log("upload")
       return mediaDB.uploadURL(url, withDownload)
             .then(medias => {
               return context.dispatch('refreshMedias')
@@ -298,7 +294,6 @@ const store = new Vuex.Store({
                 .then(m => offlineMedias.putAttachment(id, ATTACHMENT_ID, m._rev, attachment, type))
                 .catch(() => offlineMedias.putAttachment(id, ATTACHMENT_ID, attachment, type))
                 .catch(e => {
-                  console.log(e)
                   if (e.reason === 'QuotaExceededError') {
                     // when there is a quota excess the data is in an unstable state (ACID :'( )
                     // so we need to reopen the database
