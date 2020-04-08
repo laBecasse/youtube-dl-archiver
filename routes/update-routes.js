@@ -55,8 +55,8 @@ module.exports = function (router, links, cacheCol) {
 
   router.post('/medias', (req, res, next) => {
     const url = req.body.url
-    const withDownload = req.body.withdownload == 'true'
-        
+    const withDownload = req.body.withdownload === 'true'
+
     if (url) {
       handleJson(create(url, withDownload), req, res)
     } else {

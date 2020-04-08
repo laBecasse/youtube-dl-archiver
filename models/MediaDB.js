@@ -13,13 +13,69 @@ module.exports = function (links) {
         collection.replaceOne({_id: links.ObjectID(media._id)}, media, (err, res) => {
           if (err) return reject(err)
           return resolve(media)
-        }) 
+        })
       })
     }
-    
     return links.apply(action)
   }
-  
+
+  const addTagToMedia = function (mediaId, tag) {
+    const action = function (collection) {
+      const selector = { _id: links.ObjectID(mediaId) }
+      const modifier = { $push: {
+        tags: tag
+      } }
+
+      console.log(selector, modifier)
+      return new Promise((resolve, reject) => {
+        collection.updateOne(selector, modifier, (err, res) => {
+          if (err) return reject(err)
+          resolve(res)
+        })
+      })
+    }
+    return links.apply(action)
+  }
+
+  const removeTagFromMedia = function (mediaId, tag) {
+    const action = function (collection) {
+      const selector = { _id: links.ObjectID(mediaId) }
+      const modifier = { $pull: {
+        tags: tag
+      } }
+
+      return new Promise((resolve, reject) => {
+        collection.updateOne(selector, modifier, (err, res) => {
+          if (err) return reject(err)
+          resolve(res)
+        })
+      })
+    }
+    return links.apply(action)
+  }
+
+  const renameTag = function (oldTag, newTag) {
+    const action = function (collection) {
+      const renameSelector = {tags: oldTag }
+      const renameModifier = { $set: { "tags.$": newTag}}
+      const removeSelector = { $and: [ {tags: oldTag }, {tags: newTag}]}
+      const removeModifier = { $pull: {tags: oldTag}}
+
+      return new Promise((resolve, reject) => {
+        collection.updateMany(removeSelector, removeModifier, (err, res) => {
+          if (err) return reject(err)
+          console.log(res)
+          collection.updateMany(renameSelector, renameModifier, (err, res) => {
+            if (err) return reject(err)
+            console.log(res)
+            resolve(res)
+          })
+        })
+      })
+    }
+    return links.apply(action)
+  }
+
   let insertOne = function (document) {
     let action = function (collection) {
       return new Promise((resolve, reject) => {
@@ -92,7 +148,7 @@ module.exports = function (links) {
   /*
    * FIND METHODS
    */
-  
+
   let find = function (selector, limit, offset, sort) {
     limit = limit || 0
     offset = offset || 0
@@ -128,7 +184,7 @@ module.exports = function (links) {
     }
     return find(selector, limit, offset, sort)
   }
-  
+
   let findUrl = function (url) {
     const selector = {
       $or: [
@@ -185,7 +241,7 @@ module.exports = function (links) {
       return null
     }
   }
-  
+
   return {
     add: function (media) {
       return insert(media)
@@ -227,6 +283,9 @@ module.exports = function (links) {
       return remove(id)
         .then(build)
     },
-    replace: replace
+    replace: replace,
+    addTagToMedia: addTagToMedia,
+    removeTagFromMedia: removeTagFromMedia,
+    renameTag: renameTag
   }
 }

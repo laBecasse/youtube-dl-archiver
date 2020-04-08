@@ -15,7 +15,8 @@ module.exports = {
     db: process.env.MONGO_DB,
     collections: {
       links: process.env.MONGO_LINKS_COL,
-      cache: process.env.MONGO_CACHE_COL
+      cache: process.env.MONGO_CACHE_COL,
+      tags: process.env.MONGO_TAGS_VIEW
     }
   },
   webtorrent: {

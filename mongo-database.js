@@ -59,7 +59,7 @@ module.exports = function (config) {
       return apply(action)
     }
 
-    let create = function () {
+    let createCollection = function () {
       return new Promise((resolve, reject) => {
         MongoClient.connect(url, { useNewUrlParser: true })
           .then(client => {
@@ -75,12 +75,33 @@ module.exports = function (config) {
       })
     }
 
+    let createView = function (source, pipeline) {
+      return new Promise((resolve, reject) => {
+        MongoClient.connect(url, { useNewUrlParser: true })
+          .then(client => {
+            // Client returned
+            let db = client.db(dbName)
+            const options = {
+              viewOn: collections[source],
+              pipeline: pipeline
+            }
+            db.createCollection(collectionName, options, err => {
+              if (err) reject(err)
+              else resolve()
+
+              client.close()
+            })
+          })
+      })
+    }
+
     return {
-      'create': create,
-      'apply': apply,
-      'defineKey': defineKey,
-      'defineTextIndex': defineTextIndex,
-      'ObjectID': mongo.ObjectID
+      createCollection: createCollection,
+      createView: createView,
+      apply: apply,
+      defineKey: defineKey,
+      defineTextIndex: defineTextIndex,
+      ObjectID: mongo.ObjectID
     }
   }
 

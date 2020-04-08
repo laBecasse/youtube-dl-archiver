@@ -1,5 +1,4 @@
 const MediaDB = require('../models/MediaDB.js')
-const FilePath = require('../models/FilePath')
 
 module.exports = function (router, links) {
   const mediaDB = MediaDB(links)
@@ -23,7 +22,7 @@ module.exports = function (router, links) {
         }
       } else {
         res.status(404)
-        res.json({message: 'not found'})
+        res.json({ message: 'not found' })
       }
     })
       .catch(handleError(res))
@@ -33,31 +32,9 @@ module.exports = function (router, links) {
     return err => {
       console.error(err.stack)
       res.status(500)
-        .json({error: 'server error'})
+        .json({ error: 'server error' })
     }
   }
-
-  let handleFile = function (getFilePath, req, res, next) {
-    const dbId = req.params.id
-
-    mediaDB.findById(dbId)
-      .then(m => {
-        let filepath
-        if (m && (filepath = getFilePath(m))) {
-          res.sendFile(filepath)
-        } else {
-          res.status(404)
-          res.send('not found')
-        }
-      })
-      .catch(err => next(err))
-  }
-
-  router.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*')
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
-    next()
-  })
 
   router.get('/medias', getByUrl, (req, res) => {
     const limit = parseInt(req.query.limit) || 0
@@ -77,10 +54,5 @@ module.exports = function (router, links) {
   router.get('/medias/:id', (req, res) => {
     const dbId = req.params.id
     handleJson(mediaDB.findById(dbId), req, res)
-  })
-
-  router.get('/tags/:tag', (req, res, next) => {
-    const tag = req.params.tag
-    handleJson(mediaDB.findByTag(tag), req, res)
   })
 }
