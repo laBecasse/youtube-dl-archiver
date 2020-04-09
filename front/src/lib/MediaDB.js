@@ -212,11 +212,11 @@ export default class {
   }
 
   uploadURL(url, withDownload) {
-    const params = new URLSearchParams()
-    params.append('url', url)
-    params.append('withdownload', withDownload)
-
-    return axios.post(this.base + '/medias', params)
+    const data = {
+      url: url,
+      withdownload: withDownload
+    }
+    return axios.post(this.base + '/medias', data)
       .then(res => {
         const medias = res.data
         updateOrCreateOffline(medias)
@@ -243,12 +243,13 @@ export default class {
   }
 
   renameTag(tag, newTag) {
-    const params = new URLSearchParams()
-    params.append('tag', newTag)
+    const data = {
+      tag: tag
+    }
 
     const query = this.base + '/tags/' + tag
 
-    return axios.put(query, params)
+    return axios.put(query, data)
   }
 
   addTagToMedia(mediaId, tag) {

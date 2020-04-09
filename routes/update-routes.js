@@ -53,7 +53,8 @@ module.exports = function (router, links, cacheCol) {
     return res.send('update started')
   })
 
-  router.post('/medias', (req, res, next) => {
+  router.
+    post('/medias', (req, res, next) => {
     const url = req.body.url
     const withDownload = req.body.withdownload === 'true'
 

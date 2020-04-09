@@ -21,7 +21,7 @@ const port = config.port
 const app = express()
 app.use(cors())
 app.set('json spaces', 40)
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
 
 app.use('/', express.static('front/dist'))
 app.use('/medias/*', express.static('front/dist'))
