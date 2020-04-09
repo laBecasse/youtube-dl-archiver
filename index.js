@@ -9,7 +9,7 @@ const MongoDB = require('./mongo-database')
 const collections = MongoDB(config['mongo'])
 
 // create collections if they don't exist
-const textKeys = ['title', 'description', 'tags', 'uploader', 'creator']
+const textKeys = ['title', 'description', 'downloadedTags', 'tags', 'uploader', 'creator']
 collections['links'].defineTextIndex(textKeys).catch(console.error)
 collections['links'].createCollection().catch(console.error)
 
