@@ -105,7 +105,8 @@
                         -
                         <span>{{media.formated_creation_date}}</span>
                     </p>
-                    <Tags v-if="media.tags" :tags="media.tags"/>
+                    <Tags v-if="media.tags" :tags="media.tags" :removingEnabled="expanded" :limited="!expanded" @removeTag="removeTag"/>
+                    <TagForm @addTag="addTag"/>
                     <p v-if="media.description && !expanded" v-html="media.short_description" class="description">
                     </p>
                     <p v-if="media.description && expanded" v-html="media.htmlDescription" class="description">
@@ -129,6 +130,7 @@
  import { mapActions, mapMutations,  mapGetters } from 'vuex'
  import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
  import TrashIcon from 'vue-ionicons/dist/md-trash.vue'
+ import TagForm from './TagForm.vue'
  import Tags from './Tags.vue'
 
  export default {
@@ -137,7 +139,8 @@
      components: {
          DownloadIcon,
          TrashIcon,
-         Tags
+         Tags,
+         TagForm
      },
      data () {
          /* const jsonld = {
@@ -214,7 +217,7 @@
              this.downloadChoose = !this.downloadChoose
          },
          createOfflineMedia () {
-             const id = this.media._id
+             const id = this.media.id
              this.makeOfflineMedia(id)
                             .then(() => this.setOfflineMediaURL())
                             .catch(e => {
@@ -225,7 +228,7 @@
 
          },
          removeOfflineMedia () {
-             const id = this.media._id
+             const id = this.media.id
              this.deleteOfflineMedia(id)
                             .then(() => {
                                 this.offlineMediaURL = null
@@ -237,7 +240,7 @@
 
          },
          setOfflineMediaURL () {
-             const id = this.media._id
+             const id = this.media.id
              return this.getOfflineMediaURL(id)
                         .then(url => {
                             this.offlineMediaURL = url
@@ -249,7 +252,7 @@
                         })
          },
          download () {
-             const id = this.media._id
+             const id = this.media.id
              return this.downloadMedia({id: id})
                         .then(() => {this.downloadChoose = false})
          },
@@ -294,7 +297,7 @@
                              // the torrent of the actual media is downloading
                              // for this session
                              t.setMagnetOfId({
-                                 id: media._id,
+                                 id: media.id,
                                  magnet: torrent.magnetURI
                              })
                              
@@ -334,6 +337,15 @@
                  /* torrentInit() */
              }
              this.isInitialized = true
+         },
+         removeTag (tag) {
+             const mediaId = this.media.id
+             console.log('remove tag' , tag, 'from', mediaId)
+             this.$store.dispatch('removeTagFromMedia', { mediaId: mediaId, tag: tag})
+         },
+         addTag (tag) {
+             const mediaId = this.media.id
+             this.$store.dispatch('addTagToMedia', { mediaId: mediaId, tag: tag})
          }
      }
  }

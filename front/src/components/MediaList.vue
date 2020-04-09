@@ -50,11 +50,11 @@
             <div v-if="params.isSortedByCreationDate" v-for="(medias, day, index) in mediasByDay">
                 <h4 class="creation_date">{{dateFormater.format(new Date(day))}}</h4>
                 <div v-for="media in medias" :key="media.id" class="is-6">
-                    <Media :mediaId="media.id" :mediaObj="media" :ref="media.id"></Media>
+                    <Media :mediaId="media.id" :mediaObj="media" :ref="media.id" :expanded="false"></Media>
                 </div>
             </div>
             <div v-if="!params.isSortedByCreationDate" v-for="media in this.medias" :key="media.id" class="is-6">
-                <Media :mediaId="media.id" :mediaObj="media" :ref="media.id"></Media>
+                <Media :mediaId="media.id" :mediaObj="media" :ref="media.id" :expanded="false"></Media>
             </div>
         </div>
     </div>

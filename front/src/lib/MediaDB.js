@@ -40,6 +40,26 @@ const queries = {
       return {tags: {$in: [tag]}}
     },
     sort: null
+  },
+  getAllTags: {
+    api: () => '/tags',
+    selector: () => ({}),
+    post: medias => {
+      return Object.values(medias.reduce((res, m) => {
+        for (let tag of m.tags) {
+          if (res[tag]) {
+            res[tag].mediaCount++
+          } else {
+            res[tag] = {
+              _id: tag,
+              mediaCount: 1
+            }
+          }
+          return res
+        }
+      }, {}))
+    },
+    sort: null
   }
 }
 
@@ -48,6 +68,7 @@ function queryStoredMedias(queryName, input, limit, offset) {
 
   const selector = queries[queryName].selector(input)
   const sort = queries[queryName].sort
+  const post = queries[queryName].post
 
   return db.find({
     selector: selector,
@@ -55,7 +76,12 @@ function queryStoredMedias(queryName, input, limit, offset) {
     limit: limit,
     skip: offset
   })
-    .then(res => res.docs)
+    .then(res => {
+      if (post) {
+        return post(res.docs)
+      }
+      return res.docs
+    })
 }
 
 function queryOneOffline(id) {
@@ -69,7 +95,7 @@ function queryOneOffline(id) {
 
 function updateOrCreateOffline(medias) {
   return Promise.all(medias.map(m => {
-    return db.get(m._id)
+    return db.get(m.id)
       .then(doc => {
         m._rev = doc._rev
         return db.put(m)
@@ -205,7 +231,6 @@ export default class {
         updateOrCreateOffline([media])
         return media
       })
-
   }
 
   delete(id) {
@@ -216,4 +241,32 @@ export default class {
         return deleteOffline(id)
       })
   }
+
+  renameTag(tag, newTag) {
+    const params = new URLSearchParams()
+    params.append('tag', newTag)
+
+    const query = this.base + '/tags/' + tag
+
+    return axios.put(query, params)
+  }
+
+  addTagToMedia(mediaId, tag) {
+    const query = this.base + '/medias/' + mediaId + '/tags/' + tag
+    return axios.put(query).then(res => {
+      const media = res.data
+      updateOrCreateOffline([media])
+      return media
+    })
+  }
+
+  removeTagFromMedia(mediaId, tag) {
+    const query = this.base + '/medias/' + mediaId + '/tags/' + tag
+    return axios.delete(query).then(res => {
+      const media = res.data
+      updateOrCreateOffline([media])
+      return media
+    })
+  }
+
 }

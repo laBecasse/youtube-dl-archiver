@@ -13,6 +13,7 @@ Vue.use(VueAxios, axios);
 import App from './App.vue';
 import MediaList from './components/MediaList.vue'
 import Media from './components/Media.vue'
+import AllTags from './components/AllTags.vue'
 import Settings from './components/Settings.vue'
 
 import WebTorrent from 'webtorrent'
@@ -82,6 +83,11 @@ const routes = [
     }
   },
   {
+    name: 'AllTags',
+    path: '/tags',
+    component: AllTags
+  },
+  {
     name: 'WatchMedia',
     path: '/medias/:id',
     component: Media,
@@ -104,7 +110,7 @@ const ATTACHMENT_ID = 'media'
 const store = new Vuex.Store({
   state: {
     sortedByCreationDate: true,
-    medias: [],
+    medias: {},
     isLocked: false,
     offset: 0,
     step: 10,
@@ -163,6 +169,17 @@ const store = new Vuex.Store({
       for (let key in state.views) {
         state.views[key].delete(id)
       }
+      state.medias[id] = null
+    },
+    update (state, media) {
+      for(let key in media) {
+        Vue.set(state.medias[media.id], key, media[key])
+      }
+    },
+    registerMedias(state, medias) {
+      for(let media of medias) {
+        Vue.set(state.medias, media.id, media)
+      }
     },
     setSingle(state, value) {
 
@@ -201,7 +218,7 @@ const store = new Vuex.Store({
       let promises = []
 
       for(let m of medias) {
-        payload.id = m._id
+        payload.id = m.id
         promises.push(context.dispatch(action, payload))
       }
 
@@ -233,6 +250,7 @@ const store = new Vuex.Store({
         view.toggleLock()
         return mediaDB[queryName](input, limit, offset)
           .then(medias => {
+            context.commit('registerMedias', medias)
             view.insertMedias(medias)
             view.toggleLock()
             return medias
@@ -256,7 +274,7 @@ const store = new Vuex.Store({
       return mediaDB.getOne(id)
         .then(media => {
           const a = (media) ? [media] : []
-          //context.commit('insertMedias', a)
+          context.commit('registerMedias', a)
           context.commit('setSingle', true)
           return media
         })
@@ -278,10 +296,40 @@ const store = new Vuex.Store({
       mediaDB
         .download(id)
         .then(media => {
-          context.commit('remove', media._id)
+          context.commit('remove', media.id)
           context.commit('insertMedias', [media])
           return [media]
         })
+    },
+    getAllTags(context) {
+      return mediaDB.getAllTags()
+    },
+    addTagToMedia(context, payload) {
+      const mediaId = payload.mediaId
+      const tag = payload.tag
+      return mediaDB
+        .addTagToMedia(mediaId, tag)
+        .then(media => {
+          context.commit('update', media)
+          return media
+        })
+    },
+    removeTagFromMedia(context, payload) {
+      const mediaId = payload.mediaId
+      const tag = payload.tag
+      console.log('removeTagFrommedia', mediaId, tag)
+      return mediaDB
+        .removeTagFromMedia(mediaId, tag)
+        .then(media => {
+          context.commit('update', media)
+          return media
+        })
+    },
+    renameTag(context, payload) {
+      const tag = payload.tag
+      const newTag = payload.newTag
+      return mediaDB
+        .renameTag(tag, newTag)
     },
     makeOfflineMedia(context, id) {
       return mediaDB.getOne(id)
@@ -311,7 +359,7 @@ const store = new Vuex.Store({
     },
     deleteOfflineMedia(context, id) {
       return offlineMedias.get(id)
-        .then(m => offlineMedias.removeAttachment(m._id, ATTACHMENT_ID, m._rev))
+        .then(m => offlineMedias.removeAttachment(m.id, ATTACHMENT_ID, m._rev))
         .then(() => offlineMedias.viewCleanup())
         .then(() => offlineMedias.compact())
     },

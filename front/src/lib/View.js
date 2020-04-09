@@ -1,3 +1,5 @@
+import Vue from 'vue';
+
 export default class View {
   constructor(params) {
     this.hash = View.getHashFromParams(params)
@@ -17,11 +19,11 @@ export default class View {
               this.params.isSortedByCreationDate &&
               //              !state.query.startsWith('/search?text=') &&
               this.medias[i - 1].creation_date <= m.creation_date &&
-              this.medias[i - 1]._id !== m._id) {
+              this.medias[i - 1].id !== m.id) {
           i--
         }
 
-        if (i === 0 || this.medias[i - 1]._id !== m._id)
+        if (i === 0 || this.medias[i - 1].id !== m.id)
           this.medias.splice(i, 0, m)
       }
   }

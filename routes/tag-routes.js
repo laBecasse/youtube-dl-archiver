@@ -59,7 +59,6 @@ module.exports = function (router, tags, links) {
     const tag = req.params.tag
     const newTag = req.body.tag
     checkTag(newTag)
-    console.log(tag, newTag, req.body)
     handleJson(mediaDB.renameTag(tag, newTag), req, res)
   })
 

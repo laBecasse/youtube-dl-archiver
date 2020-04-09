@@ -21,16 +21,15 @@ module.exports = function (links) {
 
   const addTagToMedia = function (mediaId, tag) {
     const action = function (collection) {
-      const selector = { _id: links.ObjectID(mediaId) }
+      const selector = { $and: [ {_id: links.ObjectID(mediaId) }, {tags: {$nin: [tag] }}]}
       const modifier = { $push: {
         tags: tag
       } }
 
-      console.log(selector, modifier)
       return new Promise((resolve, reject) => {
-        collection.updateOne(selector, modifier, (err, res) => {
+        collection.findOneAndUpdate(selector, modifier, { returnOriginal: false }, (err, res) => {
           if (err) return reject(err)
-          resolve(res)
+          resolve(res.value)
         })
       })
     }
@@ -45,9 +44,9 @@ module.exports = function (links) {
       } }
 
       return new Promise((resolve, reject) => {
-        collection.updateOne(selector, modifier, (err, res) => {
+        collection.findOneAndUpdate(selector, modifier, { returnOriginal: false }, (err, res) => {
           if (err) return reject(err)
-          resolve(res)
+          resolve(res.value)
         })
       })
     }
@@ -284,8 +283,10 @@ module.exports = function (links) {
         .then(build)
     },
     replace: replace,
-    addTagToMedia: addTagToMedia,
-    removeTagFromMedia: removeTagFromMedia,
+    addTagToMedia: (mediaId, tag) => addTagToMedia(mediaId, tag)
+      .then(build),
+    removeTagFromMedia: (mediaId, tag) => removeTagFromMedia(mediaId, tag)
+      .then(build),
     renameTag: renameTag
   }
 }

@@ -26,7 +26,7 @@ class Media {
     this.mime = obj.mime
     this.title = obj.title
     this.description = obj.description
-    this.tags = obj.tags
+    this.tags = (obj.tags) ? obj.tags : []
     this.uploader = obj.uploader
     this.creator = obj.creator
     this.channel_id = obj.channel_id
