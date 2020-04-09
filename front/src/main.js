@@ -147,7 +147,7 @@ const store = new Vuex.Store({
     },
     getViewMedias(state) {
       return (params) => {
-        return state.views[View.getHashFromParams(params)].medias
+        return state.views[View.getHashFromParams(params)].getMedias()
       }
     },
     getMagnet: (state) => (id) =>  {
@@ -158,7 +158,7 @@ const store = new Vuex.Store({
     registerView(state, params) {
       const key = View.getHashFromParams(params)
       if (!state.views[key]) {
-        const view = new View(params)
+        const view = new View(params, state.medias)
         Vue.set(state.views, view.getHash(), view)
       }
     },
@@ -169,16 +169,19 @@ const store = new Vuex.Store({
       for (let key in state.views) {
         state.views[key].delete(id)
       }
-      state.medias[id] = null
-    },
-    update (state, media) {
-      for(let key in media) {
-        Vue.set(state.medias[media.id], key, media[key])
-      }
+      delete state.medias[id]
     },
     registerMedias(state, medias) {
       for(let media of medias) {
-        Vue.set(state.medias, media.id, media)
+        if (media.id in state.medias) {
+          console.log('update')
+          for(let key in media) {
+            Vue.set(state.medias[media.id], key, media[key])
+          }
+        } else {
+          console.log('registration')
+          Vue.set(state.medias, media.id, media)
+        }
       }
     },
     setSingle(state, value) {
@@ -229,6 +232,7 @@ const store = new Vuex.Store({
       const input = params.input
       const limit = context.state.step
       const view = context.getters.getView(params)
+      console.log(view)
       const offset = view.getSize()
 
       const payload = {}
@@ -271,20 +275,24 @@ const store = new Vuex.Store({
       }))
     },
     getOneMedia (context, id) {
-      return mediaDB.getOne(id)
-        .then(media => {
-          const a = (media) ? [media] : []
-          context.commit('registerMedias', a)
-          context.commit('setSingle', true)
-          return media
-        })
+      if (context.state.medias[id]) {
+        return context.state.medias[id]
+      } else {
+        return mediaDB.getOne(id)
+          .then(media => {
+            const a = (media) ? [media] : []
+            context.commit('registerMedias', a)
+            context.commit('setSingle', true)
+            return context.state.medias[id]
+          })
+      }
     },
     uploadURL(context, payload) {
       const {url, withDownload} = payload
       return mediaDB.uploadURL(url, withDownload)
-            .then(medias => {
-              return context.dispatch('refreshMedias')
-            })
+        .then(medias => {
+          return context.dispatch('refreshMedias')
+        })
     },
     delete (context, media) {
       mediaDB.delete(media.id).then(() => {
@@ -296,8 +304,7 @@ const store = new Vuex.Store({
       mediaDB
         .download(id)
         .then(media => {
-          context.commit('remove', media.id)
-          context.commit('insertMedias', [media])
+          context.commit('registerMedias', [media])
           return [media]
         })
     },
@@ -310,7 +317,7 @@ const store = new Vuex.Store({
       return mediaDB
         .addTagToMedia(mediaId, tag)
         .then(media => {
-          context.commit('update', media)
+          context.commit('registerMedias', [media])
           return media
         })
     },
@@ -321,7 +328,7 @@ const store = new Vuex.Store({
       return mediaDB
         .removeTagFromMedia(mediaId, tag)
         .then(media => {
-          context.commit('update', media)
+          context.commit('registerMedias', [media])
           return media
         })
     },

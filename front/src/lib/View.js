@@ -1,39 +1,44 @@
 import Vue from 'vue';
 
 export default class View {
-  constructor(params) {
+  constructor(params, medias) {
     this.hash = View.getHashFromParams(params)
     this.params = params
-    this.medias = []
+    this.mediaIds = []
+    this.medias = medias
     this.locked = false
   }
 
   insertMedias(list) {
       for(let m of list) {
         // insert at right position from the bottom
-        let i = this.medias.length
+        let i = this.mediaIds.length
         // for text search disable insertion
         // THERE IS STILL A PROBLEM OF DUPLICATED FOR TEXT SEARCH !!!
         // 2 QUERIES ARE EXECUTED IN PARALLEL 
         while(i > 0 &&
               this.params.isSortedByCreationDate &&
               //              !state.query.startsWith('/search?text=') &&
-              this.medias[i - 1].creation_date <= m.creation_date &&
-              this.medias[i - 1].id !== m.id) {
+              this.medias[this.mediaIds[i - 1]].creation_date <= m.creation_date &&
+              this.mediaIds[i - 1] !== m.id) {
           i--
         }
 
-        if (i === 0 || this.medias[i - 1].id !== m.id)
-          this.medias.splice(i, 0, m)
+        if (i === 0 || this.mediaIds[i - 1] !== m.id)
+          this.mediaIds.splice(i, 0, m.id)
       }
   }
 
+  getMedias() {
+    return this.mediaIds.map(id => this.medias[id])
+  }
+
   empty() {
-    this.medias = []
+    this.mediaIds = []
   }
 
   getSize() {
-    return this.medias.length
+    return this.mediaIds.length
   }
   
   getHash() {
@@ -49,9 +54,9 @@ export default class View {
   }
 
   delete(id) {
-    this.medias = this.medias.filter(m => m.id !== id)
+    this.mediaIds = this.mediaIds.filter(i => i !== id)
   }
-  
+
   static getHashFromParams(params) {
     return JSON.stringify(params)
   }
