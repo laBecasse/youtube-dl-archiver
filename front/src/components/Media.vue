@@ -142,6 +142,11 @@
          Tags,
          TagForm
      },
+     computed: {
+         fileUrl () {
+             return (this.media) ? this.media.file_url : null
+         }
+     },
      data () {
          /* const jsonld = {
           *   "@context": "https://schema.org/",
@@ -161,7 +166,6 @@
              jsonld: {},
              media: null,
              mediaPromise: null,
-             fileUrl: null,
              isInitialized: false
          }
      },
@@ -171,11 +175,10 @@
              
              t.mediaPromise = t.$store.dispatch('getOneMedia', t.mediaId).then(media => {
                  t.media = formatMedia(media)
-                 t.fileUrl = media.file_url
+
              })
          } else {
              t.media = formatMedia(t.mediaObj)
-             t.fileUrl = t.media.file_url
          }
      },
      updated () {
