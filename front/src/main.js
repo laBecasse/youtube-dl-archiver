@@ -216,13 +216,12 @@ const store = new Vuex.Store({
   },
   actions: {
     applyOnAll(context, payload) {
-      const medias = context.state.medias
+      const view = context.getters.getView(payload.params)
       const action = payload.action
       let promises = []
 
-      for(let m of medias) {
-        payload.id = m.id
-        promises.push(context.dispatch(action, payload))
+      for(let m of view.getMedias()) {
+        promises.push(context.dispatch(action, m))
       }
 
       return Promise.all(promises)
@@ -232,7 +231,6 @@ const store = new Vuex.Store({
       const input = params.input
       const limit = context.state.step
       const view = context.getters.getView(params)
-      console.log(view)
       const offset = view.getSize()
 
       const payload = {}

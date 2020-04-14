@@ -155,13 +155,15 @@
          /* control handlers */
          deleteAll () {
              const payload = {
-                 'action': 'delete'
+                 action: 'delete',
+                 params: this.params
              }
              this.$store.dispatch('applyOnAll', payload)
          },
          downloadAll () {
              const payload = {
-                 'action': 'download'
+                 action: 'downloadMedia',
+                 params: this.params
              }
              this.$store.dispatch('applyOnAll', payload)
          },
