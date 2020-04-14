@@ -55,7 +55,6 @@ class Media {
     if (this.subtitles) {
       subtitlesArray = this.subtitles.reduce((res, sub) => {
         const filePath = sub.file_path
-        const lang = sub.lang
         res.push({
           url: HOST + '/archives/' + encodeURIPath(filePath),
           lang: sub.lang
@@ -63,7 +62,6 @@ class Media {
         return res
       }, [])
     }
-    
     return subtitlesArray
   }
 
@@ -91,8 +89,46 @@ class Media {
     const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
     const mediaUrl = (test) ? info.webpage_url : info.ulr
 
-    let subtitlesArray
-    subtitlesArray = LANGS.reduce((res, lang) => {
+    let originalFile = {
+      url: info.url,
+      ext: info.ext,
+      mime: Mime.lookup(info.ext)
+    }
+
+    const creationDate = new Date().toISOString()
+
+    const obj = {
+      url: url,
+      media_url: mediaUrl,
+      ext: info.ext,
+      mime: Mime.lookup(info.ext),
+      original_file: originalFile,
+      title: info.title,
+      description: info.description,
+      tags: [],
+      downloadedTags: info.tags,
+      uploader: info.uploader,
+      creator: info.creator,
+      channel_id: info.channel_id,
+      channel_url: info.channel_url,
+      creation_date: creationDate,
+      upload_date: info.upload_date
+    }
+
+    this.setArchiveProps(obj, archive)
+
+    return new Media(obj)
+  }
+
+  static updateArchive (media, archive) {
+    const updatedMedia = new Media(media)
+    updatedMedia.creation_date = media.creation_date
+    this.setArchiveProps(updatedMedia, archive)
+    return updatedMedia
+  }
+
+  static setArchiveProps (obj, archive) {
+    let subtitlesArray = LANGS.reduce((res, lang) => {
       const filePath = archive.subtitlesPath.find(testSub(lang))
       if (filePath) {
         res.push({
@@ -103,47 +139,13 @@ class Media {
       return res
     }, [])
 
-
-    let original_file = {
-      url: info.url,
-      ext: info.ext,
-      mime: Mime.lookup(info.ext)
-    }
-
-    const creationDate = new Date().toISOString()
-
-    return new Media({
-      url: url,
-      media_url: mediaUrl,
-      ext: info.ext,
-      mime: Mime.lookup(info.ext),
-      original_file: original_file,
-      title: info.title,
-      description: info.description,
-      tags: [],
-      downloadedTags: info.tags,
-      uploader: info.uploader,
-      creator: info.creator,
-      channel_id: info.channel_id,
-      channel_url: info.channel_url,
-      creation_date: creationDate,
-      upload_date: info.upload_date,
-      file_path: archive.mediaPath,
-      torrent_path: archive.torrentPath,
-      thumbnails: archive.thumbnailsPath,
-      subtitles: subtitlesArray,
-      archive_dir: archive.dirpath
-    })
+    obj.file_path = archive.mediaPath
+    obj.torrent_path = archive.torrentPath
+    obj.thumbnails = archive.thumbnailsPath
+    obj.subtitles = subtitlesArray
+    obj.archive_dir = archive.dirpath
   }
-  
-  static update (media, info, archive) {
-    const updatedMedia = Media.create(media.url, info, archive)
-    updatedMedia._id = media._id
-    updatedMedia.creation_date = media.creation_date
 
-    return updatedMedia
-  }
-  
   // static createFromDocument (document) {
   //   return Media.createFromInfo(document.media_url,
   //                               document.url,

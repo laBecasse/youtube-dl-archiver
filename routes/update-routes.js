@@ -148,7 +148,7 @@ module.exports = function (router, links, cacheCol) {
             .then(info => {
               return Archive.load(media)
                 .then(newArchive => {
-                  const updatedMedia = Media.update(media, info, newArchive)
+                  const updatedMedia = Media.updateArchive(media, newArchive)
                   return mediaDB.replace(updatedMedia)
                 })
             })

@@ -13,7 +13,7 @@
                     Télécharger tout
                 </a>
             </p>
-            <p class="control" >
+            <p class="control" style="display: none">
                 <a class="button is-primary" v-on:click="playAll">
                     Lire tout
                 </a>
@@ -21,7 +21,7 @@
         </div>
         
         <!-- lecture controlers -->
-        <div class="field is-grouped" v-if="this.playing_id">
+        <div class="field is-grouped" v-if="false && this.playing_id">
             <p class="control" >
                 <a class="button" v-on:click="playPrevious">
                     Précédent
