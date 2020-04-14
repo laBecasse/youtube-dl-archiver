@@ -70,7 +70,7 @@
             </article>
             <div v-if="media" class="media-column-video" v-bind:class="{'column': !expanded}">
                 <div class="card-image">
-                    <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="none" class="image">
+                    <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="metadata" class="image">
                         <source v-if="fileUrl" :src="offlineMediaURL || fileUrl" :type="media.mime"/>
                         <source v-if="!fileUrl && media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
                         <track v-for="sub in media.subtitles" :key="sub.url"
@@ -465,5 +465,14 @@
  .is-vertical-center {
      display: flex;
      align-items: center;
+ }
+
+ video, audio, img {
+     max-width: 100%;
+     margin: auto;
+ }
+
+ audio {
+     width: 100%;
  }
 </style>

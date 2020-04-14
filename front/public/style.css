@@ -11,11 +11,6 @@ nav input {
     opacity:1;
 }
 
-video, audio, img {
-    max-width: 100%;
-    width: 100%;
-}
-
 audio {
     /* fix height auto in bulma */
     min-height: 2.5em;
