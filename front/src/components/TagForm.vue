@@ -2,7 +2,7 @@
     <form v-on:submit.prevent="addTag">
         <div class="field has-addons">
             <div class="control">
-                <input class="input is-small" type="text" name="tag" id="addTag" placeholder="nouveau tag" />
+                <input class="input is-small" type="text" name="tag" placeholder="nouveau tag" />
             </div>
             <div class="control">
                 <a class="button is-link is-small">
@@ -27,9 +27,11 @@
      },
      methods: {
          addTag(e) {
-             const value = this.$el.querySelector('#addTag').value
-             console.log(value)
-             this.$emit('addTag', value)
+             const input = this.$el.querySelector('input[name=tag]')
+             for (let tag of input.value.split(/[, ]/)) {
+                 this.$emit('addTag', tag)
+             }
+             input.value = ''
          }
      }
  }

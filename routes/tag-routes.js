@@ -40,7 +40,7 @@ module.exports = function (router, tags, links) {
   }
 
   let checkTag = function (tag, res) {
-    if (!tag) {
+    if (!tag && !(tag.includes(',') || tag.includes(' '))) {
       res.status(400)
       res.json({ message: 'invalid tag' })
     }
@@ -51,7 +51,7 @@ module.exports = function (router, tags, links) {
   })
 
   router.get('/tags/:tag', (req, res, next) => {
-    const tag = req.params.tag
+    const tag = req.params.tag.trim()
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0
 
@@ -59,23 +59,22 @@ module.exports = function (router, tags, links) {
   })
 
   router.put('/tags/:tag', (req, res, next) => {
-    const tag = req.params.tag
-    const newTag = req.body.tag
+    const tag = req.params.tag.trim()
+    const newTag = req.body.tag.trim()
     checkTag(newTag)
     handleJson(mediaDB.renameTag(tag, newTag), req, res)
   })
 
   router.put('/medias/:id/tags/:tag', (req, res, next) => {
     const mediaId = req.params.id
-    const tag = req.params.tag
+    const tag = req.params.tag.trim()
     checkTag(tag)
     handleJson(mediaDB.addTagToMedia(mediaId, tag), req, res)
   })
 
   router.delete('/medias/:id/tags/:tag', (req, res, next) => {
     const mediaId = req.params.id
-    const tag = req.params.tag
+    const tag = req.params.tag.trim()
     handleJson(mediaDB.removeTagFromMedia(mediaId, tag), req, res)
   })
-
 }
