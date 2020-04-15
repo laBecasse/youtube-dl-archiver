@@ -1,5 +1,6 @@
 const TagDB = require('../models/TagDB')
 const MediaDB = require('../models/MediaDB')
+const afterUpdate = require('../config').afterUpdate
 
 module.exports = function (router, tags, links) {
   const tagDB = TagDB(tags)
@@ -14,28 +15,32 @@ module.exports = function (router, tags, links) {
   }
 
   let handleJson = function (promises, req, res) {
-    promises.then(objects => {
-      if (objects) {
-        if (Array.isArray(objects)) {
-          res.json(objects.map(obj => {
-            if (obj.toAPIJSON) {
-              return obj.toAPIJSON()
-            } else {
-              return obj
-            }
-          }))
-        } else {
-          if (objects.toAPIJSON) {
-            return res.json(objects.toAPIJSON())
+    return promises
+      .then(objects => {
+        if (objects) {
+          if (Array.isArray(objects)) {
+            res.json(objects.map(obj => {
+              if (obj.toAPIJSON) {
+                return obj.toAPIJSON()
+              } else {
+                return obj
+              }
+            }))
+            return objects
           } else {
-            return res.json(objects)
+            if (objects.toAPIJSON) {
+              res.json(objects.toAPIJSON())
+            } else {
+              res.json(objects)
+            }
+            return [objects]
           }
+        } else {
+          res.status(404)
+          res.json({ message: 'not found' })
+          return []
         }
-      } else {
-        res.status(404)
-        res.json({ message: 'not found' })
-      }
-    })
+      })
       .catch(handleError(res))
   }
 
@@ -70,6 +75,7 @@ module.exports = function (router, tags, links) {
     const tag = req.params.tag.trim()
     checkTag(tag)
     handleJson(mediaDB.addTagToMedia(mediaId, tag), req, res)
+      .then(afterUpdate)
   })
 
   router.delete('/medias/:id/tags/:tag', (req, res, next) => {

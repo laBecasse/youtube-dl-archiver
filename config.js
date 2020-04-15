@@ -3,6 +3,12 @@ const path = require('path')
 
 dotenv.config()
 
+const afterUpdateModules = (process.env.AFTER_UPDATE) ? process.env.AFTER_UPDATE.split(' ').map(m => require(m)) : []
+const afterUpdate = function (medias) {
+  return Promise.all(afterUpdateModules.map(f => f(medias)))
+    .then(() => medias)
+}
+
 module.exports = {
   port: process.env.PORT,
   host: process.env.HOST,
@@ -22,5 +28,6 @@ module.exports = {
   webtorrent: {
     enabled: process.env.WEBTORRENT_ENABLE,
     trackers: process.env.WEBTORRENT_TRACKERS.split(' ')
-  }   
+  },
+  afterUpdate: afterUpdate
 }

@@ -70,14 +70,16 @@ class Media {
     json.id = json._id
     json.subtitles = this.getSubtitlesJSON()
     json.thumbnail = this.getThumbnailJSON()
-    if (this.file_path) {
-      json.file_url = Media._urlFromPath(this.file_path)
-    }
+    json.file_url = this.getFileUrl()
     if (this.torrent_path) {
       json.torrent_url = Media._urlFromPath(this.torrent_path)
     }
 
     return json
+  }
+
+  getFileUrl () {
+    return (this.file_path) ? Media._urlFromPath(this.file_path) : null
   }
 
   static _urlFromPath (path) {

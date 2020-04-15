@@ -6,20 +6,25 @@ const filePath = require('../models/FilePath')
 const Downloader = require('../libs/downloader')
 const Archive = require('../models/Archive')
 const Media = require('../models/Media')
+const afterUpdate = require('../config').afterUpdate
 
 let handleJson = function (promises, req, res) {
-  promises.then(medias => {
-    if (medias) {
-      if (Array.isArray(medias)) {
-        res.json(medias.map(media => media.toAPIJSON()))
+  return promises
+    .then(medias => {
+      if (medias) {
+        if (Array.isArray(medias)) {
+          res.json(medias.map(media => media.toAPIJSON()))
+          return medias
+        } else {
+          res.json(medias.toAPIJSON())
+          return [medias]
+        }
       } else {
-        res.json(medias.toAPIJSON())
+        res.status(404)
+        res.json({ message: 'not found' })
+        return []
       }
-    } else {
-      res.status(404)
-      res.json({ message: 'not found' })
-    }
-  })
+    })
     .catch(handleError(res))
 }
 
@@ -53,22 +58,23 @@ module.exports = function (router, links, cacheCol) {
     return res.send('update started')
   })
 
-  router.
-    post('/medias', (req, res, next) => {
-    const url = req.body.url
+  router
+    .post('/medias', (req, res, next) => {
+      const url = req.body.url
       const withDownload = req.body.withdownload
-
-    if (url) {
-      handleJson(create(url, withDownload), req, res)
-    } else {
-      res.status(400)
-      res.json({ message: 'url parameter needed' })
-    }
-  })
+      if (url) {
+        handleJson(create(url, withDownload), req, res)
+          .then(afterUpdate)
+      } else {
+        res.status(400)
+        res.json({ message: 'url parameter needed' })
+      }
+    })
 
   router.put('/medias/download/:id', (req, res, next) => {
     const dbId = req.params.id
     handleJson(downloadOne(dbId), req, res)
+      .then(afterUpdate)
   })
 
   let bagOfPromises = function (promise, args, start) {
