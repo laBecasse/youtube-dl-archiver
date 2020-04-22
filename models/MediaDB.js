@@ -254,7 +254,9 @@ module.exports = function (links) {
       let selector = {
         'tags': { '$in': [tag]}
       }
-      return find(selector, limit, offset)
+      let sort = {
+        'creation_date': -1}
+      return find(selector, limit, offset, sort)
         .then(build)
     },
     findAll: function (limit, offset) {
