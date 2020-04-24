@@ -137,7 +137,6 @@ module.exports = function (router, links, cacheCol) {
     const absDirPath = filePath.getAbsDirPath(info)
     return Downloader.move(info, absDirPath)
       .then(files => {
-
         const archive = Archive.create(files)
         const media = Media.create(url, info, archive)
         return mediaDB.add(media)

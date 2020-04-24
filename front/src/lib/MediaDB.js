@@ -270,4 +270,18 @@ export default class {
     })
   }
 
+  lookup(query, platform) {
+    const url = this.base + '/lookup/'
+    return axios.get(url, {
+      params: {
+        query: query,
+        platform: platform
+      }
+    })
+      .then(res => {
+        const medias = res.data
+        return medias
+      })
+    
+  }
 }

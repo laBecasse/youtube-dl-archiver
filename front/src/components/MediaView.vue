@@ -13,7 +13,7 @@
                     Télécharger tout
                 </a>
             </p>
-            <p class="control" >
+            <p class="control" style="display: none">
                 <a class="button is-primary" v-on:click="playAll">
                     Lire tout
                 </a>
@@ -21,7 +21,7 @@
         </div>
         
         <!-- lecture controlers -->
-        <div class="field is-grouped" v-if="this.playing_id">
+        <div class="field is-grouped" v-if="false && this.playing_id">
             <p class="control" >
                 <a class="button" v-on:click="playPrevious">
                     Précédent
@@ -45,23 +45,13 @@
                     <circle class="pull-to-refresh-material2__path pull-to-refresh-material2__path--colorful" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10" />
                 </svg>
             </div>
-            
-            <span v-if="medias.length === 0" class="loading">Pas de résultat</span>
-            <div v-if="isSortedByCreationDate" v-for="(medias, day, index) in mediasByDay">
-                <h4 class="creation_date">{{dateFormater.format(new Date(day))}}</h4>
-                <div v-for="media in medias" :key="media.id" class="is-6">
-                    <Media :mediaId="media.id" :mediaObj="media" :ref="media.id" :expanded="false"></Media>
-                </div>
-            </div>
-            <div v-if="!isSortedByCreationDate" v-for="media in this.medias" :key="media.id" class="is-6">
-                <Media :mediaId="media.id" :mediaObj="media" :ref="media.id" :expanded="false" ></Media>
-            </div>
+            <MediaList :medias="medias"/>
         </div>
     </div>
 </template>
 
 <script>
- import Media from './Media.vue'
+ import MediaList from './MediaList.vue'
  import {mapGetters} from 'vuex'
 
  import pullToRefresh from 'mobile-pull-to-refresh'
@@ -70,46 +60,37 @@
  import 'mobile-pull-to-refresh/dist/styles/material2/style.css'
 
  export default {
-     name: 'ListMedia',
+     name: 'MediaView',
      components: {
-         Media
+         MediaList
      },
+     props: ['params'],
      computed: {
-         medias () {
-             return this.$store.state.medias
+         step () {
+             return this.$store.state.step
          },
-         mediasByDay() {
-             return this.$store.state.medias.reduce((r, m) => {
-                 const d = new Date(m.creation_date)
-                 const ye = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(d)
-                 const mo = new Intl.DateTimeFormat('en', { month: '2-digit' }).format(d)
-                 const da = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(d)
-                 const date = `${ye}-${mo}-${da}`
-                 if (r[date]) {
-                     r[date].push(m)
-                 } else {
-                     r[date] = [m]
-                 }
-                 return r
-             }, {})
-         },
-         isSortedByCreationDate() {
-             return this.$store.state.sortedByCreationDate
+         medias() {
+             return this.$store.getters.getViewMedias(this.params)
          }
      },
      data() {
          return{
-             dateFormater: new Intl.DateTimeFormat('default',{ year: 'numeric', month: 'long', day: 'numeric'}),
              playing_id: undefined,
              autoplay: true,
              bottom: false,
-             isDownloading: false
+             isDownloading: false,
+             isLocked: false,
+             offset: 0
          }
      },
+     created() {
+         this.$store.commit('registerView', this.params)
+     },
+
+
      mounted: function()
      {
-         this.updateQuery()
-         this.$store.commit("emptyMedias")
+         this.$store.dispatch('getMore', this.params)
          window.addEventListener('scroll', () => {
              this.bottom = this.bottomIsClose()
          })
@@ -125,17 +106,20 @@
          })
 
          this.$on('playEnded', (v) => alert(v))
-
      },
      watch: {
-         // call again the method if the route changes
-         '$route': 'updateRoute',
          'playing_id': function() {
              this.playCurrent()
          },
+         'params': function() {
+             this.$store.commit('registerView', this.params)
+             if (this.medias.length === 0) {
+                 this.$store.dispatch('getMore', this.params)
+             }
+         },
          bottom(bottom) {
              if (bottom) {
-                 this.$store.dispatch('getMore')
+                 this.$store.dispatch('getMore', this.params)
              }
          }
      },
@@ -145,13 +129,15 @@
          /* control handlers */
          deleteAll () {
              const payload = {
-                 'action': 'delete'
+                 action: 'delete',
+                 params: this.params
              }
              this.$store.dispatch('applyOnAll', payload)
          },
          downloadAll () {
              const payload = {
-                 'action': 'download'
+                 action: 'downloadMedia',
+                 params: this.params
              }
              this.$store.dispatch('applyOnAll', payload)
          },
@@ -160,7 +146,8 @@
              this.playOneId(id)
          },
          playNext () {
-             let next = this.after()(this.playing_id)
+             let currentIndex = this.medias.indexOf(this.playing_id)
+             let next = (currentIndex != -1) ? this.medias.get(currentIndex + 1) : null
              if (next) {
                  this.playOneId(next.id)
              } else {
@@ -196,53 +183,11 @@
              if (this.playing_id && this.playing_id !== id) {
                  this.stopOneId(this.playing_id)
              }
-
+             
              this.playing_id = id
          },
          stopOneId (id) {
              this.$refs[id][0].reloadMedia()
-         },
-         /* routes handlers */
-         updateRoute() {
-             this.updateQuery()
-                 .then(() => this.playCurrent())
-         },
-         updateQuery () {
-             if (this.$route.name === 'SearchMedia' &&
-                 (this.$route.query.text ||
-                  this.$route.query.uploader)) {
-
-                 this.playing_id = undefined
-                 if (this.$route.query.text) {
-                     const text = this.$route.query.text
-                     const payload = {
-                         queryName: 'searchText',
-                         input: text
-                     }
-                     return this.$store.dispatch('query', payload)
-                 } else {
-                     const uploader = this.$route.query.uploader
-                     const payload = {
-                         queryName: 'searchUploader',
-                         input: uploader
-                     }
-                     return this.$store.dispatch('query', payload)
-                 }
-             } else if (this.$route.name === 'WatchMedia' &&
-                        this.$route.params.id) {
-                 const id = this.$route.params.id
-                 if (!this.contains(id))
-                     return this.$store.dispatch('getOneMedia', id)
-
-             } else {
-                 this.playing_id = undefined
-                 const payload = {
-                     queryName: 'find',
-                     input: ''
-                 }
-                 return this.$store.dispatch('query', payload)
-             }
-             return Promise.resolve()
          },
          bottomIsClose() {
              const margin = 1000

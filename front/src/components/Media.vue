@@ -57,7 +57,7 @@
                                 </div>
                                 <div class="column">
                                     <p class="field">
-                                        <a :href="fileUrl" class="button is-info" title="Télécharger" download>Télécharger</a>
+                                        <a :href="media.file_url" class="button is-info" title="Télécharger" download>Télécharger</a>
                                     </p>
                                     <p v-if="media.torrent_url" class="field">
                                         <a :href="media.torrent_url" class="button is-info" title="Télécharger" download>Télécharger Torrent</a>
@@ -69,58 +69,20 @@
                 </div>
             </article>
             <div v-if="media" class="media-column-video" v-bind:class="{'column': !expanded}">
-                <div class="card-image">
-                    <video v-if="media.type === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="metadata" class="image">
-                        <source v-if="fileUrl" :src="offlineMediaURL || fileUrl" :type="media.mime"/>
-                        <source v-if="!fileUrl && media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
-                        <track v-for="sub in media.subtitles" :key="sub.url"
-                               :src="sub.url"
-                               :label="sub.lang"
-                               kind="subtitles" :srclang="sub.lang"/>
-                        <p>Your browser does not support the video element.</p>
-                    </video>
-                    <audio v-if="media.type === 'audio'" controls preload="none">
-                        <source v-if="!media.torrent_url" :src="offlineMediaURL || fileUrl" :type="media.mime">
-                        <source v-if="media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
-                        <p>Your browser does not support the audio element.</p>
-                    </audio>
-                    <img v-if="media.type === 'image'"
-                         :src="fileUrl||media.original_file.url"/>
-                    <a v-if="media.type === 'other'"
-                       :href="fileUrl||media.original_file.url">media</a>
-                </div>
+                <slot name="player">
+                    <MediaPlayer :media="media" :offlineMediaURL="offlineMediaURL"/>
+                </slot>
             </div>
             <div class="is-primary" v-bind:class="{'column': !expanded}">
-                <div class="card-header">
-                    <h4 class="card-header-title is-2">
-                        <router-link :to="{name: 'WatchMedia', params: {id: media.id}}" class="has-text-dark">{{media.title}}</router-link>
-                    </h4>
-                </div>
-                <div class="card-content">
-                    <p class="media-meta">
-                        <router-link :to="{name: 'Uploader', params: {uploader: media.uploader}}" class="has-text-dark">
-                            <span v-if="media.creator">{{media.creator}}</span>
-                            <span v-if="!media.creator && media.uploader">{{media.uploader}}</span>
-                        </router-link>
-                        -
-                        <span>{{media.formated_creation_date}}</span>
-                    </p>
-                    <Tags v-if="media.tags" :tags="media.tags" :removingEnabled="expanded" :limited="!expanded" @removeTag="removeTag"/>
-                    <TagForm @addTag="addTag"/>
-                    <p v-if="media.description && !expanded" v-html="media.short_description" class="description">
-                    </p>
-                    <p v-if="media.description && expanded" v-html="media.htmlDescription" class="description">
-                    </p>
-                    <a v-bind:href="media.url">lien original</a>
-                </div>
+                <MediaDescription :media="media" :expanded="expanded" />
             </div>
         </section>
-        <footer v-if="media" class="card-footer">
-            <!-- <a :href="fileUrl" class="card-footer-item" download>Download</a> -->
-            <!-- <a class="card-footer-item"><span class="button"><span class="delete has-text-danger"></span> Delete</span></a> -->
-            <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL, 'has-background-black': fileUrl, 'has-text-white': fileUrl}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
-            <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><TrashIcon/></a>
-        </footer>
+        <slot name="footer" v-bind:media="media">
+            <footer v-if="media" class="card-footer">
+                <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL, 'has-background-black': media.file_url, 'has-text-white': media.file_url}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
+                <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><TrashIcon/></a>
+            </footer>
+        </slot>
         <script v-html="jsonld" type="application/ld+json">
         </script>
     </div>
@@ -130,22 +92,33 @@
  import { mapActions, mapMutations,  mapGetters } from 'vuex'
  import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
  import TrashIcon from 'vue-ionicons/dist/md-trash.vue'
- import TagForm from './TagForm.vue'
- import Tags from './Tags.vue'
+ import MediaDescription from './MediaDescription.vue'
+ import MediaPlayer from './MediaPlayer.vue'
 
  export default {
      name: 'Media',
-     props: ['mediaObj', 'mediaId', 'expanded'],
+     props: {
+         mediaObj: {
+             type: Object,
+             required: false
+         },
+         mediaId: {
+             type: String,
+             required: false
+         },
+         expanded: {
+             type: Boolean,
+             required: false,
+             default: false
+         }
+     },
      components: {
          DownloadIcon,
          TrashIcon,
-         Tags,
-         TagForm
+         MediaDescription,
+         MediaPlayer
      },
      computed: {
-         fileUrl () {
-             return (this.media) ? this.media.file_url : null
-         }
      },
      data () {
          /* const jsonld = {
@@ -172,45 +145,35 @@
      created () {
          const t = this
          if (!t.mediaObj) {
-             
              t.mediaPromise = t.$store.dispatch('getOneMedia', t.mediaId).then(media => {
-                 t.media = formatMedia(media)
-
+                 t.media = media
+                 this.setOfflineMediaURL()
              })
          } else {
-             t.media = formatMedia(t.mediaObj)
+             t.media = t.mediaObj
+             this.setOfflineMediaURL()
          }
-     },
-     updated () {
-         // if the media is loading or finished 
-         if (!this.isInitialized && this.mediaPromise) {
-             this.mediaPromise
-                 .then(() => {
-                     this.init()
-                     this.mediaPromise = null
-                 })
-         }
-     },
-     mounted () {
-         if (!this.isInitialized && this.media) {
-             this.init()
-         }
-     },
-     watch: {
-         offlineMediaURL: 'reloadMedia',
-         'fileUrl': 'reloadMedia'
      },
      methods: {
-         ...mapGetters(['getMagnet']),
-         ...mapMutations(['setMagnetOfId']),
          ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia', 'downloadMedia']),
          toggleDeleteConfirmation () {
              this.deleteConfirmation = !this.deleteConfirmation
          },
-         /* getters */
-         getMediaElt () {
-             const mediaElt = (this.media.type === 'video') ? this.$el.querySelector('.card-image video') : this.$el.querySelector('.card-image audio')
-             return mediaElt
+         getMediaType () {
+             const reV = new RegExp('video')
+             const reI = new RegExp('image')
+             const reA = new RegExp('audio')
+
+             if (reV.test(this.media.mime)) {
+                 return 'video'
+             }
+             if (reI.test(this.media.mime)) {
+                 return 'image'
+             }
+             if (reA.test(this.media.mime)) {
+                 return 'audio'
+             }
+             return 'other'
          },
          /* control handlers */
          deleteThis () {
@@ -260,183 +223,13 @@
                         .then(() => {this.downloadChoose = false})
          },
          /* play states */
-         play () {
-             const mediaElt = this.getMediaElt()
-             mediaElt.play()
-         },
          reloadMedia () {
              if (this.isInitialized) {
                  // reload the media when changing the source URL
                  this.getMediaElt().load()
              }
-         },
-         init() {
-
-             const media = this.media
-             const t = this
-             if (media.torrent_url) {
-                 
-                 var client = this.$store.state.webtorrentClient
-                 
-                 const mediaElt = this.getMediaElt()
-                 
-                 const playhandler = function() {
-                     
-                     // if the actual media is not yet served using webtorrent
-                     if (!t.isTorrentSet) {
-                         mediaElt.pause()
-                     } else {
-                         // if the webtorrent is set/rendered
-                         return;
-                     }
-                     // try to get the torrent of the media 
-                     const torrent = client.get(t.getMagnet()(media.id))
-                     if (!torrent) {
-                         // download the torrent
-                         client.add(media.torrent_url, function(torrent) {
-                             // attach a web seed to it
-                             const url = media.file_url
-                             torrent.addWebSeed(url)
-                             // the torrent of the actual media is downloading
-                             // for this session
-                             t.setMagnetOfId({
-                                 id: media.id,
-                                 magnet: torrent.magnetURI
-                             })
-                             
-                             // play as torrent
-                             torrent.files.forEach(function (file) {
-                                 file.renderTo(mediaElt)
-                                 mediaElt.play()
-                             })
-                         })
-                     } else {
-                         // play as torrent
-                         torrent.files.forEach(function (file) {
-                             file.renderTo(mediaElt)
-                             mediaElt.play()
-                         })
-                     }
-                     
-                     // the actual media is served using webtorrent
-                     t.isTorrentSet = true
-                 }
-                 mediaElt.addEventListener('play', playhandler)
-
-             }
-             const mediaElt = this.getMediaElt()
-             if (mediaElt) {
-                 const listener = () => {
-                     this.$emit('playEnded')
-                 }
-                 mediaElt.addEventListener('ended', listener)
-                 
-                 mediaElt.addEventListener('play', () => {
-                     if (this.$parent.playOneId)
-                         this.$parent.playOneId(this.media.id)
-                 })
-                 // offline state initialization
-                 this.setOfflineMediaURL()
-                 /* torrentInit() */
-             }
-             this.isInitialized = true
-         },
-         removeTag (tag) {
-             const mediaId = this.media.id
-             console.log('remove tag' , tag, 'from', mediaId)
-             this.$store.dispatch('removeTagFromMedia', { mediaId: mediaId, tag: tag})
-         },
-         addTag (tag) {
-             const mediaId = this.media.id
-             this.$store.dispatch('addTagToMedia', { mediaId: mediaId, tag: tag})
          }
      }
- }
-
- /*
-  * Format media functions
-  */
-
- const SHORT_DESCRIPTION_LENGTH = 200
-
- function formatMedia (media) {
-     addMediaType(media)
-     addShortDescription(media)
-     addFormatedUploadDate(media)
-     addHTMLDescription(media)
-     return media
- }
-
- function urlify(text) {
-     var urlRegex = /(https?:\/\/[^\s]+)/g;
-     return text.replace(urlRegex, function(url) {
-         return '<a href="' + url + '">' + url + '</a>';
-     })
- }
-
- function htmlEscape(text) {
-     return text
-         .replace(/&/g, '&amp;')
-         .replace(/</g, '&lt;')
-         .replace(/"/g, '&quot;')
-         .replace(/'/g, '&#039;')
- }
-
- function addHTMLDescription (media) {
-     if (media.description) {
-         let htmlDescription = htmlEscape(media.description)
-         htmlDescription = urlify(htmlDescription)
-         htmlDescription = htmlDescription.replace(/\r\n?|\n/g, "<br>")
-         media.htmlDescription = htmlDescription
-     }
- }
-
- function addShortDescription (media) {
-     const description = media.description
-     
-     if (description) {
-         let shortDescription = description.split('\n\n')[0]
-         shortDescription = shortDescription.substring(0, SHORT_DESCRIPTION_LENGTH)
-         shortDescription = urlify(shortDescription)
-         shortDescription = shortDescription.replace(/\r\n?|\n/g, "<br>")
-         
-         if (media.description.length > SHORT_DESCRIPTION_LENGTH) {
-             shortDescription += '...'
-         }
-         media.short_description = shortDescription
-     }
- }
-
- function addMediaType (media) {
-     const reV = new RegExp('video')
-     const reI = new RegExp('image')
-     const reA = new RegExp('audio')
-     media.type = 'other'
-     if (reV.test(media.mime)) {
-         media.type = 'video'
-     }
-     if (reI.test(media.mime)) {
-         media.type = 'image'
-     }
-     if (reA.test(media.mime)) {
-         media.type = 'audio'
-     }
- }
-
- function addFormatedUploadDate (media) {
-     if (media.upload_date) {
-         const date = parseUploadDate(media)
-         media.formated_creation_date = new Intl.DateTimeFormat().format(date)
-     }
- }
-
- function parseUploadDate (media) {
-     const dateString = media.upload_date
-     const year = dateString.substring(0, 4)
-     const month = parseInt(dateString.substring(4, 6))
-     const day = dateString.substring(6, 8)
-     
-     return new Date(year, month - 1, day)
  }
 </script>
 

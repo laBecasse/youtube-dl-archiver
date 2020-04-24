@@ -11,7 +11,8 @@ import axios from 'axios';
 Vue.use(VueAxios, axios);
 
 import App from './App.vue';
-import MediaList from './components/MediaList.vue'
+import MediaView from './components/MediaView.vue'
+import Lookup from './components/Lookup.vue'
 import Media from './components/Media.vue'
 import AllTags from './components/AllTags.vue'
 import Settings from './components/Settings.vue'
@@ -31,7 +32,7 @@ const routes = [
   {
     name: 'ListMedia',
     path: '/',
-    component: MediaList,
+    component: MediaView,
     props: {
       'params': {
         'queryName': 'find',
@@ -43,7 +44,7 @@ const routes = [
   {
     name: 'SearchMedia',
     path: '/search',
-    component: MediaList,
+    component: MediaView,
     props: (route) => {
       return {
         params: {
@@ -57,7 +58,7 @@ const routes = [
   {
     name: 'Uploader',
     path: '/uploader/:uploader',
-    component: MediaList,
+    component: MediaView,
     props: (route) => {
       return {
         params: {
@@ -71,7 +72,7 @@ const routes = [
   {
     name: 'MediaTag',
     path: '/tag/:tag',
-    component: MediaList,
+    component: MediaView,
     props: (route) => {
       return {
         params: {
@@ -96,6 +97,16 @@ const routes = [
       mediaId: route.params.id
     })
   },
+  {
+    name: 'Lookup',
+    path: '/lookup',
+    component: Lookup,
+    props: (route) => ({
+      query: route.query.query,
+      platform: route.query.platform
+    })
+  },
+
   {
     name: 'Settings',
     path: '/settings',
@@ -335,6 +346,11 @@ const store = new Vuex.Store({
       const newTag = payload.newTag
       return mediaDB
         .renameTag(tag, newTag)
+    },
+    lookup(context, payload) {
+      const query = payload.query
+      const platform = payload.platform
+      return mediaDB.lookup(query, platform)
     },
     makeOfflineMedia(context, id) {
       return mediaDB.getOne(id)

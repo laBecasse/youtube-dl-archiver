@@ -14,6 +14,12 @@ const youtubeDl = config.youtubedlBin
 const formatDl = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4/bestvideo+bestaudio/best"
 const langs = config.subtitleLangs
 
+const queryPatterns = {
+  youtube: '"ytsearch5:%s"',
+  googlevideo: '"gvsearch5:%s"',
+  soundcloud: '"scsearch5:%s"'
+}
+
 /*
  * download the media related to info
  * @returns {Promise} Promise represented the info of the media
@@ -42,7 +48,7 @@ function downloadMedia (info) {
         info._filename = paths[0]
         const mediaFileName = path.basename(info._filename)
         info._fileNames.push(mediaFileName)
-        
+
         return info
       })
   }
@@ -58,7 +64,7 @@ function downloadTorrentFile (info) {
     return axios.get(url).then(res => res.data)
       .then(video => {
         // choose resolution (expected 720p)
-        const file = video.files.filter(file => {file.label === "720p"})[0] || video.files[0]
+        const file = video.files.filter(file => file.label === '720p')[0] || video.files[0]
         const torrentURL = file.torrentUrl
 
         return new Promise((resolve, reject) => {
@@ -105,7 +111,7 @@ function loadInfo (dlDirPath, infoFileName, fileNames) {
     })
 }
 
-function createInfo(infoPath) {
+function createInfo (infoPath) {
   return new Promise((resolve, reject) => {
     fs.readFile(infoPath, (err, data) => {
       if (err) return reject(err)
@@ -129,13 +135,31 @@ function createInfo(infoPath) {
   })
 }
 
-/* 
+/*
  * Create a temporary directory path
- * @returns {string} 
+ * @returns {string}
  */
-function createTempDirectoryPath() {
+function createTempDirectoryPath () {
   const downloadDirName = Math.random().toString(36).substring(7)
   return path.join(tempDownloadDir, downloadDirName)
+}
+
+function buildSearchQuery (query, platform) {
+  if (queryPatterns[platform]) {
+    return util.format(queryPatterns[platform], query)
+  } else {
+    return null
+  }
+}
+
+function downloadMetadataFromSearch (query, platform) {
+  let q = buildSearchQuery(query, platform)
+  if (q) {
+    return downloadMetadata(q)
+  } else {
+    const error = new Error('unsupported platform')
+    return Promise.reject(error)
+  }
 }
 
 /*
@@ -166,18 +190,17 @@ function downloadMetadata (url) {
           const infoFiles = files.filter(file => {
             return path.extname(file).toLowerCase() === '.json'
           })
-          
+
           let promises = infoFiles.map(infoFile => {
             return loadInfo(dlDirPath, infoFile, files)
               .then(info => downloadTorrentFile(info))
           })
-          
+
           resolve(Promise.all(promises))
         })
       })
     })
 }
-
 
 /*
  * move all temporary files related to info object
@@ -185,14 +208,13 @@ function downloadMetadata (url) {
  * @returns {array} list of the files path
  */
 function move (info, absDirPath) {
-  console.log('moving '+ info.title)
+  console.log('moving ' + info.title)
   const downloadDirPath = info._dirname
 
   return new Promise((resolve, reject) => {
     // promises of file renaming
     const promises = info._fileNames.map(file => {
       return new Promise((resolve, reject) => {
-
         const oldFile = path.join(downloadDirPath, file)
         const ext = path.extname(file)
 
@@ -239,8 +261,9 @@ function removeExt (file) {
 }
 
 module.exports = {
-  'downloadMetadata': downloadMetadata,
-  'downloadMedia': downloadMedia,
-  'createInfo': createInfo,
-  'move': move
+  downloadMetadata: downloadMetadata,
+  downloadMetadataFromSearch: downloadMetadataFromSearch,
+  downloadMedia: downloadMedia,
+  createInfo: createInfo,
+  move: move
 }

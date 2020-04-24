@@ -1,8 +1,8 @@
-const Mime = require('mime')
-const path = require('path')
 const config = require('../config')
 const HOST = config.host
 const LANGS = config.subtitleLangs
+
+const UnarchivedMedia = require('./UnarchivedMedia')
 
 let encodeURIPath = function (path) {
   return path.split('/').map(encodeURIComponent).join('/')
@@ -16,30 +16,16 @@ let testSub = function (lang) {
   }
 }
 
-class Media {
+class Media extends UnarchivedMedia {
   constructor (obj) {
+    super(obj)
     this._id = obj._id
-    this.url = obj.url
-    this.media_url = obj.media_url
-    this.original_file = obj.original_file
-    this.ext = obj.ext
-    this.mime = obj.mime
-    this.title = obj.title
-    this.description = obj.description
-    this.downloadedTags = obj.downloadedTags
-    this.tags = (obj.tags) ? obj.tags : []
-    this.uploader = obj.uploader
-    this.creator = obj.creator
-    this.channel_id = obj.channel_id
-    this.channel_url = obj.channel_url
     this.creation_date = obj.creation_date
-    this.upload_date = obj.upload_date
     this.file_path = obj.file_path
     this.thumbnails = obj.thumbnails
     this.subtitles = obj.subtitles
     this.torrent_path = obj.torrent_path
-    // if archive directory is not set, then media path is set (back compatibility)
-    this.archive_dir = (obj.archive_dir) ? obj.archive_dir : path.dirname(this.file_path)
+    this.archive_dir = obj.archive_dir
   }
 
   getThumbnailJSON () {
@@ -66,7 +52,7 @@ class Media {
   }
 
   toAPIJSON () {
-    const json = JSON.parse(JSON.stringify(this))
+    const json = super.toAPIJSON()
     json.id = json._id
     json.subtitles = this.getSubtitlesJSON()
     json.thumbnail = this.getThumbnailJSON()
@@ -87,39 +73,15 @@ class Media {
   }
 
   static create (url, info, archive) {
-    // create the media url following the extractor
-    const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
-    const mediaUrl = (test) ? info.webpage_url : info.ulr
-
-    let originalFile = {
-      url: info.url,
-      ext: info.ext,
-      mime: Mime.lookup(info.ext)
-    }
-
     const creationDate = new Date().toISOString()
 
     const obj = {
       url: url,
-      media_url: mediaUrl,
-      ext: info.ext,
-      mime: Mime.lookup(info.ext),
-      original_file: originalFile,
-      title: info.title,
-      description: info.description,
-      tags: [],
-      downloadedTags: info.tags,
-      uploader: info.uploader,
-      creator: info.creator,
-      channel_id: info.channel_id,
-      channel_url: info.channel_url,
-      creation_date: creationDate,
-      upload_date: info.upload_date
+      creation_date: creationDate
     }
 
     this.setArchiveProps(obj, archive)
-
-    return new Media(obj)
+    return new Media(Object.assign(super.create(info), obj))
   }
 
   static updateArchive (media, archive) {
@@ -147,68 +109,6 @@ class Media {
     obj.subtitles = subtitlesArray
     obj.archive_dir = archive.dirpath
   }
-
-  // static createFromDocument (document) {
-  //   return Media.createFromInfo(document.media_url,
-  //                               document.url,
-  //                               document.file_path,
-  //                               document.thumbnails,
-  //                               document.subtitles,
-  //                               document.info,
-  //                               document._id)
-  // }
-
-  // static createFromInfo(mediaUrl, url, filepath, thumbnails, subtitles, info, id) {
-  //   const date = new Date()
-  //   const obj = {
-  //     '_id': id,
-  //     'url': url,
-  //     'media_url': mediaUrl,
-  //     'file_path': filepath,
-  //     'thumbnails': thumbnails,
-  //     'subtitles': subtitles,
-  //     'info': info,
-  //     'creation_date': date.toISOString()
-  //   }
-
-  //   return Media.createFromObject(obj)
-  // }
-
-  // static createFromObject(obj) {
-  //   let subtitlesArray
-  //   if (obj.subtitles) {
-  //     subtitlesArray = LANGS.reduce((res, lang) => {
-  //       const filePath = obj.subtitles.find(testSub(lang))
-  //       if (filePath) {
-  //         res.push({
-  //           file_path: filePath,
-  //           lang: lang
-  //         })
-  //       }
-  //       return res
-  //     }, [])
-  //   }
-
-  //   return new Media({
-  //     _id: obj._id,
-  //     url: obj.url,
-  //     media_url: obj.media_url,
-  //     ext: obj.info.ext,
-  //     mime: Mime.lookup(obj.info.ext),
-  //     title: obj.info.title,
-  //     description: obj.info.description,
-  //     tags: obj.info.tags,
-  //     uploader: obj.info.uploader,
-  //     creator: obj.info.creator,
-  //     channel_id: obj.info.channel_id,
-  //     channel_url: obj.info.channel_url,
-  //     creation_date: obj.creation_date,
-  //     upload_date: obj.info.upload_date,
-  //     file_url: HOST + '/archives/' + encodeURIPath(obj.file_path),
-  //     file_path: obj.file_path,
-  //     thumbnails: obj.thumbnails,
-  //     subtitles: subtitlesArray,
-  //   })
-  // }
 }
+
 module.exports = Media
