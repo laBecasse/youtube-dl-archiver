@@ -29,5 +29,6 @@ module.exports = {
     enabled: process.env.WEBTORRENT_ENABLE,
     trackers: process.env.WEBTORRENT_TRACKERS.split(' ')
   },
+  invidiousURL: process.env.INVIDIOUS_URL,
   afterUpdate: afterUpdate
 }

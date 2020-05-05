@@ -54,7 +54,7 @@ class UnarchivedMedia {
   static create (info) {
     // create the media url following the extractor
     const test = ['youtube', 'dailymotion', 'soundcloud', 'vimeo'].includes(info.extractor)
-    const mediaUrl = (test) ? info.webpage_url : info.ulr
+    const mediaUrl = (test) ? info.webpage_url : info.url
 
     let originalFile = {
       url: info.url,
@@ -66,7 +66,7 @@ class UnarchivedMedia {
       media_url: mediaUrl,
       ext: info.ext,
       mime: Mime.lookup(info.ext),
-      original_file: originalFile,
+      original_file: (info.url) ? originalFile : undefined,
       title: info.title,
       description: info.description,
       tags: [],

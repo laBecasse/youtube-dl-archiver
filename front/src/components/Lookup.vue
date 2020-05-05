@@ -6,6 +6,7 @@
                 <p class="control">
                     <span class="select">
                         <select name="platform">
+                            <option>invidious</option>
                             <option>youtube</option>
                             <option>googlevideo</option>
                             <option>soundcloud</option>
@@ -32,7 +33,7 @@
 <script>
  import MediaAdd from './MediaAdd.vue'
  import SearchIcon from 'vue-ionicons/dist/md-search.vue'
- 
+
  export default {
      name: 'Lookup',
      components: {
@@ -44,11 +45,11 @@
          return {
              medias: [],
              searching: false,
-             
+
          }
      },
      computed: {
-         
+
      },
      created() {
          if (this.query && this.platform) {

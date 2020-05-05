@@ -1,6 +1,6 @@
 <template>
     <div class="card-image">
-        <video v-if="getMediaType() === 'video'" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="metadata" class="image">
+        <video v-if="getMediaType() === 'video' && (media.original_file || media.file_url)" controls :poster="(media.thumbnail) ? media.thumbnail.url: undefined" preload="metadata" class="image">
             <source v-if="media.file_url" :src="offlineMediaURL || media.file_url" :type="media.mime"/>
             <source v-if="!media.file_url && media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
             <track v-for="sub in media.subtitles" :key="sub.url"
@@ -9,15 +9,17 @@
                    kind="subtitles" :srclang="sub.lang"/>
             <p>Your browser does not support the video element.</p>
         </video>
-        <audio v-if="getMediaType() === 'audio'" controls preload="none">
+        <audio v-else-if="getMediaType() === 'audio'" controls preload="none">
             <source v-if="!media.torrent_url" :src="offlineMediaURL || media.file_url" :type="media.mime">
             <source v-if="media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
             <p>Your browser does not support the audio element.</p>
         </audio>
-        <img v-if="getMediaType() === 'image'"
+        <img v-else-if="getMediaType() === 'image'"
              :src="media.file_url||media.original_file.url"/>
-        <a v-if="getMediaType() === 'other'"
+        <a v-else-if="getMediaType() === 'other'"
            :href="media.file_url||media.original_file.url">media</a>
+        <img v-else-if="media.thumbnail"
+             :src="media.thumbnail.url"/>
     </div>
 </template>
 
