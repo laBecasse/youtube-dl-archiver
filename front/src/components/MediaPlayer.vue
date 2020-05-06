@@ -117,10 +117,8 @@
              return mediaElt
          },
          reloadMedia () {
-             if (this.isInitialized) {
-                 // reload the media when changing the source URL
-                 this.getMediaElt().load()
-             }
+             // reload the media when changing the source URL
+             this.getMediaElt().load()
          }
      }
  }
