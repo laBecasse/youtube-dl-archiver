@@ -45,7 +45,7 @@
                     <circle class="pull-to-refresh-material2__path pull-to-refresh-material2__path--colorful" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10" />
                 </svg>
             </div>
-            <MediaList :medias="medias"/>
+            <MediaList :medias="medias" :isSortedByCreationDate="params.isSortedByCreationDate"/>
         </div>
     </div>
 </template>

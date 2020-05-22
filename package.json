@@ -33,6 +33,7 @@
     "tingodb": "^0.6.1",
     "wallabag-api": "^0.2.3",
     "webtorrent-hybrid": "^3.0.1",
+    "ydla-mpd-playlist": "0.0.1",
     "youtube-dl": "^1.13.1"
   },
   "devDependencies": {

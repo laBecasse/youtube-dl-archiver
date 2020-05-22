@@ -173,9 +173,6 @@ const store = new Vuex.Store({
         Vue.set(state.views, view.getHash(), view)
       }
     },
-    emptyView (state, params) {
-      
-    },
     delete (state, id) {
       for (let key in state.views) {
         state.views[key].delete(id)
@@ -185,12 +182,10 @@ const store = new Vuex.Store({
     registerMedias(state, medias) {
       for(let media of medias) {
         if (media.id in state.medias) {
-          console.log('update')
           for(let key in media) {
             Vue.set(state.medias[media.id], key, media[key])
           }
         } else {
-          console.log('registration')
           Vue.set(state.medias, media.id, media)
         }
       }
@@ -238,8 +233,6 @@ const store = new Vuex.Store({
       return Promise.all(promises)
     },
     getMore(context, params) {
-      const queryName = params.queryName
-      const input = params.input
       const limit = context.state.step
       const view = context.getters.getView(params)
       const offset = view.getSize()
@@ -299,7 +292,7 @@ const store = new Vuex.Store({
     uploadURL(context, payload) {
       const {url, withDownload} = payload
       return mediaDB.uploadURL(url, withDownload)
-        .then(medias => {
+        .then(() => {
           return context.dispatch('refreshMedias')
         })
     },
@@ -318,7 +311,7 @@ const store = new Vuex.Store({
         })
     },
     getAllTags(context) {
-      return mediaDB.getAllTags()
+      return mediaDB.getAllTags(context)
     },
     addTagToMedia(context, payload) {
       const mediaId = payload.mediaId
@@ -333,7 +326,6 @@ const store = new Vuex.Store({
     removeTagFromMedia(context, payload) {
       const mediaId = payload.mediaId
       const tag = payload.tag
-      console.log('removeTagFrommedia', mediaId, tag)
       return mediaDB
         .removeTagFromMedia(mediaId, tag)
         .then(media => {

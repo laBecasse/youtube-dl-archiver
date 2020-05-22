@@ -1,9 +1,9 @@
 <template>
     <div>
         <span v-if="medias.length === 0" class="loading">Pas de résultat</span>
-        <div v-else-if="isSortedByCreationDate" v-for="(medias, day, index) in mediasByDay">
+        <div v-else-if="isSortedByCreationDate" v-for="(medias, day) in mediasByDay" v-bind:key="day">
             <h4 class="creation_date">{{dateFormater.format(new Date(day))}}</h4>
-            <div v-for="media in medias" :key="media.id" class="is-6">
+            <div v-for="media in medias" v-bind:key="media.id" class="is-6">
                 <Media :mediaId="media.id" :mediaObj="media" :ref="media.id" :expanded="false"></Media>
             </div>
         </div>
