@@ -59,8 +59,9 @@ module.exports = function (router, tags, links) {
     const tag = req.params.tag.trim()
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0
+    const to = (Date.parse(req.query.to)) ? new Date(req.query.to) : new Date()
 
-    handleJson(mediaDB.findByTag(tag, limit, offset), req, res)
+    handleJson(mediaDB.findByTag(tag, limit, offset, to), req, res)
   })
 
   router.put('/tags/:tag', (req, res, next) => {

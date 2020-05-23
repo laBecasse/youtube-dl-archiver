@@ -33,11 +33,14 @@ const routes = [
     name: 'ListMedia',
     path: '/',
     component: MediaView,
-    props: {
-      'params': {
-        'queryName': 'find',
-        'input': {},
-        'isSortedByCreationDate': true
+    props: route => {
+      return {
+        'params': {
+          queryName: 'find',
+          input: {},
+          isSortedByCreationDate: true,
+          to: route.query.to
+        }
       }
     }
   },
@@ -78,7 +81,8 @@ const routes = [
         params: {
           queryName: 'searchTag',
           input: route.params.tag,
-          isSortedByCreationDate: true
+          isSortedByCreationDate: true,
+          to: route.query.to
         }
       }
     }
@@ -233,20 +237,27 @@ const store = new Vuex.Store({
       return Promise.all(promises)
     },
     getMore(context, params) {
-      const limit = context.state.step
       const view = context.getters.getView(params)
-      const offset = view.getSize()
 
       const payload = {}
       payload.params = params
-      payload.offset = offset
-      payload.limit = limit
+      payload.offset = (params.isSortedByCreationDate) ? 0 : view.getSize()
+      payload.limit = context.state.step
+      if (params.isSortedByCreationDate &&
+          view.getSize()) {
+        payload.to = view.getMedias()[view.getSize() - 1].creation_date
+      } else if (params.isSortedByCreationDate &&
+                 !view.getSize() &&
+                 params.to)  {
+        payload.to = params.to
+      }
 
       return context.dispatch('fillView', payload)
     },
     fillView(context, payload) {
       const limit = payload.limit
       const offset = payload.offset
+      const to = payload.to
       const params = payload.params
       const view = context.getters.getView(params)
       const queryName = params.queryName
@@ -254,7 +265,7 @@ const store = new Vuex.Store({
 
       if (!view.isLocked()) {
         view.toggleLock()
-        return mediaDB[queryName](input, limit, offset)
+        return mediaDB[queryName](input, limit, offset, to)
           .then(medias => {
             context.commit('registerMedias', medias)
             view.insertMedias(medias)

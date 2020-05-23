@@ -250,28 +250,47 @@ module.exports = function (links) {
       return findUrl(url)
         .then(build)
     },
-    findByTag: function (tag, limit, offset) {
+    findByTag: function (tag, limit, offset, to) {
       let selector = {
-        'tags': { '$in': [tag]}
+        'tags': { '$in': [tag] }
+      }
+
+      if (to) {
+        selector = {
+          $and: [
+            selector,
+            {
+              creation_date: { $lt: to.toISOString() }
+            }
+          ]
+        }
       }
       let sort = {
-        'creation_date': -1}
+        'creation_date': -1
+      }
       return find(selector, limit, offset, sort)
         .then(build)
     },
-    findAll: function (limit, offset) {
+    findAll: function (limit, offset, to) {
       let selector = {}
+
+      if (to) {
+        selector = {
+          creation_date: { $lt: to.toISOString() }
+        }
+      }
       let sort = {
-        'creation_date': -1}
+        'creation_date': -1
+      }
       return find(selector, limit, offset, sort)
         .then(build)
     },
     findById: function (id) {
-      let selector = {_id: new links.ObjectID(id)}
+      let selector = { _id: new links.ObjectID(id) }
       return findOne(selector)
         .then(build)
     },
-    search: function(text, uploader, limit, offset) {
+    search: function (text, uploader, limit, offset) {
       if (text) {
         return searchText(text, uploader, limit, offset)
           .then(build)

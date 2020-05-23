@@ -9,9 +9,10 @@ const MongoDB = require('./mongo-database')
 const collections = MongoDB(config['mongo'])
 
 // create collections if they don't exist
+collections['links'].createCollection().catch(console.error)
+collections['links'].defineKey({creation_date: -1})
 const textKeys = ['title', 'description', 'downloadedTags', 'tags', 'uploader', 'creator']
 collections['links'].defineTextIndex(textKeys).catch(console.error)
-collections['links'].createCollection().catch(console.error)
 
 // create view tags on links
 const tagPipeline = [{$project:{"tags": 1, creation_date: 1}}, {$unwind: "$tags"}, {$group: {_id: "$tags", mediaCount: {$sum: 1}, creation_date: {$min: "$creation_date"}, update_date: {$max: "$creation_date"}}}]

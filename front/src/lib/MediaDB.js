@@ -123,7 +123,7 @@ function deleteOffline(id) {
 
 /* API querying */
 
-function queryMedias(base, queryName, input, limit, offset) {
+function queryMedias(base, queryName, input, limit, offset, to) {
   const query = queries[queryName].api(input)
 
   let fullQuery
@@ -131,6 +131,10 @@ function queryMedias(base, queryName, input, limit, offset) {
     fullQuery = base + query + '&limit=' + limit + '&offset='+ offset
   } else {
     fullQuery =  base + query + '?limit=' + limit + '&offset='+ offset
+  }
+
+  if (to) {
+    fullQuery = fullQuery + '&to=' + to
   }
 
   return axios.get(fullQuery)
@@ -177,13 +181,13 @@ function buildTimeoutSwitch(apiQuery, offlineQuery) {
 }
 
 function queryWithOffline(base, queryName) {
-  return (input, limit, offset) => {
-    const apiQuery = queryMedias(base, queryName, input, limit, offset)
+  return (input, limit, offset, to) => {
+    const apiQuery = queryMedias(base, queryName, input, limit, offset, to)
           .then(medias => {
             updateOrCreateOffline(medias)
             return medias
           })
-    const offlineQuery = queryStoredMedias(queryName, input, limit, offset)
+    const offlineQuery = queryStoredMedias(queryName, input, limit, offset, to)
     return buildTimeoutSwitch(apiQuery, offlineQuery)
   }
 }

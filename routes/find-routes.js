@@ -39,7 +39,8 @@ module.exports = function (router, links) {
   router.get('/medias', getByUrl, (req, res) => {
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0
-    handleJson(mediaDB.findAll(limit, offset), req, res)
+    const to = (Date.parse(req.query.to)) ? new Date(req.query.to) : new Date()
+    handleJson(mediaDB.findAll(limit, offset, to), req, res)
   })
 
   router.get('/search', getByUrl, (req, res) => {
