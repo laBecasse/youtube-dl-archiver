@@ -44,7 +44,7 @@ const queries = {
   getAllTags: {
     api: () => '/tags',
     selector: () => ({}),
-    post: medias => {
+    next: medias => {
       return Object.values(medias.reduce((res, m) => {
         for (let tag of m.tags) {
           if (res[tag]) {
@@ -55,8 +55,8 @@ const queries = {
               mediaCount: 1
             }
           }
-          return res
         }
+        return res
       }, {}))
     },
     sort: null
@@ -68,7 +68,7 @@ function queryStoredMedias(queryName, input, limit, offset) {
 
   const selector = queries[queryName].selector(input)
   const sort = queries[queryName].sort
-  const post = queries[queryName].post
+  const next = queries[queryName].next
 
   return db.find({
     selector: selector,
@@ -77,8 +77,8 @@ function queryStoredMedias(queryName, input, limit, offset) {
     skip: offset
   })
     .then(res => {
-      if (post) {
-        return post(res.docs)
+      if (next) {
+        return next(res.docs)
       }
       return res.docs
     })

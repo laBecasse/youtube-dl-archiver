@@ -17,7 +17,6 @@
      name: 'Tags',
      props: ['tags', 'removingEnabled', 'limited'],
      data () {
-         console.log(this.tags, this.removingEnabled)
          return {
              limit: (this.limited) ? 5 : 10000,
          }
