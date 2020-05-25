@@ -64,6 +64,16 @@
         <div class="navbar-item">
           <a :href="this.API_URL + '/update'" id="update" class="button" type="submit">MAJ</a>
         </div>
+        <div class="navbar-item">
+          <router-link class="button"
+                       :to="{name: 'AllTags', params: {}}">
+            Tags
+          </router-link>
+          <router-link class="button"
+                       :to="{name: 'Lookup', params: {}}">
+            Lookup
+          </router-link>
+        </div>
       </div>
     </div>
   </nav>
