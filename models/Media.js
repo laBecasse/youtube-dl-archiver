@@ -22,7 +22,7 @@ class Media extends UnarchivedMedia {
     this._id = obj._id
     this.creation_date = obj.creation_date
     this.file_path = obj.file_path
-    this.thumbnails = obj.thumbnails
+    this.thumbnails = obj.thumbnails || []
     this.subtitles = obj.subtitles
     this.torrent_path = obj.torrent_path
     this.archive_dir = obj.archive_dir
