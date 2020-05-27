@@ -86,6 +86,9 @@
             </div>
             <router-view></router-view>
         </section>
+        <datalist id="all-tag-list" >
+            <option :value="tag._id" v-for="tag in allTags" />
+        </datalist>
     </div>
 </template>
 
@@ -118,7 +121,8 @@
              'offline': !navigator.onLine,
              'notificationOpt': {
              },
-             tags: []
+             tags: [],
+             allTags: []
          }
      },
      watch: {
@@ -133,6 +137,7 @@
      created () {
          this.$store.dispatch('getAllTags')
              .then(tags => {
+                 this.allTags = tags
                  this.tags = tags.sort((a,b) => b.mediaCount > a.mediaCount)
                                  .slice(0, 50)
 //                                 .sort((a, b) => b.creation_date > a.creation_date)

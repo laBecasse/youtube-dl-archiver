@@ -2,7 +2,7 @@
     <form v-on:submit.prevent="addTag">
         <div class="field has-addons">
             <div class="control">
-                <input class="input is-small" type="text" name="tag" placeholder="nouveau tag" />
+                <input class="input is-small" type="text" name="tag" placeholder="nouveau tag" list="all-tag-list"/>
             </div>
             <div class="control">
                 <a class="button is-link is-small">
@@ -22,8 +22,11 @@
      components: {
          AddIcon
      },
-     data () {
-         return {}
+   data () {
+     console.log(this.$root.allTags)
+       return {
+         allTags: this.$root.allTags
+       }
      },
      methods: {
          addTag(e) {
