@@ -33,14 +33,15 @@ npm run update
 # install dependencies of back-end
 npm i
 ```
-Look at `.env.source` to known what are the environment variables and run the server:
+Look at `.env.source` to known what are the environment variables and copy them into a new file `.env`, then run the server:
 ```sh 
 node index.js
 ```
 In another terminal, go to `front/` and execute:
 ```sh
 npm i
-npm run build
+npm run serve # for development 
+npm run build # for production and will haved to serve the folder dist/ 
 ```
 
 Open http://localhost:8000/ and have fun :)
