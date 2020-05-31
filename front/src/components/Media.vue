@@ -70,7 +70,8 @@
             </article>
             <div v-if="media" class="media-column-video" v-bind:class="{'column': !expanded}">
                 <slot name="player">
-                    <MediaPlayer :media="media" :offlineMediaURL="offlineMediaURL"/>
+                    <MediaPlayer v-if="expanded" :media="media" :offlineMediaURL="offlineMediaURL"/>
+                    <MediaThumbnail v-else="" :media="media" :offlineMediaURL="offlineMediaURL"/>
                 </slot>
             </div>
             <div class="is-primary" v-bind:class="{'column': !expanded}">
@@ -94,6 +95,7 @@
  import TrashIcon from 'vue-ionicons/dist/md-trash.vue'
  import MediaDescription from './MediaDescription.vue'
  import MediaPlayer from './MediaPlayer.vue'
+ import MediaThumbnail from './MediaThumbnail.vue'
 
  export default {
      name: 'Media',
@@ -116,7 +118,8 @@
          DownloadIcon,
          TrashIcon,
          MediaDescription,
-         MediaPlayer
+         MediaPlayer,
+         MediaThumbnail
      },
      computed: {
      },

@@ -22,11 +22,10 @@
      components: {
          AddIcon
      },
-   data () {
-     console.log(this.$root.allTags)
-       return {
-         allTags: this.$root.allTags
-       }
+     data () {
+         return {
+             allTags: this.$root.allTags
+         }
      },
      methods: {
          addTag(e) {
