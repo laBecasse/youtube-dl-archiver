@@ -64,9 +64,21 @@ const queries = {
 }
 
 /* offline database querying */
-function queryStoredMedias(queryName, input, limit, offset) {
+function queryStoredMedias(queryName, input, limit, offset, to) {
 
-  const selector = queries[queryName].selector(input)
+  let selector = queries[queryName].selector(input)
+
+  if (to) {
+        selector = {
+          $and: [
+            selector,
+            {
+              creation_date: { $lt: to }
+            }
+          ]
+        }
+  }
+  
   const sort = queries[queryName].sort
   const next = queries[queryName].next
 
