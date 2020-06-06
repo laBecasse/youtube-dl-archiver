@@ -21,7 +21,6 @@
      },
      methods: {
          ...mapGetters(['getMagnet']),
-         ...mapMutations(['setMagnetOfId']),
          getMediaType () {
              const reV = new RegExp('video')
              const reI = new RegExp('image')
