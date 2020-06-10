@@ -111,7 +111,7 @@ function loadInfo (dlDirPath, infoFileName, fileNames) {
     })
 }
 
-function createInfo (infoPath) {
+function createInfo (infoPath, torrentPath) {
   return new Promise((resolve, reject) => {
     fs.readFile(infoPath, (err, data) => {
       if (err) return reject(err)
@@ -122,6 +122,10 @@ function createInfo (infoPath) {
       info._basename = removeExt(info._filename)
       // path of the info file
       info._selfPath = infoPath
+
+      if(torrentPath) {
+        info._torrent_file = torrentPath
+      }
 
       info._original_format = {
         'url': info.url,

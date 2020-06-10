@@ -148,7 +148,13 @@ module.exports = function (router, links, cacheCol) {
       .then(media => {
         if (media.file_path === null) {
           return Archive.load(media)
-            .then(archive => Downloader.createInfo(Archive.absolute(archive.infoPath)))
+            .then(archive => {
+              let torrentPath
+              if (archive.torrentPath) {
+                torrentPath = Archive.absolute(archive.torrentPath)
+              }
+              return Downloader.createInfo(Archive.absolute(archive.infoPath), torrentPath)
+            })
             .then(info => Downloader.downloadMedia(info))
             .then(info => {
               return Archive.load(media)
