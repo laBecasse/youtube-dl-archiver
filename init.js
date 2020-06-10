@@ -4,6 +4,9 @@ const parseTorrent = require('parse-torrent')
 const Media = require('./models/MediaDB')
 const FilePath = require('./models/FilePath')
 const Webtorrent = require('./libs/webtorrent')
+const config = require('./config')
+
+const INITIALISER = [seedAllMedias, config.init]
 
 let bagOfPromises = function (promise, args, start) {
   const step = 3
@@ -18,19 +21,17 @@ let bagOfPromises = function (promise, args, start) {
     })
 }
 
-function seedAllMedias(Medias) {
+function seedAllMedias (medias) {
   return new Promise((resolve, reject) => {
-    return Medias.findAll().then(medias => {
-      const filteredMedias = medias.filter(m => m.torrent_path).filter(m => m.file_path).slice(0, 25)
-      const mediaTorrentPaths = filteredMedias.map(m => FilePath.absolute(m.torrent_path))
-      const mediaDirectoryPaths = filteredMedias.map(m => FilePath.absolute(m.file_path))
+    const filteredMedias = medias.filter(m => m.torrent_path).filter(m => m.file_path).slice(0, 25)
+    const mediaTorrentPaths = filteredMedias.map(m => FilePath.absolute(m.torrent_path))
+    const mediaDirectoryPaths = filteredMedias.map(m => FilePath.absolute(m.file_path))
 
-      const inputs = []
-      for (let i = 0; i < mediaTorrentPaths.length; i++) {
-        inputs[i] = [mediaDirectoryPaths[i], mediaTorrentPaths[i]]
-      }
-      return bagOfPromises(seed, inputs, 0)
-    })
+    const inputs = []
+    for (let i = 0; i < mediaTorrentPaths.length; i++) {
+      inputs[i] = [mediaDirectoryPaths[i], mediaTorrentPaths[i]]
+    }
+    return bagOfPromises(seed, inputs, 0)
   })
 }
 
@@ -60,8 +61,11 @@ function seed (arr) {
 
 module.exports = {
   init: function(links) {
-    const Medias = Media(links)
-    const promises = [seedAllMedias(Medias)]
-    return Promise.all(promises)
+    return new Promise((resolve, reject) => {
+      const Medias = Media(links)
+      Medias.findAll().then(medias => {
+        resolve(Promise.all(INITIALISER.map(f => f(medias))))
+      })
+    })
   }
 }

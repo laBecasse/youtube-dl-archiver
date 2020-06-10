@@ -3,7 +3,14 @@ const path = require('path')
 
 dotenv.config()
 
+const initModules = (process.env.INIT) ? process.env.INIT.split(' ').map(m => require(m)) : []
 const afterUpdateModules = (process.env.AFTER_UPDATE) ? process.env.AFTER_UPDATE.split(' ').map(m => require(m)) : []
+
+const init = function (medias) {
+  return Promise.all(initModules.map(f => f(medias)))
+    .then(() => medias)
+}
+
 const afterUpdate = function (medias) {
   return Promise.all(afterUpdateModules.map(f => f(medias)))
     .then(() => medias)
@@ -30,5 +37,6 @@ module.exports = {
     trackers: process.env.WEBTORRENT_TRACKERS.split(' ')
   },
   invidiousURL: process.env.INVIDIOUS_URL,
-  afterUpdate: afterUpdate
+  afterUpdate: afterUpdate,
+  init: init
 }
