@@ -1,3 +1,6 @@
+const fs = require('fs')
+const createTorrent = require('create-torrent')
+const parseTorrent = require('parse-torrent')
 const Media = require('./models/MediaDB')
 const FilePath = require('./models/FilePath')
 const Webtorrent = require('./libs/webtorrent')
@@ -27,6 +30,22 @@ function seedAllMedias(Medias) {
         inputs[i] = [mediaDirectoryPaths[i], mediaTorrentPaths[i]]
       }
       return bagOfPromises(seed, inputs, 0)
+    })
+  })
+}
+
+// useful methods to find files whose has not the same infoHash than its torrent
+// replace seed by test in seedAllMedias
+function test (arr) {
+  return new Promise((resolve, reject) => {
+    const torrent = parseTorrent(fs.readFileSync(arr[1]))
+    createTorrent(arr[0], { announce: torrent.annonce }, function (err, buf) {
+      const tor = parseTorrent(buf)
+      if (torrent.infoHash !== tor.infoHash) {
+        console.log(arr[0])
+        console.log(torrent.infoHash, tor.infoHash)
+      }
+      resolve()
     })
   })
 }
