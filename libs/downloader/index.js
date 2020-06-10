@@ -64,7 +64,7 @@ function downloadTorrentFile (info) {
     return axios.get(url).then(res => res.data)
       .then(video => {
         // choose resolution (expected 720p)
-        const file = video.files.filter(file => file.label === '720p')[0] || video.files[0]
+        const file = video.files.filter(file => file.resolution.label === '720p')[0] || video.files[0]
         const torrentURL = file.torrentUrl
 
         return new Promise((resolve, reject) => {
