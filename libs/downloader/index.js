@@ -42,10 +42,10 @@ function downloadMedia (info) {
   } else {
     const torrentFileName = info._torrent_file
     const torrentPath = path.join(dlDirPath, torrentFileName)
-    console.log('download by torrent ' + torrentPath)
+    console.log('downloading files by torrent ' + torrentPath)
     return downloadTorrent(torrentPath, dlDirPath)
       .then(paths => {
-        console.log('paths in dowloader ' + paths)
+        console.log('downloaded files by torrent in ' + paths)
         info._filename = paths[0]
         const mediaFileName = path.basename(info._filename)
         info._fileNames.push(mediaFileName)
@@ -73,6 +73,7 @@ function downloadTorrentFile (info) {
           const torrentPath = path.join(dlDirPath, torrentFileName)
 
           const file = fs.createWriteStream(torrentPath)
+          console.log('torrent downloading ' + torrentURL)
           https.get(torrentURL, function (response) {
             response.pipe(file)
             file.on('finish', () => {

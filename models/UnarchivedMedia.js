@@ -76,7 +76,7 @@ class UnarchivedMedia {
       channel_id: info.channel_id,
       channel_url: info.channel_url,
       upload_date: info.upload_date,
-      originalThumbnails: info.thumbnails.map(t => t.url)
+      originalThumbnails: (info.thumbnails) ? info.thumbnails.map(t => t.url) : []
     }
 
     return new UnarchivedMedia(obj)
