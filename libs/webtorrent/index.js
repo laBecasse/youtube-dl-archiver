@@ -25,10 +25,10 @@ function download (torrentId, dirPath) {
     client.add(torrentId, options, torrent => {
       const paths = torrent.files.map(f => f.path)
       torrent.on('done', () => {
-        client.destroy(err => {
-          if (err) return reject(err)
-          resolve(paths)
-        })
+        // client.destroy(err => {
+        //   if (err) return reject(err)
+        resolve(paths)
+        // })
       })
       torrent.on('error', err => {
         reject(err)
