@@ -19,39 +19,59 @@ function seed (path, torrentPath) {
 
     console.log('seeding ' + path)
     client.seed(path, opts, function (torrent) {
+      torrent.on('error', console.log)
+      torrent.on('warning', console.log)
+      torrent.on('ready', console.log)
+      torrent.on('noPeers', console.log)
       torrent.on('wire', () => console.log('wire on ' + path))
       resolve(torrent)
     })
   })
 }
 
-function download (torrentId, dirPath) {
+function download (torrentPath, dirPath) {
   return new Promise((resolve, reject) => {
-//    const client = new WebTorrent()
-    const options = {
-      path: dirPath
+
+    const torrent = parseTorrent(fs.readFileSync(torrentPath))
+
+    // if the torrent has already been added
+    if (client.get(torrent)) {
+      if (client.get(torrent).done) {
+        // unstable state re download the files
+        client.get(torrent).destroy(() => doDownload(torrent))
+      } else {
+        // downloading
+        const error = new Error('torrent already added')
+        return reject(error)
+      }
+    } else {
+      doDownload(torrent)
     }
-    client.add(torrentId, options, torrent => {
-      const paths = torrent.files.map(f => f.path)
-      torrent.on('done', () => {
-        // client.destroy(err => {
-        //   if (err) return reject(err)
-        resolve(paths)
-        // })
+
+    function doDownload (t) {
+      const options = {
+        path: dirPath
+      }
+      client.add(t, options, torrent => {
+        const paths = torrent.files.map(f => f.path)
+        torrent.on('wire', () => console.log('wire on ' + torrentPath))
+        torrent.on('done', () => {
+          resolve(paths)
+        })
+        torrent.on('error', err => {
+          reject(err)
+        })
       })
-      torrent.on('error', err => {
+      client.on('error', err => {
         reject(err)
       })
-    })
-    client.on('error', err => {
-      reject(err)
-    })
+    }
   })
 }
 
 function create (path, torrentFile) {
   return new Promise((resolve, reject) => {
-    createTorrent(path, { announceList: trackers }, function (err, tor) {
+    createTorrent(path, { annoyunceList: trackers }, function (err, tor) {
       if (err) return reject(err)
       // return the buffer of the torrent file
       fs.writeFile(torrentFile, tor, (err) => {
