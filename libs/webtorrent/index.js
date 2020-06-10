@@ -1,5 +1,6 @@
 const fs = require('fs')
 const createTorrent = require('create-torrent')
+const parseTorrent = require('parse-torrent')
 const WebTorrent = require('webtorrent-hybrid')
 const client = new WebTorrent()
 const config = require('../../config')
@@ -8,9 +9,17 @@ let trackers = [config.webtorrent.trackers]
 
 global.WEBTORRENT_ANNOUNCE = null
 
-function seed (path) {
+function seed (path, torrentPath) {
   return new Promise((resolve, reject) => {
-    client.seed(path, { announceList: trackers }, function (torrent) {
+    const opts = { announceList: trackers }
+    if (torrentPath) {
+      const torrent = parseTorrent(fs.readFileSync(torrentPath))
+      opts.announceList = torrent.announce
+    }
+
+    console.log('seeding ' + path)
+    client.seed(path, opts, function (torrent) {
+      torrent.on('wire', console.log)
       resolve(torrent)
     })
   })
@@ -18,7 +27,7 @@ function seed (path) {
 
 function download (torrentId, dirPath) {
   return new Promise((resolve, reject) => {
-    const client = new WebTorrent()
+//    const client = new WebTorrent()
     const options = {
       path: dirPath
     }

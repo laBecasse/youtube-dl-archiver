@@ -35,3 +35,6 @@ app.use('/api', router)
 app.listen(port, () => {
   console.log('We are live on http://localhost:' + port)
 })
+
+
+require('./init').init(collections['links']).catch(console.log)
