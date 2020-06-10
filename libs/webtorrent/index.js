@@ -11,14 +11,14 @@ global.WEBTORRENT_ANNOUNCE = null
 
 function seed (path, torrentPath) {
   return new Promise((resolve, reject) => {
-    const opts = { announceList: trackers }
+    const opts = { }
     if (torrentPath) {
       const torrent = parseTorrent(fs.readFileSync(torrentPath))
       opts.announce = torrent.announce
     }
 
-    console.log('seeding ' + path)
     client.seed(path, opts, function (torrent) {
+      console.log('seeding ' + torrent.name + ' with trackers ' + torrent.announce)
       torrent.on('error', console.log)
       torrent.on('warning', console.log)
       torrent.on('ready', console.log)
@@ -71,7 +71,7 @@ function download (torrentPath, dirPath) {
 
 function create (path, torrentFile) {
   return new Promise((resolve, reject) => {
-    createTorrent(path, { annoyunceList: trackers }, function (err, tor) {
+    createTorrent(path, { announceList: trackers }, function (err, tor) {
       if (err) return reject(err)
       // return the buffer of the torrent file
       fs.writeFile(torrentFile, tor, (err) => {

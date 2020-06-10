@@ -59,13 +59,13 @@ class UnarchivedMedia {
     let originalFile = {
       url: info.url,
       ext: info.ext,
-      mime: Mime.lookup(info.ext)
+      mime: Mime.getType(info.ext)
     }
 
     const obj = {
       media_url: mediaUrl,
       ext: info.ext,
-      mime: Mime.lookup(info.ext),
+      mime: Mime.getType(info.ext),
       original_file: (info.url) ? originalFile : undefined,
       title: info.title,
       description: info.description,
