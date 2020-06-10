@@ -16,11 +16,11 @@ let bagOfPromises = function (promise, args, start) {
 }
 
 function seedAllMedias(Medias) {
-
   return new Promise((resolve, reject) => {
     return Medias.findAll().then(medias => {
-      const mediaTorrentPaths = medias.filter(m => m.torrent_path).map(m => FilePath.absolute(m.torrent_path))
-      const mediaDirectoryPaths = medias.filter(m => m.torrent_path).map(m => FilePath.absolute(m.archive_dir))
+      const filteredMedias = medias.filter(m => m.torrent_path).filter(m => m.file_path)
+      const mediaTorrentPaths = filteredMedias.map(m => FilePath.absolute(m.torrent_path))
+      const mediaDirectoryPaths = filteredMedias.map(m => FilePath.absolute(m.file_path))
 
       const inputs = []
       for (let i = 0; i < mediaTorrentPaths.length; i++) {
@@ -33,6 +33,9 @@ function seedAllMedias(Medias) {
 
 function seed (arr) {
   return Webtorrent.seed(arr[0], arr[1])
+    .catch(e => {
+      console.log('error while seeding ' + arr[0] + ':\n' + e)
+    })
 }
 
 module.exports = {
