@@ -18,7 +18,7 @@ let bagOfPromises = function (promise, args, start) {
 function seedAllMedias(Medias) {
   return new Promise((resolve, reject) => {
     return Medias.findAll().then(medias => {
-      const filteredMedias = medias.filter(m => m.torrent_path).filter(m => m.file_path)
+      const filteredMedias = medias.filter(m => m.torrent_path).filter(m => m.file_path).slice(0,5)
       const mediaTorrentPaths = filteredMedias.map(m => FilePath.absolute(m.torrent_path))
       const mediaDirectoryPaths = filteredMedias.map(m => FilePath.absolute(m.file_path))
 
