@@ -14,12 +14,12 @@ function seed (path, torrentPath) {
     const opts = { announceList: trackers }
     if (torrentPath) {
       const torrent = parseTorrent(fs.readFileSync(torrentPath))
-      opts.announceList = torrent.announce
+      opts.announce = torrent.announce
     }
 
     console.log('seeding ' + path)
     client.seed(path, opts, function (torrent) {
-      torrent.on('wire', console.log)
+      torrent.on('wire', () => console.log('wire on ' + path))
       resolve(torrent)
     })
   })
