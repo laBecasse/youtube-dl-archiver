@@ -42,6 +42,7 @@ function downloadMedia (info) {
   } else {
     const torrentFileName = info._torrent_file
     const torrentPath = path.join(dlDirPath, torrentFileName)
+    console.log('download by torrent ' + torrentPath)
     return downloadTorrent(torrentPath, dlDirPath)
       .then(paths => {
         console.log('paths in dowloader ' + paths)
@@ -123,8 +124,8 @@ function createInfo (infoPath, torrentPath) {
       // path of the info file
       info._selfPath = infoPath
 
-      if(torrentPath) {
-        info._torrent_file = torrentPath
+      if (torrentPath) {
+        info._torrent_file = path.basename(torrentPath)
       }
 
       info._original_format = {
