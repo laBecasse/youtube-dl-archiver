@@ -21,7 +21,7 @@ let bagOfPromises = function (promise, args, start) {
 function seedAllMedias(Medias) {
   return new Promise((resolve, reject) => {
     return Medias.findAll().then(medias => {
-      const filteredMedias = medias.filter(m => m.torrent_path).filter(m => m.file_path).slice(0,5)
+      const filteredMedias = medias.filter(m => m.torrent_path).filter(m => m.file_path).slice(0, 25)
       const mediaTorrentPaths = filteredMedias.map(m => FilePath.absolute(m.torrent_path))
       const mediaDirectoryPaths = filteredMedias.map(m => FilePath.absolute(m.file_path))
 
@@ -40,6 +40,7 @@ function test (arr) {
   return new Promise((resolve, reject) => {
     const torrent = parseTorrent(fs.readFileSync(arr[1]))
     createTorrent(arr[0], { announce: torrent.annonce }, function (err, buf) {
+      if (err) return reject(err)
       const tor = parseTorrent(buf)
       if (torrent.infoHash !== tor.infoHash) {
         console.log(arr[0])
