@@ -95,7 +95,7 @@ function testExt (exts) {
 
 const _testMedia = testExt(['.mp4', '.webm', '.mp3', '.m4a'])
 
-const _testTumbnails = testExt(['.png', '.jpeg', '.jpg'])
+const _testTumbnails = testExt(['.png', '.jpeg', '.jpg', '.webp'])
 
 const _testSubtitles = testExt(['.vtt'])
 
