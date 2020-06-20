@@ -11,7 +11,7 @@ const config = require('../../config')
 
 const tempDownloadDir = config.archivesTmpDir
 const youtubeDl = config.youtubedlBin
-const formatDl = 'bestvideo[vcodec^=avc1][height<=720]+bestaudio[ext=m4a]/mp4[height<=720]/best'
+const formatDl = 'bestvideo[vcodec^=avc1][height<=360]+bestaudio[ext=m4a]/mp4[height<=360]/best'
 const langs = config.subtitleLangs
 
 const queryPatterns = {
@@ -64,8 +64,8 @@ function downloadTorrentFile (info) {
 
     return axios.get(url).then(res => res.data)
       .then(video => {
-        // choose resolution (expected 720p)
-        const file = video.files.filter(file => file.resolution.label === '720p')[0] || video.files[0]
+        // choose resolution (expected 360p)
+        const file = video.files.filter(file => file.resolution.label === '360p')[0] || video.files[0]
         const torrentURL = file.torrentUrl
 
         return new Promise((resolve, reject) => {
