@@ -1,3 +1,4 @@
+
 const MediaDB = require('../models/MediaDB.js')
 
 module.exports = function (router, links) {
@@ -46,10 +47,11 @@ module.exports = function (router, links) {
   router.get('/search', getByUrl, (req, res) => {
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0
-    const text = req.query.text
+    const text = req.query.text.trim()
+    const query = (text.startsWith('"')) ? text : '"' + text.split(' ').join('" "') + '"'
     const uploader = req.query.uploader
 
-    handleJson(mediaDB.search(text, uploader, limit, offset), req, res)
+    handleJson(mediaDB.search(query, uploader, limit, offset), req, res)
   })
 
   router.get('/medias/:id', (req, res) => {
