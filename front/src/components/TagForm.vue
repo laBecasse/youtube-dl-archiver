@@ -5,9 +5,9 @@
                 <input class="input is-small" type="text" name="tag" placeholder="nouveau tag" list="all-tag-list"/>
             </div>
             <div class="control">
-                <a class="button is-link is-small">
+                <button class="button is-link is-small" type="submit">
                     <AddIcon/>
-                </a>
+                </button>
             </div>
         </div>
     </form>
