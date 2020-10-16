@@ -135,21 +135,21 @@ module.exports = function (router, links, cacheCol) {
       .then(res => {
         if (res.length === 0) {
           return Downloader.downloadMetadata(url)
+            .catch(downError)
+            .then(infos => {
+              const promises = infos.map(info => {
+                if (withDownload) {
+                  return Downloader.downloadMedia(info)
+                    .then(info => createOne(url, info))
+                } else {
+                  return createOne(url, info)
+                }
+              })
+              return Promise.all(promises)
+            })
         } else {
-          return []
+          return res
         }
-      })
-      .catch(downError)
-      .then(infos => {
-        const promises = infos.map(info => {
-          if (withDownload) {
-            return Downloader.downloadMedia(info)
-              .then(info => createOne(url, info))
-          } else {
-            return createOne(url, info)
-          }
-        })
-        return Promise.all(promises)
       })
   }
 

@@ -1,7 +1,7 @@
 <template>
     <router-link :to="{name: 'WatchMedia', params: {id: media.id}}">
         <div class="card-image thumbnail-wrapper">
-            <img v-if="media.thumbnail && media.thumbnail.url" :src="media.thumbnail.url" :alt="media.title"/>
+            <img v-if="media.thumbnail && media.thumbnail.url" :src="media.thumbnail.url" :alt="media.title" v-bind:class="{'blinking': isDownloading}"/>
         </div>
     </router-link>
 </template>
@@ -11,7 +11,7 @@
 
  export default {
      name: 'MediaPlayer',
-     props: ['media', 'offlineMediaURL'],
+     props: ['media', 'offlineMediaURL', 'isDownloading'],
      components: {
      },
      data () {
@@ -45,4 +45,19 @@
  .thumbnail-wrapper {
      background-color: black;
  }
-</style>
+
+ @keyframes blink {
+    0% {
+        opacity:1;
+    }
+    50% {
+        opacity:0;
+    }
+    100% {
+        opacity:1;
+    }
+ } 
+ .blinking {
+     animation: blink normal 4s infinite ease-in-out;
+ }
+ </style>

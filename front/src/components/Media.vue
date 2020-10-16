@@ -71,7 +71,7 @@
             <div v-if="media" class="media-column-video" v-bind:class="{'column': !expanded}">
                 <slot name="player">
                     <MediaPlayer v-if="expanded && media.archived" :media="media" :offlineMediaURL="offlineMediaURL"/>
-                    <MediaThumbnail v-else="" :media="media" :offlineMediaURL="offlineMediaURL"/>
+                    <MediaThumbnail v-else="" :media="media" :offlineMediaURL="offlineMediaURL" :isDownloading="isDownloading"/>
                 </slot>
             </div>
             <div class="is-primary" v-bind:class="{'column': !expanded}">
@@ -142,7 +142,8 @@
              jsonld: {},
              media: null,
              mediaPromise: null,
-             isInitialized: false
+             isInitialized: false,
+             isDownloading: false
          }
      },
      created () {
@@ -161,8 +162,10 @@
          if (!t.media.archived && t.expanded) {
            const mediaUrl = t.media.media_url
            console.log('starting up ' + mediaUrl)
+           t.isDownloading = true
            t.$store.dispatch('uploadURL', {url: mediaUrl, withDownload: true})
              .then(medias => {
+               t.isDownloading = false
                t.$router.replace({name: 'WatchMedia', params : {id: medias[0].id}})
                t.media = medias[0]
              })

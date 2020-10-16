@@ -2,6 +2,7 @@
     <div class="card-image">
         <video v-if="getMediaType() === 'video' && (media.original_file || media.file_url)"
                controls
+               autoplay
                :poster="(media.thumbnail) ? media.thumbnail.url: undefined"
                :preload="(media.torrent_url) ? 'none' : 'metadata'"
                class="image">
