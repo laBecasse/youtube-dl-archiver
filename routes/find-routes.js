@@ -51,7 +51,7 @@ module.exports = function (router, links) {
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0
     const text = req.query.text
-    const query = (text && text.startsWith('"')) ? text : '"' + text.trim().split(' ').join('" "') + '"'
+    const query = (!text || text.startsWith('"')) ? text : '"' + text.trim().split(' ').join('" "') + '"'
     const uploader = req.query.uploader
 
     mediaDB.search(query, uploader, limit, offset)
