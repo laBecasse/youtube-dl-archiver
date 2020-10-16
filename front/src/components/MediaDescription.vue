@@ -16,7 +16,7 @@
                 <span>{{uploadDate}}</span>
             </p>
             <Tags v-if="media.tags" :tags="media.tags" :removingEnabled="expanded" :limited="!expanded" @removeTag="removeTag"/>
-            <TagForm v-if="media.id" @addTag="addTag"/>
+            <TagForm v-if="media.archived" @addTag="addTag"/>
             <p v-if="media.description && !expanded" v-html="shortDescription" class="description">
             </p>
             <p v-if="media.description && expanded" v-html="description" class="description">

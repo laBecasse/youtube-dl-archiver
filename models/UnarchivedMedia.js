@@ -5,6 +5,10 @@ const LANGS = config.subtitleLangs
 
 class UnarchivedMedia {
   constructor (obj) {
+
+    this.archived = false
+
+    this.id = obj.media_url
     // the URL from which we found the media
     this.url = obj.url
     // the URL of the media page, maybe different from url (e.g. iframe)
@@ -34,9 +38,66 @@ class UnarchivedMedia {
     // upload date of the media in the source (remotely)
     this.upload_date = obj.upload_date
     // original thumbnails URL
-    this.originalThumbnails = obj.originalThumbnails
+    this.originalThumbnails = (obj.originalThumbnails) ? obj.originalThumbnails : []
   }
 
+  getUrl() {
+    return this.media_url
+  }
+
+  setUrl(url) {
+    this.url = url
+  }
+
+  getMediaUrl() {
+    return this.media_url
+  }
+
+  setMediaUrl(url) {
+    this.media_url = url
+  }
+
+  getTitle() {
+    return this.title
+  }
+
+  setTitle(title) {
+    this.title = title
+  }
+
+  getDescription() {
+    return this.description
+  }
+
+  setDescription(description) {
+    this.description = description
+  }
+
+  getUploadDate() {
+    return this.upload_date
+  }
+
+  getUploader() {
+    return this.uploader
+  }
+
+  setUploader(uploader) {
+    this.uploader = uploader
+  }
+
+  setUploadDate(date) {
+    if (Date.parse(date)) {
+      const d = new Date(date)
+      this.upload_date = (''+ d.getFullYear()) + d.getMonth() + d.getDate() 
+    } else {
+      this.upload_date = date
+    }
+  }
+
+  addOriginalThumbnailUrl(url) {
+    this.originalThumbnails.push(url)
+  }
+  
   toAPIJSON () {
     const json = Object.assign({}, this)
     json.thumbnail = this.getThumbnailJSON()

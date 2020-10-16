@@ -70,7 +70,7 @@
             </article>
             <div v-if="media" class="media-column-video" v-bind:class="{'column': !expanded}">
                 <slot name="player">
-                    <MediaPlayer v-if="expanded" :media="media" :offlineMediaURL="offlineMediaURL"/>
+                    <MediaPlayer v-if="expanded && media.archived" :media="media" :offlineMediaURL="offlineMediaURL"/>
                     <MediaThumbnail v-else="" :media="media" :offlineMediaURL="offlineMediaURL"/>
                 </slot>
             </div>
@@ -79,7 +79,7 @@
             </div>
         </section>
         <slot name="footer" v-bind:media="media">
-            <footer v-if="media" class="card-footer">
+            <footer v-if="media && media.archived" class="card-footer">
                 <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL, 'has-background-black': media.file_url, 'has-text-white': media.file_url}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
                 <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><TrashIcon/></a>
             </footer>
@@ -156,6 +156,24 @@
              t.media = t.mediaObj
              this.setOfflineMediaURL()
          }
+
+       function uploadNotArchived() {
+         if (!t.media.archived && t.expanded) {
+           const mediaUrl = t.media.media_url
+           console.log('starting up ' + mediaUrl)
+           t.$store.dispatch('uploadURL', {url: mediaUrl, withDownload: true})
+             .then(medias => {
+               t.$router.replace({name: 'WatchMedia', params : {id: medias[0].id}})
+               t.media = medias[0]
+             })
+         }
+       }
+
+         if (t.media) {
+           uploadNotArchived()
+         } else if (t.mediaPromise) {
+           t.mediaPromise.then(uploadNotArchived)
+         }
      },
      methods: {
          ...mapActions(['makeOfflineMedia', 'getOfflineMediaURL', 'deleteOfflineMedia', 'downloadMedia']),
@@ -179,8 +197,14 @@
              return 'other'
          },
          /* control handlers */
-         deleteThis () {
-             return this.$store.dispatch('delete', {id: this.media.id})
+       deleteThis () {
+         const t = this
+           return this.$store.dispatch('delete', {id: this.media.id})
+             .then(() => {
+               if (t.media.expanded) {
+                 t.$router.go(-1)
+                 }
+               })
          },
          toggleDownloadChoose() {
              this.downloadChoose = !this.downloadChoose

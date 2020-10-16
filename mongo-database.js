@@ -10,11 +10,11 @@ module.exports = function (config) {
   let createCollection = function (collectionName) {
     let apply = function (action) {
       return new Promise(function (resolve, reject) {
-        MongoClient.connect(url, { useNewUrlParser: true })
+        MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
           .then(client => {
             // Client returned
             let db = client.db(dbName)
-            db.collection(collectionName, {strict: true}, function (error, collection) {
+            db.collection(collectionName, {strict: false}, function (error, collection) {
               if (error) {
                 console.log('Could not access collection: ' + error.message)
                 reject(error)
@@ -28,7 +28,6 @@ module.exports = function (config) {
               }
             })
           })
-          .catch(err => reject(err))
       })
     }
 
@@ -61,36 +60,50 @@ module.exports = function (config) {
 
     let createCollection = function () {
       return new Promise((resolve, reject) => {
-        MongoClient.connect(url, { useNewUrlParser: true })
+        MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
           .then(client => {
             // Client returned
             let db = client.db(dbName)
-            db.createCollection(collectionName, err => {
-              if (err) reject(err)
-              else resolve()
+            db.collections()
+              .then(cols => {
+                if (!cols.map(c => c.collectionName).includes(collectionName)) {
+                  console.log('Creation of the collection ' + collectionName)
 
-              client.close()
-            })
+                  db.createCollection(collectionName, err => {
+                    if (err) reject(err)
+                    else resolve()
+
+                    client.close()
+                  })
+                }
+              })
           })
       })
     }
 
     let createView = function (source, pipeline) {
       return new Promise((resolve, reject) => {
-        MongoClient.connect(url, { useNewUrlParser: true })
+        MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
           .then(client => {
             // Client returned
             let db = client.db(dbName)
-            const options = {
-              viewOn: collections[source],
-              pipeline: pipeline
-            }
-            db.createCollection(collectionName, options, err => {
-              if (err) reject(err)
-              else resolve()
+            db.collections()
+              .then(cols => {
+                if (!cols.map(c => c.collectionName).includes(collectionName)) {
+                  console.log('Creation of the view ' + collectionName)
 
-              client.close()
-            })
+                  const options = {
+                    viewOn: collections[source],
+                    pipeline: pipeline
+                  }
+                  db.createCollection(collectionName, options, err => {
+                    if (err) reject(err)
+                    else resolve()
+
+                    client.close()
+                  })
+                }
+              })
           })
       })
     }

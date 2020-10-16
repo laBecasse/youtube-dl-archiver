@@ -1,7 +1,7 @@
 <template>
     <router-link :to="{name: 'WatchMedia', params: {id: media.id}}">
         <div class="card-image thumbnail-wrapper">
-            <img v-if="media.thumbnail.url" :src="media.thumbnail.url" :alt="media.title"/>
+            <img v-if="media.thumbnail && media.thumbnail.url" :src="media.thumbnail.url" :alt="media.title"/>
         </div>
     </router-link>
 </template>

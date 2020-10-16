@@ -34,7 +34,8 @@
     "tingodb": "^0.6.1",
     "wallabag-api": "^0.2.3",
     "webtorrent-hybrid": "^4.0.2",
-    "youtube-dl": "^1.13.1"
+    "youtube-dl": "^1.13.1",
+    "ytt": "^2.0.6"
   },
   "devDependencies": {
     "nodemon": "^1.19.4"

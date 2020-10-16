@@ -6,6 +6,7 @@ const filePath = require('../models/FilePath')
 const Downloader = require('../libs/downloader')
 const Archive = require('../models/Archive')
 const Media = require('../models/Media')
+const DownloadState = require('../models/DownloadState')
 const afterUpdate = require('../config').afterUpdate
 
 let handleJson = function (promises, req, res) {
@@ -58,6 +59,18 @@ module.exports = function (router, links, cacheCol) {
     return res.send('update started')
   })
 
+
+  router.get('/medias/state/:id', (req, res, next) => {
+    const id = req.params.id
+    const state = DownloadState.get(id)
+    if (state) {
+      return res.json(state)
+    } else {
+      res.status(404)
+      return res.send()
+    }
+  })
+  
   router
     .post('/medias', (req, res, next) => {
       const url = req.body.url
@@ -65,6 +78,13 @@ module.exports = function (router, links, cacheCol) {
       if (url) {
         handleJson(create(url, withDownload), req, res)
           .then(afterUpdate)
+        // const state = DownloadState.create(url)
+        // create(url, withDownload)
+        // .then(afterUpdate)
+        // .then(medias => {
+        //   state.status = 'downloaded'
+        // })
+        // res.json(state)
       } else {
         res.status(400)
         res.json({ message: 'url parameter needed' })

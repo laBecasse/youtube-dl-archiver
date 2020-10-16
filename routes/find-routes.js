@@ -1,5 +1,7 @@
-
+const Invidious = require('../libs/invidious')
+const Ytt = require('../libs/ytt')
 const MediaDB = require('../models/MediaDB.js')
+const UnarchivedMedia = require('../models/UnarchivedMedia')
 
 module.exports = function (router, links) {
   const mediaDB = MediaDB(links)
@@ -15,6 +17,7 @@ module.exports = function (router, links) {
 
   let handleJson = function (promises, req, res) {
     promises.then(medias => {
+
       if (medias) {
         if (Array.isArray(medias)) {
           res.json(medias.map(media => media.toAPIJSON()))
@@ -51,7 +54,18 @@ module.exports = function (router, links) {
     const query = (text.startsWith('"')) ? text : '"' + text.split(' ').join('" "') + '"'
     const uploader = req.query.uploader
 
-    handleJson(mediaDB.search(query, uploader, limit, offset), req, res)
+
+    mediaDB.search(query, uploader, limit, offset)
+      .then(medias => {
+        let promise
+        if (medias.length) {
+          promise = Promise.resolve(medias)
+        } else {
+          //promise = Invidious.downloadMetadataFromSearch(text).then(infos => infos.map(info => UnarchivedMedia.create(info)))
+          promise = (offset) ? Promise.resolve([]) : Ytt.searchMetadataMedias(text, limit)
+        }
+        return handleJson(promise, req, res)
+      }).catch(handleError)
   })
 
   router.get('/medias/:id', (req, res) => {

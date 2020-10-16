@@ -303,13 +303,14 @@ const store = new Vuex.Store({
     uploadURL(context, payload) {
       const {url, withDownload} = payload
       return mediaDB.uploadURL(url, withDownload)
-        .then(() => {
+        .then(medias => {
           return context.dispatch('refreshMedias')
+            .then(() => medias)
         })
     },
     delete (context, media) {
       mediaDB.delete(media.id).then(() => {
-        context.commit('delete', media.id)
+        return context.commit('delete', media.id)
       })
     },
     downloadMedia(context, payload) {
