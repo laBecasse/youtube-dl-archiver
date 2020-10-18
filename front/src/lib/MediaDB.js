@@ -164,7 +164,7 @@ function queryOne(base, id) {
 /* Cache and offline support */
 
 // timeout in ms
-const TIMEOUT = 500
+const TIMEOUT = 1500
 
 function buildTimeoutSwitch(apiQuery, offlineQuery) {
   // wait before switch to offline db
