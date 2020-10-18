@@ -1,5 +1,6 @@
 const Invidious = require('../libs/invidious')
 const Ytt = require('../libs/ytt')
+const Downloader = require('../libs/downloader')
 const MediaDB = require('../models/MediaDB.js')
 const UnarchivedMedia = require('../models/UnarchivedMedia')
 
@@ -54,21 +55,50 @@ module.exports = function (router, links) {
     const query = (!text || text.startsWith('"')) ? text : '"' + text.trim().split(' ').join('" "') + '"'
     const uploader = req.query.uploader
 
-    mediaDB.search(query, uploader, limit, offset)
-      .then(medias => {
-        let promise
-        if (medias.length) {
-          promise = Promise.resolve(medias)
-        } else {
-          //promise = Invidious.downloadMetadataFromSearch(text).then(infos => infos.map(info => UnarchivedMedia.create(info)))
-          promise = (offset) ? Promise.resolve([]) : Ytt.searchMetadataMedias(text, limit)
-        }
-        return handleJson(promise, req, res)
-      }).catch(handleError)
+    let promise = mediaDB.search(query, uploader, limit, offset)
+        .then(medias => (!offset) ? emptyAnswerRejection(medias) : medias)
+        .catch(e => YttSearch(text, limit))
+    return handleJson(promise, req, res)
+
   })
 
   router.get('/medias/:id', (req, res) => {
     const dbId = req.params.id
     handleJson(mediaDB.findById(dbId), req, res)
   })
+}
+
+function emptyAnswerRejection(medias) {
+  return  (medias.length) ? medias : Promise.reject(new Error('empty answer'))
+}
+
+function YTSearch(query, limit) {
+  return YttSeach(query, limit)
+    .then(emptyAnswerRejection)
+}
+
+function InvidiousSearch(query, limit) {
+  return Invidious.downloadMetadataFromSearch(query).then(infos => infos.map(info => UnarchivedMedia.create(info)))
+}
+
+function YtDlSearch(query, limit) {
+  return Downloader.downloadMetadataFromSearch(query, 'youtube')
+    .then(infos => {
+      const medias = infos.map(info => UnarchivedMedia.create(info))
+      return medias
+    })
+}
+
+function YttSearch(query, limit) {
+  return Ytt.searchMetadataMedias(query, limit)
+    .then(emptyAnswerRejection)
+    .catch(e => {
+        console.warn('Ytt empty answer for query: '+ query)      
+      return InvidiousSeach(query, limit)
+    })
+    .then(emptyAnswerRejection)
+    .catch(e => {
+        console.warn('Invidious empty answer for query: '+ query)      
+      return YtDlSearch(query, limit)
+    })
 }

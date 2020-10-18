@@ -3,6 +3,8 @@ const UnarchivedMedia = require('../../models/UnarchivedMedia')
 
 module.exports = {
   searchMetadataMedias: function(query, limit) {
+    query = query.replace(/'/g, ' ')
+
     return ytt.query(query, {filter: 'video', max: limit})
       .then(answers => {
         return answers.items.map(ans => {

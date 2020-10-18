@@ -14,12 +14,13 @@ module.exports = {
       q: query,
       type: 'video'
     }
-    
     return axios.get(link, {params: params})
       .then(res => {
         return res.data
       })
-      .then(videos => videos.map(createInfo))
+      .then(videos => {
+        return videos.map(createInfo)
+      })
   }
 }
 
