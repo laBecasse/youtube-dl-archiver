@@ -3,15 +3,15 @@
         <notification
             :options.sync="this.notificationOpt"></notification>
         <nav class="navbar" role="navigation" aria-label="main navigation">
-          <div class="navbar-brand">
-                <div class="columns is-mobile is-vcentered is-multiline is-centered mobile-nav-columns">
-                    <div class="column is-narrow">
+            <div class="navbar-brand">
+                <div class="nav-columns">
+                    <div class="nav-column logo">
                         <router-link :to="{name: 'ListMedia'}" class="title" id="logo">
                             <img src="/logo.svg" class="logo-img">
                         </router-link>
                     </div>
-                    <div id="search" class="column is-half">
-                        <form v-on:submit.prevent="search" action="/search" method="get">
+                    <div id="search" class="nav-column search">
+                        <form v-on:submit.prevent="search" action="/search" method="get" >
                             <div class="field has-addons">
                                 <div class="control">
                                     <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
@@ -23,7 +23,7 @@
                             </div>
                         </form>
                     </div>
-                    <div class="column is-narrow">
+                    <div class="nav-column">
                         <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
                             <span aria-hidden="true"></span>
                             <span aria-hidden="true"></span>
@@ -32,7 +32,7 @@
                     </div>
                 </div>
             </div>
-
+            
             <div id="navbarBasicExample" class="navbar-menu">
                 <div class="navbar-start">
                     <div class="navbar-item has-dropdown is-hoverable">
@@ -40,9 +40,9 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <div class="navbar-dropdown">
-                  <LeftPanel/>
+                    <LeftPanel/>
                 </div>
             </div>
         </nav>
@@ -51,15 +51,15 @@
             </div>
         </nav>
         <section id="section" class="columns is-desktop">
-          <div class="column is-hidden-mobile is-hidden-tablet-only">
-            <LeftPanel/>
-          </div>
-          <div class="column is-three-quarters-desktop" id="scrolled">
-            <div class="level" v-if="this.$route.name === 'SearchMedia'">
-              <h3 class="level-item title" v-if="this.$route.query.uploader">{{this.$route.query.uploader}}</h3>
+            <div class="column is-hidden-mobile is-hidden-tablet-only">
+                <LeftPanel/>
             </div>
-            <router-view></router-view>
-          </div>
+            <div class="column is-three-quarters-desktop" id="scrolled">
+                <div class="level" v-if="this.$route.name === 'SearchMedia'">
+                    <h3 class="level-item title" v-if="this.$route.query.uploader">{{this.$route.query.uploader}}</h3>
+                </div>
+                <router-view></router-view>
+            </div>
         </section>
         <datalist id="all-tag-list" >
             <option :value="tag._id" v-for="tag in allTags" />
@@ -71,12 +71,12 @@
  import SearchIcon from 'vue-ionicons/dist/md-search.vue'
  import Notification from './components/Notification'
  import LeftPanel from './components/LeftPanel.vue'
- 
+
  export default {
      components: {
-       SearchIcon,
-       Notification,
-       LeftPanel
+         SearchIcon,
+         Notification,
+         LeftPanel
      },
      computed: {
          darkMode() {
@@ -89,7 +89,7 @@
              'offline': !navigator.onLine,
              'notificationOpt': {
              },
-           allTags: []
+             allTags: []
          }
      },
      watch: {
@@ -103,10 +103,10 @@
      },
      created () {
          this.$store.dispatch('getAllTags')
-         .then(tags => {
-           this.allTags = tags
-           this.$store.commit('setTags', tags)
-         })
+             .then(tags => {
+                 this.allTags = tags
+                 this.$store.commit('setTags', tags)
+             })
      },
      mounted () {
          window.addEventListener('online',  () => {
@@ -159,11 +159,37 @@
  }
 
  .mobile-nav-columns{
-     width: 100%;
+     /* width: 100%; */
  }
 
  #section {
      margin: 0 .5em;
  }
- 
+
+ .navbar-brand {
+     padding-top: .2em;
+     width: 100%;
+ }
+
+ .nav-columns {
+     display: flex;
+     width: 100%;
+     justify-content: space-between;
+     align-items: center;
+ }
+ .navar-brand .column {
+     /* padding-left: 6em; */
+ }
+
+ .nav-column.search {
+     flex-basis: 30em;
+     flex-grow: 1;
+     display: flex;
+     justify-content: center;
+ }
+
+ .logo {
+     flex-basis: 8em;
+     padding-left: .5em;
+ }
 </style>
