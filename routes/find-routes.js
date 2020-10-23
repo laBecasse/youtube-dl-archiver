@@ -37,7 +37,7 @@ module.exports = function (router, links) {
     return err => {
       console.error(err.stack)
       res.status(500)
-        .json({ error: 'server error' })
+        .json({ error: err.stack })
     }
   }
 

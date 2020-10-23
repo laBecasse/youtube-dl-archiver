@@ -91,6 +91,9 @@
      mounted: function()
      {
        this.$store.dispatch('getMore', this.params)
+         .catch(e => {
+           this.$root.showWarning('error on search: \n' + JSON.stringify(e))
+         })
 
        const scrolled = document.documentElement
        window.addEventListener('scroll', () => {
