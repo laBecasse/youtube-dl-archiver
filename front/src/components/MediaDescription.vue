@@ -125,3 +125,10 @@
      return new Date(year, month - 1, day)
  }
 </script>
+
+<style>
+  .description {
+      text-overflow: ellipsis;
+      overflow: hidden;
+  }
+</style>

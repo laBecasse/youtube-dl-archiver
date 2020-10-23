@@ -1,9 +1,9 @@
 <template>
-    <div id="app" v-bind:class="{'has-background-dark': darkMode}">
+    <div id="app" class="" v-bind:class="{'has-background-dark': darkMode}">
         <notification
             :options.sync="this.notificationOpt"></notification>
-        <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
-            <div class="navbar-brand">
+        <nav class="navbar" role="navigation" aria-label="main navigation">
+          <div class="navbar-brand">
                 <div class="columns is-mobile is-vcentered is-multiline is-centered mobile-nav-columns">
                     <div class="column is-narrow">
                         <router-link :to="{name: 'ListMedia'}" class="title" id="logo">
@@ -41,38 +41,8 @@
                     </div>
                 </div>
 
-                <div class="navbar-end">
-                    <div id="post-media" class="navbar-item">
-                        <form v-on:submit.prevent="onSubmit" action="/medias" method="post">
-                            <div class="field has-addons">
-                                <div class="control">
-                                    <input id="post-media-url" class="input" type="text" value="" name="url" placeholder="ajouter un média"/>
-                                </div>
-                                <div class="control">
-                                    <input type="checkbox" id="withdownload" name="withdownload" class="hidden" value="" checked/>
-                                    <label for="withdownload" class="button has-text-grey withdownload" title="Activer le téléchargement des médias"><DownloadIcon/></label>
-                                </div>
-                                <div class="control" v-bind:class="{'is-loading': isUploading}">
-                                    <label for="post-media-url-submit" class="button is-info" v-bind:class="{'is-danger': uploadFailed}">></label>
-                                    <input type="submit" id="post-media-url-submit" class="hidden"/>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="navbar-item">
-                        <Tags v-if="tags" :tags="tags.map(t=>t._id)" :removingEnabled="false" :limited="false" />
-                    </div>
-                    <div class="navbar-item">
-                        <a :href="this.API_URL + '/update'" id="update" class="button" type="submit">MAJ</a>
-                        <router-link class="button"
-                                     :to="{name: 'AllTags', params: {}}">
-                            All Tags
-                        </router-link>
-                        <router-link class="button"
-                                     :to="{name: 'Lookup', params: {}}">
-                            Lookup
-                        </router-link>
-                    </div>
+                <div class="navbar-dropdown">
+                  <LeftPanel/>
                 </div>
             </div>
         </nav>
@@ -80,11 +50,16 @@
             <div class="level is-mobile">
             </div>
         </nav>
-        <section class="section">
+        <section id="section" class="columns is-desktop">
+          <div class="column is-hidden-mobile is-hidden-tablet-only">
+            <LeftPanel/>
+          </div>
+          <div class="column is-three-quarters-desktop" id="scrolled">
             <div class="level" v-if="this.$route.name === 'SearchMedia'">
-                <h3 class="level-item title" v-if="this.$route.query.uploader">{{this.$route.query.uploader}}</h3>
+              <h3 class="level-item title" v-if="this.$route.query.uploader">{{this.$route.query.uploader}}</h3>
             </div>
             <router-view></router-view>
+          </div>
         </section>
         <datalist id="all-tag-list" >
             <option :value="tag._id" v-for="tag in allTags" />
@@ -93,17 +68,15 @@
 </template>
 
 <script>
- import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
  import SearchIcon from 'vue-ionicons/dist/md-search.vue'
  import Notification from './components/Notification'
- import Tags from './components/Tags.vue'
+ import LeftPanel from './components/LeftPanel.vue'
  
  export default {
      components: {
-         SearchIcon,
-         DownloadIcon,
-         Notification,
-         Tags
+       SearchIcon,
+       Notification,
+       LeftPanel
      },
      computed: {
          darkMode() {
@@ -112,17 +85,11 @@
      },
      data () {
          return {
-             'bottom': false,
              'API_URL': process.env.VUE_APP_API_URL,
-             'offset': 0,
-             'step': 10,
-             'isUploading': false,
-             'uploadFailed': false,
              'offline': !navigator.onLine,
              'notificationOpt': {
              },
-             tags: [],
-             allTags: []
+           allTags: []
          }
      },
      watch: {
@@ -136,12 +103,10 @@
      },
      created () {
          this.$store.dispatch('getAllTags')
-             .then(tags => {
-                 this.allTags = tags
-                 this.tags = tags.sort((a,b) => b.mediaCount > a.mediaCount)
-                                 .slice(0, 50)
-//                                 .sort((a, b) => b.creation_date > a.creation_date)
-             })
+         .then(tags => {
+           this.allTags = tags
+           this.$store.commit('setTags', tags)
+         })
      },
      mounted () {
          window.addEventListener('online',  () => {
@@ -157,23 +122,6 @@
          search () {
              let text = document.getElementById('search-text').value
              this.$router.push({path: '/search', query : {text: text}})
-         },
-         onSubmit () {
-
-             if(this.offline) {
-                 return this.showWarning('Tu ne peux pas ajouter de média en étant hors ligne')
-             }
-             
-             const url = document.getElementById('post-media-url').value
-             const withDownload = document.getElementById('withdownload').checked
-             this.isUploading = true
-             this.uploadFailed = false
-             return this.$store.dispatch('uploadURL', {url: url, withDownload: withDownload})
-                        .then(() => {this.isUploading = false})
-                        .catch(err => {
-                            this.uploadFailed = true
-                            this.isUploading = false
-                        })
          },
          showInfo(content) {
              this.notificationOpt = {
@@ -210,17 +158,12 @@
      height: 100%;
  }
 
- section {
-     margin-top: 1rem;
- }
-
  .mobile-nav-columns{
      width: 100%;
  }
 
- #withdownload:checked ~ .withdownload {
-     background-color:black;
-     color: white !important;
-     border-color: black;
+ #section {
+     margin: 0 .5em;
  }
+ 
 </style>

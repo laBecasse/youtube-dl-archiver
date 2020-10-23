@@ -135,7 +135,8 @@ const store = new Vuex.Store({
     webtorrentClient: new WebTorrent(),
     magnetPerId: {},
     settings: {},
-    views: {}
+    views: {},
+    tags: []
   },
   getters: {
     first (state) {
@@ -167,6 +168,9 @@ const store = new Vuex.Store({
     },
     getMagnet: (state) => (id) =>  {
       return state.magnetPerId[id]
+    },
+    getTags(state) {
+      return state.tags
     }
   },
   mutations: {
@@ -222,6 +226,9 @@ const store = new Vuex.Store({
     },
     setSettings(state, settings) {
       state.settings = settings
+    },
+    setTags(state, tags) {
+      state.tags = tags
     }
   },
   actions: {
