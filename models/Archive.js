@@ -93,7 +93,7 @@ function testExt (exts) {
   return (file) => exts.includes(path.extname(file).toLowerCase())
 }
 
-const _testMedia = testExt(['.mp4', '.webm', '.mp3', '.m4a'])
+const _testMedia = testExt(['.mp4', '.webm', '.mp3', '.m4a', '.ogg'])
 
 const _testTumbnails = testExt(['.png', '.jpeg', '.jpg', '.webp'])
 
