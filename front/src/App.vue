@@ -11,17 +11,7 @@
                         </router-link>
                     </div>
                     <div id="search" class="nav-column search">
-                        <form v-on:submit.prevent="search" action="/search" method="get" >
-                            <div class="field has-addons">
-                                <div class="control">
-                                    <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
-                                </div>
-                                <div class="control">
-                                    <button v-if="!(this.$route.name === 'SearchMedia' && this.$route.query.text)" class="button is-info"><SearchIcon/></button>
-                                    <router-link :to="{name: 'ListMedia'}" v-if="this.$route.name === 'SearchMedia' && this.$route.query.text" class="button" v-on:click.prevent="lastAdded">❌</router-link>
-                                </div>
-                            </div>
-                        </form>
+                      <SearchForm />
                     </div>
                     <div class="nav-column">
                         <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
@@ -68,15 +58,15 @@
 </template>
 
 <script>
- import SearchIcon from 'vue-ionicons/dist/md-search.vue'
  import Notification from './components/Notification'
  import LeftPanel from './components/LeftPanel.vue'
+ import SearchForm from './components/SearchForm.vue'
 
  export default {
      components: {
-         SearchIcon,
          Notification,
-         LeftPanel
+         LeftPanel,
+         SearchForm
      },
      computed: {
          darkMode() {
@@ -119,10 +109,6 @@
          })
      },
      methods: {
-         search () {
-             let text = document.getElementById('search-text').value
-             this.$router.push({path: '/search', query : {text: text}})
-         },
          showInfo(content) {
              this.notificationOpt = {
                  autoClose: true,
