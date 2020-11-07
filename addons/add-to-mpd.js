@@ -1,3 +1,7 @@
+/*
+ * Addon to automatically add new medias to mpd playlist
+*/
+
 const COMMAND = 'mpc  --host=192.168.1.71 -p 6600 add "%s"'
 
 const util = require('util')
