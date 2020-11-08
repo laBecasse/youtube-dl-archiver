@@ -162,12 +162,16 @@
              if (!t.media.archived && t.expanded) {
                  const mediaUrl = t.media.media_url
 
+                 const oldPath = t.$route.path
                  t.isDownloading = true
                  t.$store.dispatch('uploadURL', {url: mediaUrl, withDownload: true})
                   .then(medias => {
                       t.isDownloading = false
-                      t.$router.replace({name: 'WatchMedia', params : {id: medias[0].id}})
                       t.media = medias[0]
+
+                      if (oldPath === t.$route.path) {
+                          t.$router.replace({name: 'WatchMedia', params : {id: medias[0].id}})
+                      }
                   })
              }
          }
