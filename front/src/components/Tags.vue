@@ -1,6 +1,6 @@
 <template>
     <div class="field is-grouped is-grouped-multiline">
-        <div class="control" v-for="tag in tags.slice(0, limit)">
+        <div class="control" v-for="tag in tags.slice(0, limit)" v-bind:key="tag._id">
             <div class="tags has-addons">
                 <router-link class="tag is-link is-small" :to="{name: 'MediaTag', params: {tag: tag}}">{{tag}}</router-link>
                 <a v-on:click="removeTag"

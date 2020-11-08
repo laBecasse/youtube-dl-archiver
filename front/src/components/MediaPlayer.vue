@@ -28,7 +28,7 @@
 </template>
 
 <script>
- import { mapActions, mapMutations,  mapGetters } from 'vuex'
+ import { mapMutations,  mapGetters } from 'vuex'
 
  export default {
      name: 'MediaPlayer',
@@ -101,7 +101,7 @@
          startTorrent()  {
              const client = this.$store.state.webtorrentClient
              const media = this.media
-             const mediaElt = this.getMediaElt()
+             // const mediaElt = this.getMediaElt()
              const t = this
              const torrent = client.get(t.getMagnet()(media.id))
              if (!torrent) {

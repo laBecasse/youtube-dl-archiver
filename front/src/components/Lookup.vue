@@ -24,7 +24,7 @@
         <div>
             <span v-if="searching">Recherche en cours</span>
             <span v-else-if="medias.length === 0" class="loading">Pas de résultat</span>
-            <div v-else v-for="media in this.medias" class="is-6">
+            <div v-else v-for="media in this.medias" v-bind:key="media._id" class="is-6">
                 <MediaAdd :mediaObj="media" />
             </div>
         </div>

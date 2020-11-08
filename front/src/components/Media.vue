@@ -90,7 +90,7 @@
 </template>
 
 <script>
- import { mapActions, mapMutations,  mapGetters } from 'vuex'
+ import { mapActions } from 'vuex'
  import DownloadIcon from 'vue-ionicons/dist/md-download.vue'
  import TrashIcon from 'vue-ionicons/dist/md-trash.vue'
  import MediaDescription from './MediaDescription.vue'
@@ -158,24 +158,24 @@
              this.setOfflineMediaURL()
          }
 
-       function uploadNotArchived() {
-         if (!t.media.archived && t.expanded) {
-           const mediaUrl = t.media.media_url
-           console.log('starting up ' + mediaUrl)
-           t.isDownloading = true
-           t.$store.dispatch('uploadURL', {url: mediaUrl, withDownload: true})
-             .then(medias => {
-               t.isDownloading = false
-               t.$router.replace({name: 'WatchMedia', params : {id: medias[0].id}})
-               t.media = medias[0]
-             })
+         function uploadNotArchived() {
+             if (!t.media.archived && t.expanded) {
+                 const mediaUrl = t.media.media_url
+
+                 t.isDownloading = true
+                 t.$store.dispatch('uploadURL', {url: mediaUrl, withDownload: true})
+                  .then(medias => {
+                      t.isDownloading = false
+                      t.$router.replace({name: 'WatchMedia', params : {id: medias[0].id}})
+                      t.media = medias[0]
+                  })
+             }
          }
-       }
 
          if (t.media) {
-           uploadNotArchived()
+             uploadNotArchived()
          } else if (t.mediaPromise) {
-           t.mediaPromise.then(uploadNotArchived)
+             t.mediaPromise.then(uploadNotArchived)
          }
      },
      methods: {
@@ -200,14 +200,14 @@
              return 'other'
          },
          /* control handlers */
-       deleteThis () {
-         const t = this
-           return this.$store.dispatch('delete', {id: this.media.id})
-             .then(() => {
-               if (t.media.expanded) {
-                 t.$router.go(-1)
-                 }
-               })
+         deleteThis () {
+             const t = this
+             return this.$store.dispatch('delete', {id: this.media.id})
+                        .then(() => {
+                            if (t.media.expanded) {
+                                t.$router.go(-1)
+                            }
+                        })
          },
          toggleDownloadChoose() {
              this.downloadChoose = !this.downloadChoose

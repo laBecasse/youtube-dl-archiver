@@ -10,14 +10,14 @@
   "dependencies": {
     "axios": "^0.18.1",
     "mobile-pull-to-refresh": "^0.2.2",
-    "pouchdb": "^7.2.1",
-    "pouchdb-find": "^7.2.1",
+    "pouchdb": "^7.2.2",
+    "pouchdb-find": "^7.2.2",
     "terser": "^3.17.0",
-    "vue": "^2.6.11",
+    "vue": "^2.6.12",
     "vue-axios": "^2.1.5",
-    "vue-ionicons": "^3.0.4",
-    "vue-router": "^3.1.6",
-    "vuex": "^3.1.2",
+    "vue-ionicons": "^3.0.5",
+    "vue-router": "^3.4.9",
+    "vuex": "^3.5.1",
     "webtorrent": "^0.107.16"
   },
   "devDependencies": {
@@ -27,7 +27,7 @@
     "babel-eslint": "^10.1.0",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.2.3",
-    "vue-template-compiler": "^2.6.11"
+    "vue-template-compiler": "^2.6.12"
   },
   "eslintConfig": {
     "root": true,

@@ -38,11 +38,11 @@
              if (!this.uploaded) {
                  this.isUploading = true
                  return this.$store.dispatch('uploadURL', {url: this.mediaObj.media_url, withDownload: false})
-                            .then(media => {
+                            .then(() => {
                                 this.isUploading = false
                                 this.uploaded = true
                             })
-                            .catch(err => {
+                            .catch(() => {
                                 this.uploadFailed = true
                                 this.isUploading = false
                             })

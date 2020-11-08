@@ -28,7 +28,7 @@
          }
      },
      methods: {
-         addTag(e) {
+         addTag() {
              const input = this.$el.querySelector('input[name=tag]')
              for (let tag of input.value.split(/[, ]/)) {
                  this.$emit('addTag', tag)

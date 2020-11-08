@@ -62,14 +62,6 @@
 
  const SHORT_DESCRIPTION_LENGTH = 200
 
- function formatMedia (media) {
-     addMediaType(media)
-     addShortDescription(media)
-     addFormatedUploadDate(media)
-     addHTMLDescription(media)
-     return media
- }
-
  function urlify(text) {
      var urlRegex = /(https?:\/\/[^\s]+)/g;
      return text.replace(urlRegex, function(url) {
