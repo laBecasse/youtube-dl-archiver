@@ -167,11 +167,16 @@
                  t.$store.dispatch('uploadURL', {url: mediaUrl, withDownload: true})
                   .then(medias => {
                       t.isDownloading = false
-                      t.media = medias[0]
-
                       if (oldPath === t.$route.path) {
                           t.$router.replace({name: 'WatchMedia', params : {id: medias[0].id}})
+                          for (let key in medias[0]) {
+                              t.media[key] = medias[0][key]
+                          }
+                          t.$forceUpdate();
                       }
+                  })
+                  .catch(e => {
+                      this.$root.showWarning('error : \n' + JSON.stringify(e))
                   })
              }
          }
@@ -208,7 +213,7 @@
              const t = this
              return this.$store.dispatch('delete', {id: this.media.id})
                         .then(() => {
-                            if (t.media.expanded) {
+                            if (t.expanded) {
                                 t.$router.go(-1)
                             }
                         })
