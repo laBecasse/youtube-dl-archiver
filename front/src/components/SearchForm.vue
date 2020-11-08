@@ -5,7 +5,9 @@
                 <input id="search-text" class="input" type="text" value="" name="text" placeholder="rechercher"/>
             </div>
             <div class="control">
-                <button v-if="!(this.$route.name === 'SearchMedia' && this.$route.query.text)" class="button is-info"><SearchIcon/></button>
+                <button v-if="!(this.$route.name === 'SearchMedia' && this.$route.query.text)" class="button is-info">
+                    <SearchIcon/>
+                </button>
                 <router-link :to="{name: 'ListMedia'}" v-if="this.$route.name === 'SearchMedia' && this.$route.query.text" class="button" v-on:click.prevent="lastAdded">❌</router-link>
             </div>
         </div>

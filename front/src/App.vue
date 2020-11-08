@@ -52,7 +52,7 @@
             </div>
         </section>
         <datalist id="all-tag-list" >
-            <option :value="tag._id" v-for="tag in allTags" v-bind:key="tab._id" />
+            <option :value="tag._id" v-for="tag in allTags" v-bind:key="tag._id" />
         </datalist>
     </div>
 </template>
