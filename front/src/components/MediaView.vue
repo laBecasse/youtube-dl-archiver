@@ -45,10 +45,13 @@
                 <circle class="pull-to-refresh-material2__path pull-to-refresh-material2__path--colorful" cx="50" cy="50" r="20" fill="none" stroke-width="4" stroke-miterlimit="10" />
             </svg>
         </div>
-        <div v-if="isLoading">
+        <div v-if="isLoading && !this.medias.length">
             chargement
         </div>
         <MediaList v-else :medias="medias" :isSortedByCreationDate="params.isSortedByCreationDate"/>
+        <div v-if="isLoading && this.medias.length">
+            chargement
+        </div>
     </div>
     <!-- </div> -->
 </template>
@@ -92,15 +95,7 @@
 
 
      mounted: function() {
-         this.isLoading = true
-         this.$store.dispatch('getMore', this.params)
-             .then(() => {
-                 this.isLoading = false
-             })
-             .catch(e => {
-                 this.isLoading = false
-                 this.$root.showWarning('error on search: \n' + JSON.stringify(e))
-             })
+         this.getMore()
 
          const scrolled = document.documentElement
          window.addEventListener('scroll', () => {
@@ -125,13 +120,13 @@
          },
          'params': function() {
              this.$store.commit('registerView', this.params)
-             if (this.medias.length === 0) {
-                 this.$store.dispatch('getMore', this.params)
+             if (!this.medias.length) {
+                 this.getMore()
              }
          },
          bottom(bottom) {
              if (bottom) {
-                 this.$store.dispatch('getMore', this.params)
+                 this.getMore()
              }
          }
      },
@@ -160,6 +155,17 @@
              const pageHeight = obj.scrollHeight
              const bottomOfPage = visible + scrollY >= pageHeight - margin
              return bottomOfPage || pageHeight < visible
+         },
+         getMore() {
+             this.isLoading = true
+             return this.$store.dispatch('getMore', this.params)
+                        .then(() => {
+                            this.isLoading = false
+                        })
+                        .catch(e => {
+                            this.isLoading = false
+                            this.$root.showWarning('error on search: \n' + JSON.stringify(e))
+                        })
          }
      }
  }
