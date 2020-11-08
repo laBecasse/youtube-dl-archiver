@@ -17,11 +17,18 @@
   </div>
   <!-- <a :href="this.API_URL + '/update'" id="update" class="button" type="submit">MAJ</a> -->
   <div class="panel-block">
-    <router-link class="button is-link is-outlined is-fullwidth"
-                 :to="{name: 'Lookup', params: {}}">
-      Import medias
-    </router-link>
+      <router-link class="button is-link is-outlined is-fullwidth"
+                   :to="{name: 'Lookup', params: {}}">
+          Import medias
+      </router-link>
   </div>
+  <div class="panel-block">
+      <router-link class="button is-link is-outlined is-fullwidth"
+                   :to="{name: 'Settings', params: {}}">
+          Settings
+      </router-link>
+  </div>
+
 </div>
 </template>
 

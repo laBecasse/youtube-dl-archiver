@@ -24,7 +24,6 @@
      },
      data () {
          return {
-             allTags: this.$root.allTags
          }
      },
      methods: {

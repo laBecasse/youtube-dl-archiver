@@ -11,7 +11,7 @@
                         </router-link>
                     </div>
                     <div id="search" class="nav-column search">
-                      <SearchForm />
+                        <SearchForm />
                     </div>
                     <div class="nav-column">
                         <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
@@ -61,6 +61,8 @@
  import Notification from './components/Notification'
  import LeftPanel from './components/LeftPanel.vue'
  import SearchForm from './components/SearchForm.vue'
+ import Parameters from './lib/Parameters.js'
+ import YMPD from './lib/YMPD.js'
 
  export default {
      components: {
@@ -68,18 +70,16 @@
          LeftPanel,
          SearchForm
      },
-     computed: {
-         darkMode() {
-             return this.$store.state.settings.darkMode
-         }
-     },
      data () {
          return {
              'API_URL': process.env.VUE_APP_API_URL,
              'offline': !navigator.onLine,
              'notificationOpt': {
              },
-             allTags: []
+             allTags: [],
+             parameters: new Parameters(),
+             ympdClient: null,
+             darkMode: false
          }
      },
      watch: {
@@ -92,11 +92,18 @@
          }
      },
      created () {
+         // gather all tags
          this.$store.dispatch('getAllTags')
              .then(tags => {
                  this.allTags = tags
                  this.$store.commit('setTags', tags)
              })
+         // initialize the ympd client
+         const ympdUrl = this.parameters.get('ympdUrl')
+         this.initYmpd(ympdUrl)
+         this.parameters.setEventListenerOnKey('ympdUrl', this.initYmpd)
+         // darkMode event
+         this.parameters.setEventListenerOnKey('darkMode', v => {this.darkMode = v})
      },
      mounted () {
          window.addEventListener('online',  () => {
@@ -109,6 +116,17 @@
          })
      },
      methods: {
+         initYmpd(url) {
+             if (url) {
+                 this.ympdClient = new YMPD(url)
+                 this.ympdClient.connect()
+                     .catch(e => {
+                         this.showWarning('Ympd url "' + url + '" is invalid.')
+                         this.parameters.remove('ympdUrl')
+                         this.ympdClient = undefined
+                     })
+             }
+         },
          showInfo(content) {
              this.notificationOpt = {
                  autoClose: true,

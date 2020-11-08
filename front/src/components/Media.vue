@@ -80,7 +80,8 @@
         </section>
         <slot name="footer" v-bind:media="media">
             <footer v-if="media && media.archived" class="card-footer">
-                <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL, 'has-background-black': media.file_url, 'has-text-white': media.file_url}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
+              <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL, 'has-background-black': media.file_url, 'has-text-white': media.file_url}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
+              <RadioButton :media="media"/>
                 <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><TrashIcon/></a>
             </footer>
         </slot>
@@ -96,6 +97,7 @@
  import MediaDescription from './MediaDescription.vue'
  import MediaPlayer from './MediaPlayer.vue'
  import MediaThumbnail from './MediaThumbnail.vue'
+ import RadioButton from './RadioButton.vue'
 
  export default {
      name: 'Media',
@@ -119,9 +121,8 @@
          TrashIcon,
          MediaDescription,
          MediaPlayer,
-         MediaThumbnail
-     },
-     computed: {
+         MediaThumbnail,
+         RadioButton
      },
      data () {
          /* const jsonld = {
@@ -167,16 +168,13 @@
                  t.$store.dispatch('uploadURL', {url: mediaUrl, withDownload: true})
                   .then(medias => {
                       t.isDownloading = false
+                      t.media = medias[0]
                       if (oldPath === t.$route.path) {
                           t.$router.replace({name: 'WatchMedia', params : {id: medias[0].id}})
-                          for (let key in medias[0]) {
-                              t.media[key] = medias[0][key]
-                          }
-                          t.$forceUpdate();
                       }
                   })
                   .catch(e => {
-                      this.$root.showWarning('error : \n' + JSON.stringify(e))
+                      t.$root.showWarning('error : \n' + JSON.stringify(e))
                   })
              }
          }

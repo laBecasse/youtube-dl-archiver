@@ -37,11 +37,20 @@
          Tags,
          TagForm
      },
+     computed: {
+         shortDescription(){
+             return getShortDescription(this.media)
+         },
+         description() {
+             return  getHTMLDescription(this.media)
+         },
+         uploadDate() {
+             return getFormatedUploadDate(this.media)
+         }
+     },
      data () {
          return {
-             shortDescription: getShortDescription(this.media),
-             description: getHTMLDescription(this.media),
-             uploadDate: getFormatedUploadDate(this.media)
+
        }  
      },
      methods: {

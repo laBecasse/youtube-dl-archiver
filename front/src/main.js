@@ -134,9 +134,9 @@ const store = new Vuex.Store({
     isSingle: false,
     webtorrentClient: new WebTorrent(),
     magnetPerId: {},
-    settings: {},
     views: {},
-    tags: []
+    tags: [],
+    parameters: {}
   },
   getters: {
     first (state) {
@@ -198,6 +198,9 @@ const store = new Vuex.Store({
         }
       }
     },
+    registerParameters(state, parameters) {
+      Vue.set(state, 'parameters', parameters)
+    },
     setSingle(state, value) {
 
       // when the single is switched to false
@@ -223,9 +226,6 @@ const store = new Vuex.Store({
     },
     toggleLock(state) {
       state.isLocked = !state.isLocked
-    },
-    setSettings(state, settings) {
-      state.settings = settings
     },
     setTags(state, tags) {
       state.tags = tags
@@ -311,6 +311,7 @@ const store = new Vuex.Store({
       const {url, withDownload} = payload
       return mediaDB.uploadURL(url, withDownload)
         .then(medias => {
+          context.commit('registerMedias', medias)
           return context.dispatch('refreshMedias')
             .then(() => medias)
         })
