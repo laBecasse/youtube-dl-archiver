@@ -5,5 +5,6 @@ libs/wrappers/config.json
 archives/
 config.json
 
-front/.env*
+front/.env.development
+front/.env.production
 /.env

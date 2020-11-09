@@ -27,6 +27,9 @@ import MediaDB from './lib/MediaDB'
 const mediaDB = new MediaDB(process.env.VUE_APP_API_URL)
 import View from './lib/View'
 
+import Parameters from './lib/Parameters.js'
+const parameters = new Parameters()
+parameters.setDefaultFromEnv()
 
 const routes = [
   {
@@ -136,7 +139,7 @@ const store = new Vuex.Store({
     magnetPerId: {},
     views: {},
     tags: [],
-    parameters: {}
+    parameters: parameters
   },
   getters: {
     first (state) {
@@ -171,6 +174,9 @@ const store = new Vuex.Store({
     },
     getTags(state) {
       return state.tags
+    },
+    getParameters(state) {
+      return state.parameters
     }
   },
   mutations: {

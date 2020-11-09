@@ -8,8 +8,8 @@
         </div>
         <div class="control">
             <label class="checkbox">
-                Ymdp Url
-                <input type="text" name="ympdUrl" :value="ympdUrl" v-on:change="change" v-bind:class="{'has-text-success': ympdClient, 'has-text-danger': !ympdClient}">
+                Ymdp Url <span v-if="!ympdClient"> (disabled)</span>
+                <input type="text" name="YMPD_URL" :value="YMPD_URL" v-on:change="change">
             </label>
         </div>
 
@@ -20,8 +20,9 @@
  export default {
      data () {
          return {
-             parameters: this.$root.parameters,
-             ympdUrl: this.$root.parameters.get('ympdUrl')
+             parameters: this.$root.getParameters(),
+             'YMPD_URL': this.$root.getParameters().get('YMPD_URL'),
+             errors: {}
          }
      },
      computed: {
@@ -32,13 +33,21 @@
      methods: {
          change (e) {
              const key = e.target.name
+             let promise
              if (e.target.type === "checkbox") {
-                 this.parameters.put(key, e.target.checked)
+                 promise = this.parameters.put(key, e.target.checked)
              } else {
-                 this.parameters.put(key, e.target.value)
+                 promise = this.parameters.put(key, e.target.value)
              }
-
-             this[key] = e.target.value
+             const t = this
+             promise
+                 .then(() => {
+                     t.errors[key] = false
+                 })
+                 .catch(() => {
+                     console.log(t.errors)
+                     t.errors[key] = true
+                 })
          }
      }
  }

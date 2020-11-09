@@ -58,6 +58,7 @@
 </template>
 
 <script>
+ import {mapGetters} from 'vuex'
  import Notification from './components/Notification'
  import LeftPanel from './components/LeftPanel.vue'
  import SearchForm from './components/SearchForm.vue'
@@ -77,7 +78,6 @@
              'notificationOpt': {
              },
              allTags: [],
-             parameters: new Parameters(),
              ympdClient: null,
              darkMode: false
          }
@@ -99,11 +99,11 @@
                  this.$store.commit('setTags', tags)
              })
          // initialize the ympd client
-         const ympdUrl = this.parameters.get('ympdUrl')
+         const ympdUrl = this.getParameters().get('YMPD_URL')
          this.initYmpd(ympdUrl)
-         this.parameters.setEventListenerOnKey('ympdUrl', this.initYmpd)
+         this.getParameters().setEventListenerOnKey('YMPD_URL', this.initYmpd)
          // darkMode event
-         this.parameters.setEventListenerOnKey('darkMode', v => {this.darkMode = v})
+         this.getParameters().setEventListenerOnKey('darkMode', v => {this.darkMode = v})
      },
      mounted () {
          window.addEventListener('online',  () => {
@@ -116,15 +116,27 @@
          })
      },
      methods: {
+         ...mapGetters(['getParameters']),
          initYmpd(url) {
+
+             // disable ympd
+             if (url === '')  {
+                 this.ympdClient = undefined
+                 return Promise.resolve()
+             }
+             
              if (url) {
-                 this.ympdClient = new YMPD(url)
-                 this.ympdClient.connect()
-                     .catch(e => {
-                         this.showWarning('Ympd url "' + url + '" is invalid.')
-                         this.parameters.remove('ympdUrl')
-                         this.ympdClient = undefined
-                     })
+                 const ympdClient = new YMPD(url)
+                 return ympdClient.connect()
+                            .then(() => {
+                                this.ympdClient = ympdClient
+                            })
+                            .catch(e => {
+                                this.showWarning('Ympd url "' + url + '" is invalid.')
+                                throw e
+                            })
+             } else {
+                 return Promise.resolve() 
              }
          },
          showInfo(content) {

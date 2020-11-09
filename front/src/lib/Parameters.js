@@ -1,4 +1,4 @@
-const PREFIX = 'param-'
+const PREFIX = 'PARAMS_'
 
 export default class Parameters {
     constructor() {
@@ -6,9 +6,15 @@ export default class Parameters {
     }
 
     put(key, value) {
-        localStorage.setItem(PREFIX + key, value)
         if (this.listeners[key]) {
-            this.listeners[key](value)
+            return this.listeners[key](value)
+                .then(() => {
+                    localStorage.setItem(PREFIX + key, value)
+                    return value
+                })
+        } else {
+            localStorage.setItem(PREFIX + key, value)
+            return Promise.resolve(value)
         }
     }
 
@@ -20,8 +26,24 @@ export default class Parameters {
         return localStorage.removeItem(PREFIX + key)
     }
 
-    
+    /*
+     * Defines a listener executed before 
+     * each change of value of a key (the new value is passed)
+     * assume to return a promise 
+     * no change are applied, if the promise is rejected
+     */
     setEventListenerOnKey(key, listener) {
         this.listeners[key] = listener
+    }
+
+    setDefaultFromEnv() {
+        for (let key in process.env) {
+            if (key.startsWith('VUE_APP_')) {
+                const paramsKey = key.substr(8)
+                if(!this.get(paramsKey)) {
+                    this.put(paramsKey, process.env[key])
+                }
+            }
+        }
     }
 }
