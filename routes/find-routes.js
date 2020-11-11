@@ -48,16 +48,33 @@ module.exports = function (router, links) {
     handleJson(mediaDB.findAll(limit, offset, to), req, res)
   })
 
-  router.get('/search', getByUrl, (req, res) => {
+  router.get('/search', getByUrl, (req, res) => { 
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0
     const text = req.query.text
-    const query = (!text || text.startsWith('"')) ? text : '"' + text.trim().split(' ').join('" "') + '"'
     const uploader = req.query.uploader
+    const platform = req.query.platform
 
-    let promise = mediaDB.search(query, uploader, limit, offset)
-        .then(medias => (!offset) ? emptyAnswerRejection(medias) : medias)
-        .catch(e => YttSearch(text, limit))
+    if (!text) {
+      res.status(400)
+      return res.json({ message: 'invalid request' })
+    }
+
+    let promise
+    if (!platform) {
+      const query = (!text || text.startsWith('"')) ? text : '"' + text.trim().split(' ').join('" "') + '"'
+
+      promise = mediaDB.search(query, uploader, limit, offset)
+    } else if (platform === 'youtube') {
+      promise = (!offset) ? YttSearch(text, limit) : Promise.resolve([])
+    } else {
+      promise = (!offset) ? Downloader.downloadMetadataFromSearch(text, platform)
+        .then(infos => {
+          return infos.map(info => UnarchivedMedia.create(info))
+        }) : Promise.resolve([])
+
+    }
+
     return handleJson(promise, req, res)
 
   })

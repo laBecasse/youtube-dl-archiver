@@ -178,8 +178,10 @@ function downloadMetadata (url) {
   const subLangValue = langs.join(',')
   const cmdFormat = youtubeDl + ' -f "%s" --ignore-errors --skip-download --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
   const cmdLine = util.format(cmdFormat, 'best[tbr<=500]/best/bestvideo+bestaudio', subLangValue, outputValue, url)
+  console.log(cmdLine)
   return exec(cmdLine)
     .catch(e => {
+      console.log(e)
       // if any thing have been downloaded
       // it can append for playlist
       if (!fs.existsSync(dlDirPath)) {
@@ -187,7 +189,7 @@ function downloadMetadata (url) {
         throw e
       }
     })
-    .then(() => {
+    .then(res => {
       // WARNING goes into sterr :/
       // if (data.stderr !== '') return Promise.reject(data.stderr)
       return new Promise((resolve, reject) => {

@@ -12,6 +12,7 @@ Vue.use(VueAxios, axios);
 
 import App from './App.vue';
 import MediaView from './components/MediaView.vue'
+import SearchView from './components/SearchView.vue'
 import Lookup from './components/Lookup.vue'
 import Media from './components/Media.vue'
 import AllTags from './components/AllTags.vue'
@@ -50,12 +51,13 @@ const routes = [
   {
     name: 'SearchMedia',
     path: '/search',
-    component: MediaView,
+    component: SearchView,
     props: (route) => {
       return {
         params: {
           queryName: 'searchText',
           input: route.query.text,
+          platform: route.query.platform,
           isSortedByCreationDate: false
         }
       }
@@ -275,10 +277,11 @@ const store = new Vuex.Store({
       const view = context.getters.getView(params)
       const queryName = params.queryName
       const input = params.input
+      const platform = params.platform
 
       if (!view.isLocked()) {
         view.toggleLock()
-        return mediaDB[queryName](input, limit, offset, to)
+        return mediaDB[queryName](input, limit, offset, to, platform)
           .then(medias => {
             context.commit('registerMedias', medias)
             view.insertMedias(medias)

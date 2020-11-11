@@ -70,7 +70,7 @@
      components: {
          MediaList
      },
-     props: ['params'],
+     props: ['params', 'afterGetMore'],
      computed: {
          step () {
              return this.$store.state.step
@@ -130,7 +130,6 @@
              }
          }
      },
-
      methods: {
          ...mapGetters(['first', 'before', 'after','contains']),
          /* control handlers */
@@ -161,6 +160,9 @@
              return this.$store.dispatch('getMore', this.params)
                         .then(() => {
                             this.isLoading = false
+                            if (this.afterGetMore) {
+                                this.afterGetMore()
+                            }
                         })
                         .catch(e => {
                             this.isLoading = false
@@ -181,7 +183,7 @@
      vertical-align: middle;
      border-bottom: .13em solid black;
  }
- 
+
  .creation_date {
      margin: 1em 0;
  }

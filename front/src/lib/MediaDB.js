@@ -135,14 +135,14 @@ function deleteOffline(id) {
 
 /* API querying */
 
-function queryMedias(base, queryName, input, limit, offset, to) {
+function queryMedias(base, queryName, input, limit, offset, to, platform) {
   const query = queries[queryName].api(input)
 
   let fullQuery
   if (query.includes('?')) {
-    fullQuery = base + query + '&limit=' + limit + '&offset='+ offset
+    fullQuery = base + query + '&limit=' + limit + '&offset='+ offset + ((platform) ? '&platform='+platform : '')
   } else {
-    fullQuery =  base + query + '?limit=' + limit + '&offset='+ offset
+    fullQuery =  base + query + '?limit=' + limit + '&offset='+ offset + ((platform) ? '&platform='+platform : '')
   }
 
   if (to) {
@@ -193,14 +193,19 @@ function buildTimeoutSwitch(apiQuery, offlineQuery) {
 }
 
 function queryWithOffline(base, queryName) {
-  return (input, limit, offset, to) => {
-    const apiQuery = queryMedias(base, queryName, input, limit, offset, to)
+  return (input, limit, offset, to, platform) => {
+    const apiQuery = queryMedias(base, queryName, input, limit, offset, to, platform)
           .then(medias => {
             updateOrCreateOffline(medias)
             return medias
           })
-    const offlineQuery = queryStoredMedias(queryName, input, limit, offset, to)
-    return buildTimeoutSwitch(apiQuery, offlineQuery)
+
+    if (platform) {
+      return apiQuery
+    } else {
+      const offlineQuery = queryStoredMedias(queryName, input, limit, offset, to)
+      return buildTimeoutSwitch(apiQuery, offlineQuery)
+    }
   }
 }
 
