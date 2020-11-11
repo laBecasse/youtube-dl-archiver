@@ -32,20 +32,20 @@
      },
      methods: {
          onSubmit () {
-             if(this.$root.offline) {
-                 return this.$root.showWarning('Tu ne peux pas ajouter de média en étant hors ligne')
-             }
-             
-             const url = this.$el.querySelector('#post-media-url' + this.id).value
-             const withDownload = this.$el.querySelector('#withdownload'+ this.id).checked
-             this.isUploading = true
-             this.uploadFailed = false
+           if(this.$root.offline) {
+             return this.$store.commit('showWarning', 'Tu ne peux pas ajouter de média en étant hors ligne')
+           }
+
+           const url = this.$el.querySelector('#post-media-url' + this.id).value
+           const withDownload = this.$el.querySelector('#withdownload'+ this.id).checked
+           this.isUploading = true
+           this.uploadFailed = false
              return this.$store.dispatch('uploadURL', {url: url, withDownload: withDownload})
                         .then(() => {this.isUploading = false})
                         .catch(err => {
                             this.uploadFailed = true
                             this.isUploading = false
-                            this.$root.showWarning('Error on upload: \n ' + JSON.stringify(err))
+                            this.$store.commit('showWarning', 'Error on upload: \n ' + JSON.stringify(err))
                         })
          }
      }

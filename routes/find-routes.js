@@ -1,5 +1,6 @@
 const Invidious = require('../libs/invidious')
 const Ytt = require('../libs/ytt')
+const Sepiasearch = require('../libs/sepiasearch')
 const Downloader = require('../libs/downloader')
 const MediaDB = require('../models/MediaDB.js')
 const UnarchivedMedia = require('../models/UnarchivedMedia')
@@ -67,6 +68,8 @@ module.exports = function (router, links) {
       promise = mediaDB.search(query, uploader, limit, offset)
     } else if (platform === 'youtube') {
       promise = (!offset) ? YttSearch(text, limit) : Promise.resolve([])
+    } else if (platform === 'sepiasearch') {
+      promise = (!offset) ? Sepiasearch.searchMetadataMedias(text) : Promise.resolve([])
     } else {
       promise = (!offset) ? Downloader.downloadMetadataFromSearch(text, platform)
         .then(infos => {
@@ -87,11 +90,6 @@ module.exports = function (router, links) {
 
 function emptyAnswerRejection(medias) {
   return  (medias.length) ? medias : Promise.reject(new Error('empty answer'))
-}
-
-function YTSearch(query, limit) {
-  return YttSeach(query, limit)
-    .then(emptyAnswerRejection)
 }
 
 function InvidiousSearch(query, limit) {

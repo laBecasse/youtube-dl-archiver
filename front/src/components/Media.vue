@@ -174,7 +174,7 @@
                       }
                   })
                   .catch(e => {
-                      t.$root.showWarning('error : \n' + JSON.stringify(e))
+                      this.$store.commit('showWarning', 'error : \n' + JSON.stringify(e))
                   })
              }
          }
@@ -225,7 +225,7 @@
                             .then(() => this.setOfflineMediaURL())
                             .catch(e => {
                                 if (e.status !== 404) {
-                                    this.$root.showWarning('Une erreur est survenue à la mise hors-ligne de la vidéo:<br/>: '+e)
+                                    this.$store.commit('showWarning', 'Une erreur est survenue à la mise hors-ligne de la vidéo:<br/>: '+e)
                                 }
                             })
 
@@ -238,7 +238,7 @@
                                 this.downloadChoose = false
                             })
                             .catch(e => {
-                                this.$root.showWarning('Une erreur est survenue à la suppression de la vidéo hors-ligne :<br/>: '+e)
+                                this.$store.commit('showWarning','Une erreur est survenue à la suppression de la vidéo hors-ligne :<br/>: '+e)
                             })
 
          },

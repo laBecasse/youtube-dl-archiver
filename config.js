@@ -37,6 +37,7 @@ module.exports = {
     trackers: process.env.WEBTORRENT_TRACKERS.split(' ')
   },
   invidiousURL: process.env.INVIDIOUS_URL,
+  sepiasearchURL: process.env.SEPIASEARCH_URL,
   afterUpdate: afterUpdate,
   init: init
 }

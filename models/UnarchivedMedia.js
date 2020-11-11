@@ -73,16 +73,32 @@ class UnarchivedMedia {
     this.description = description
   }
 
-  getUploadDate() {
-    return this.upload_date
-  }
-
   getUploader() {
     return this.uploader
   }
 
   setUploader(uploader) {
     this.uploader = uploader
+  }
+
+  getChannelId() {
+    return this.uploader
+  }
+
+  setChannelId(id) {
+    this.channel_id = id
+  }
+
+  getChannelUrl() {
+    return this.channel_url
+  }
+
+  setChannelUrl(url) {
+    this.channel_url = url
+  }
+
+  getUploadDate() {
+    return this.upload_date
   }
 
   setUploadDate(date) {

@@ -19,21 +19,40 @@
 </template>
 
 <script>
+  import {mapGetters} from 'vuex'
+
   export default {
     data () {
       return {
         timers: [],
         barControl: '',
-        myOptions: this.options,
         show: false
       }
     },
-    props: {
-      'options': {
-        type: Object
-      }
-    },
     computed: {
+      options () {
+        const type = this.getNotifications().type
+        const content = this.getNotifications().content
+        console.log(type, content)
+        if (type === 'info') {
+          return {
+            autoClose: true,
+            backgroundColor: '#769FCD',
+            content: content,
+            countdownBar: true,
+            barColor: '#415F77'
+          }
+        } else if (type === 'warning') {
+          return {
+            autoClose: false,
+            backgroundColor: '#fbff7c',
+            textColor: '#92253f',
+            content: content
+          }
+        } else {
+          return {}
+        }
+      },
       setStyle () {
         return {
           color: this.myOptions.textColor || '#fff',
@@ -48,6 +67,7 @@
       }
     },
     methods: {
+      ...mapGetters(['getNotifications']),
       countdown () {
         if (this.myOptions.autoClose) {
           if (this.myOptions.countdownBar) {

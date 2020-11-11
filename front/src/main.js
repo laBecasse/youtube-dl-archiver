@@ -141,7 +141,8 @@ const store = new Vuex.Store({
     magnetPerId: {},
     views: {},
     tags: [],
-    parameters: parameters
+    parameters: parameters,
+    notifications: {}
   },
   getters: {
     first (state) {
@@ -179,6 +180,9 @@ const store = new Vuex.Store({
     },
     getParameters(state) {
       return state.parameters
+    },
+    getNotifications(state) {
+      return state.notifications
     }
   },
   mutations: {
@@ -237,6 +241,18 @@ const store = new Vuex.Store({
     },
     setTags(state, tags) {
       state.tags = tags
+    },
+    showInfo(state, content) {
+      state.notifications = {
+        type: 'info',
+        content: content
+      }
+    },
+    showWarning(state, content) {
+      state.notifications = {
+        type: 'warning',
+        content: content
+      }
     }
   },
   actions: {

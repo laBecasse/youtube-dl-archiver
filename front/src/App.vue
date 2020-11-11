@@ -1,7 +1,6 @@
 <template>
     <div id="app" class="" v-bind:class="{'has-background-dark': darkMode}">
-        <notification
-            :options.sync="this.notificationOpt"></notification>
+        <Notification/>
         <nav class="navbar" role="navigation" aria-label="main navigation">
             <div class="navbar-brand">
                 <div class="nav-columns">
@@ -75,8 +74,6 @@
          return {
              'API_URL': process.env.VUE_APP_API_URL,
              'offline': !navigator.onLine,
-             'notificationOpt': {
-             },
              allTags: [],
              ympdClient: null,
              darkMode: false
@@ -137,23 +134,6 @@
                             })
              } else {
                  return Promise.resolve() 
-             }
-         },
-         showInfo(content) {
-             this.notificationOpt = {
-                 autoClose: true,
-                 backgroundColor: '#769FCD',
-                 content: content,
-                 countdownBar: true,
-                 barColor: '#415F77'
-             }
-         },
-         showWarning(content) {
-             this.notificationOpt = {
-                 autoClose: false,
-                 backgroundColor: '#fbff7c',
-                 textColor: '#92253f',
-                 content: content
              }
          }
      }

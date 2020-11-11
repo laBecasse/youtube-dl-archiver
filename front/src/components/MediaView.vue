@@ -72,9 +72,6 @@
      },
      props: ['params', 'afterGetMore'],
      computed: {
-         step () {
-             return this.$store.state.step
-         },
          medias() {
              return this.$store.getters.getViewMedias(this.params)
          }
@@ -166,7 +163,7 @@
                         })
                         .catch(e => {
                             this.isLoading = false
-                            this.$root.showWarning('error on search: \n' + JSON.stringify(e))
+                            this.$store.commit('showWarning', 'error while loading: \n' +JSON.stringify(e))
                         })
          }
      }
