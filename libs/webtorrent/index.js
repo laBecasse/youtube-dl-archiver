@@ -18,12 +18,12 @@ function seed (path, torrentPath) {
     }
 
     client.seed(path, opts, function (torrent) {
-      console.log('seeding ' + torrent.name + ' with trackers ' + torrent.announce)
-      torrent.on('error', console.log)
-      torrent.on('warning', console.log)
-      torrent.on('ready', console.log)
-      torrent.on('noPeers', console.log)
-      torrent.on('wire', () => console.log('wire on ' + path))
+      // console.log('seeding ' + torrent.name + ' with trackers ' + torrent.announce)
+      // torrent.on('error', console.log)
+      // torrent.on('warning', console.log)
+      // torrent.on('ready', console.log)
+      // torrent.on('noPeers', console.log)
+      // torrent.on('wire', () => console.log('wire on ' + path))
       resolve(torrent)
     })
   })
