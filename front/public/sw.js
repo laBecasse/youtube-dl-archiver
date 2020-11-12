@@ -1,10 +1,9 @@
 console.log('------------------------- Hello from sw.js --------------------')
 
-const version = 'v0.14.10'
-const staticCacheName = 'staticfiles' + version
+const version = 'v0.14.11'
+const staticCachePrefix = 'staticfiles'
+const staticCacheName = staticCachePrefix + version
 const imagesCacheName = 'images'
-
-const loadedCacheNames = [staticCacheName, imagesCacheName]
 
 addEventListener('install', installEvent => {
   skipWaiting();
@@ -31,9 +30,10 @@ addEventListener('activate', activateEvent => {
     caches.keys()
       .then( cacheNames => {
         return Promise.all(
-          cacheNames.map( cacheName => {
-            if (!loadedCacheNames.includes(cacheName)) {
-              return caches.delete(cacheName);
+          cacheNames.map(cacheName => {
+            if (cacheName !== staticCacheName &&
+              cacheName.startsWith(staticCachePrefix)) {
+              return caches.delete(cacheName)
             } // end if
           }) // end map
         ); // end return Promise.all
