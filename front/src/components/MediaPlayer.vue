@@ -46,7 +46,7 @@
 
          const playhandler = function () {
              const mediaElt = t.getMediaElt()
-             const client = t.$store.state.webtorrentClient
+             const client = t.$store.state.global.webtorrentClient
              const torrent = client.get(t.getMagnet()(t.media.id))
 
            if (torrent && !t.mediaLoaded) {
@@ -99,7 +99,7 @@
            this.mediaLoaded = this.mediaLoaded || this.offlineMediaURL
          },
          startTorrent()  {
-             const client = this.$store.state.webtorrentClient
+             const client = this.$store.state.global.webtorrentClient
              const media = this.media
              // const mediaElt = this.getMediaElt()
              const t = this

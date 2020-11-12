@@ -1,7 +1,7 @@
 <template>
     <router-link :to="{name: 'WatchMedia', params: {id: media.id}}">
         <div class="card-image thumbnail-wrapper">
-            <img v-if="media.thumbnail && media.thumbnail.url" :src="media.thumbnail.url" :alt="media.title" v-bind:class="{'blinking': isDownloading}"/>
+            <img v-if="media.thumbnail && media.thumbnail.url" :src="media.thumbnail.url" :alt="media.title" v-bind:class="{'is-blinking': isDownloading}"/>
         </div>
     </router-link>
 </template>
@@ -44,20 +44,5 @@
 <style>
  .thumbnail-wrapper {
      background-color: black;
- }
-
- @keyframes blink {
-    0% {
-        opacity:1;
-    }
-    50% {
-        opacity:0;
-    }
-    100% {
-        opacity:1;
-    }
- } 
- .blinking {
-     animation: blink normal 4s infinite ease-in-out;
  }
  </style>

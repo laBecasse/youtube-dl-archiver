@@ -80,8 +80,8 @@
         </section>
         <slot name="footer" v-bind:media="media">
             <footer v-if="media && media.archived" class="card-footer">
-              <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL, 'has-background-black': media.file_url, 'has-text-white': media.file_url}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon/></a>
-              <RadioButton :media="media"/>
+                <a class="card-footer-item" v-bind:class="{'has-background-info': offlineMediaURL, 'has-text-white': offlineMediaURL, 'has-background-black': media.file_url, 'has-text-white': media.file_url, 'is-blinking': isDownloading}" title="Télécharger" v-on:click="toggleDownloadChoose"><DownloadIcon /></a>
+                <RadioButton :media="media"/>
                 <a class="card-footer-item has-text-danger" v-on:click="toggleDeleteConfirmation" title="Supprimer"><TrashIcon/></a>
             </footer>
         </slot>
@@ -221,9 +221,12 @@
          },
          createOfflineMedia () {
              const id = this.media.id
+             this.isDownloading = true
+             this.downloadChoose = false
              this.makeOfflineMedia(id)
-                            .then(() => this.setOfflineMediaURL())
-                            .catch(e => {
+                 .then(() => this.setOfflineMediaURL())
+                 .then(() => {this.isDownloading = false})
+                 .catch(e => {
                                 if (e.status !== 404) {
                                     this.$store.commit('showWarning', 'Une erreur est survenue à la mise hors-ligne de la vidéo:<br/>: '+e)
                                 }
@@ -247,7 +250,6 @@
              return this.getOfflineMediaURL(id)
                         .then(url => {
                             this.offlineMediaURL = url
-                            this.downloadChoose = false
                             return url
                         })
                         .catch(e => {
@@ -256,8 +258,10 @@
          },
          download () {
              const id = this.media.id
+             this.isDownloading = true
+             this.downloadChoose = false
              return this.downloadMedia({id: id})
-                        .then(() => {this.downloadChoose = false})
+                        .then(() => {this.isDownloading = false})
          },
          /* play states */
          reloadMedia () {
