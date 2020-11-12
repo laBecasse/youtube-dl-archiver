@@ -49,6 +49,16 @@ module.exports = function (router, links) {
     handleJson(mediaDB.findAll(limit, offset, to), req, res)
   })
 
+  router.get('/uploaders', (req, res) => {
+    const limit = parseInt(req.query.limit) || 0
+    const offset = parseInt(req.query.offset) || 0
+    const name = req.query.name
+
+    let promise = mediaDB.search(null, name, limit, offset)
+
+    return handleJson(promise, req, res)
+  })
+
   router.get('/search', getByUrl, (req, res) => { 
     const limit = parseInt(req.query.limit) || 0
     const offset = parseInt(req.query.offset) || 0

@@ -1,6 +1,6 @@
 console.log('------------------------- Hello from sw.js --------------------')
 
-const version = 'v0.14.11'
+const version = 'v0.14.12'
 const staticCachePrefix = 'staticfiles'
 const staticCacheName = staticCachePrefix + version
 const imagesCacheName = 'images'

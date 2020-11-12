@@ -28,7 +28,7 @@ const queries = {
     sort: null
   },
   searchUploader: {
-    api: uploader => '/search?uploader=' + uploader,
+    api: uploader => '/uploaders?name=' + uploader,
     selector: uploader => {
       return {$and: [{uploader: {$eq:uploader}}, {creation_date :{$gt: null}}]}
     },
