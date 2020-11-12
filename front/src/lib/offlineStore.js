@@ -29,6 +29,10 @@ function getRequestFromId(id) {
   return new Request(API_URL + '/medias/' + id)
 }
 
+function getIdFromRequest(req) {
+  return req.url.substr(API_URL.length + 8)
+}
+
 export default {
   actions: {
     _offlineUrlFromId(context, id) {
@@ -63,7 +67,12 @@ export default {
         })
         .then(res => res ? res.blob(): getNotFoundRejection())
         .then(blob => URL.createObjectURL(blob))
-        .then(url => {console.log(url); return url})
+    },
+    getAllOfflineMedias(context, id) {
+      return getCache()
+        .then(cache => cache.keys())
+        .then(keys => keys.map(getIdFromRequest))
+        .then(ids => Promise.all(ids.map(id => context.dispatch('getOneMedia', id))))
     }
   }
 }

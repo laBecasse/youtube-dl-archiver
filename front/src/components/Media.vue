@@ -227,8 +227,9 @@
                  .then(() => this.setOfflineMediaURL())
                  .then(() => {this.isDownloading = false})
                  .catch(e => {
-                                if (e.status !== 404) {
-                                    this.$store.commit('showWarning', 'Une erreur est survenue à la mise hors-ligne de la vidéo:<br/>: '+e)
+                     this.isDownloading = false
+                     if (e.status !== 404) {
+                         this.$store.commit('showWarning', 'Une erreur est survenue à la mise hors-ligne de la vidéo:<br/>: '+e)
                                 }
                             })
 
