@@ -11,7 +11,7 @@ const config = require('../../config')
 
 const tempDownloadDir = config.archivesTmpDir
 const youtubeDl = config.youtubedlBin
-const formatDl = 'bestvideo[vcodec^=avc1][height<=360]+bestaudio[ext=m4a]/bestvideo[vcodec^=avc1][height<=720]+bestaudio/bestvideo+bestaudio/best[height<=480]/best'
+const formatDl = 'mp4[height<=360]/bestvideo[vcodec^=avc1][height<=360]+bestaudio[ext=m4a]/bestvideo[vcodec^=avc1][height<=720]+bestaudio/bestvideo+bestaudio/best[height<=480]/best'
 const langs = config.subtitleLangs
 
 const queryPatterns = {
@@ -23,7 +23,8 @@ const queryPatterns = {
 /*
  * download the media related to info
  * @returns {Promise} Promise represented the info of the media
- *                    where the media file name has been set
+ *                    with object of the media paths final and temporary
+ *
  */
 function downloadMedia (info) {
   const dlDirPath = info._dirname
@@ -33,24 +34,25 @@ function downloadMedia (info) {
 
   if (!info._torrent_file) {
     console.log('ydl execution: "' + cmdLine + '"')
-    return exec(cmdLine, { maxBuffer: Infinity })
-      .then(() => {
-        const mediaFileName = path.basename(info._filename)
-        info._fileNames.push(mediaFileName)
-        return info
-      })
+    const promise = exec(cmdLine, { maxBuffer: Infinity })
+    const fileName = path.basename(info._filename)
+    return Promise.resolve({
+      downloaded: promise,
+      downloadedPath: path.join(dlDirPath, fileName),
+      temporaryPath: path.join(dlDirPath, fileName + '.part')
+    })
   } else {
     const torrentFileName = info._torrent_file
     const torrentPath = path.join(dlDirPath, torrentFileName)
     console.log('downloading files by torrent ' + torrentPath)
     return downloadTorrent(torrentPath, dlDirPath)
-      .then(paths => {
-        console.log('downloaded files by torrent in ' + paths)
-        info._filename = paths[0]
-        const mediaFileName = path.basename(info._filename)
-        info._fileNames.push(mediaFileName)
-
-        return info
+      .then(res => {
+        console.log('downloaded files by torrent in ' + res.path)
+        return {
+          downloaded: res.downloaded,
+          downloadedPath: res.path,
+          temporaryPath: null
+        }
       })
   }
 }

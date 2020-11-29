@@ -1,4 +1,3 @@
-const path = require('path')
 const wrapper = require('../libs/wrappers')
 const MediaDB = require('../models/MediaDB.js')
 const Cache = require('../models/Cache.js')
@@ -6,6 +5,7 @@ const filePath = require('../models/FilePath')
 const Downloader = require('../libs/downloader')
 const Archive = require('../models/Archive')
 const Media = require('../models/Media')
+const Source = require('../models/Source')
 const DownloadState = require('../models/DownloadState')
 const afterUpdate = require('../config').afterUpdate
 
@@ -31,18 +31,6 @@ module.exports = function (router, handleJson, handleError, links, cacheCol) {
     return res.send('update started')
   })
 
-
-  router.get('/medias/state/:id', (req, res, next) => {
-    const id = req.params.id
-    const state = DownloadState.get(id)
-    if (state) {
-      return res.json(state)
-    } else {
-      res.status(404)
-      return res.send()
-    }
-  })
-  
   router
     .post('/medias', (req, res, next) => {
       const url = req.body.url
@@ -50,7 +38,7 @@ module.exports = function (router, handleJson, handleError, links, cacheCol) {
       if (url) {
         handleJson(create(url, withDownload), req, res)
           .then(afterUpdate)
-        // const state = DownloadState.create(url)
+        // const state = DownloadState.create(url)o
         // create(url, withDownload)
         // .then(afterUpdate)
         // .then(medias => {
@@ -111,8 +99,7 @@ module.exports = function (router, handleJson, handleError, links, cacheCol) {
             .then(infos => {
               const promises = infos.map(info => {
                 if (withDownload) {
-                  return Downloader.downloadMedia(info)
-                    .then(info => createOne(url, info))
+                  return createOne(url, info).then(media => downloadOne(media._id))
                 } else {
                   return createOne(url, info)
                 }
@@ -147,18 +134,41 @@ module.exports = function (router, handleJson, handleError, links, cacheCol) {
               }
               return Downloader.createInfo(Archive.absolute(archive.infoPath), torrentPath)
             })
-            .then(info => Downloader.downloadMedia(info))
             .then(info => {
-              return Archive.load(media)
-                .then(newArchive => {
-                  const updatedMedia = Media.updateArchive(media, newArchive)
-                  return mediaDB.replace(updatedMedia)
-                })
+              // fill media info
+              media.setArchiveSize(info.filesize)
+              return Downloader.downloadMedia(info)
+            })
+            .then(res => {
+              // download started
+              const state = DownloadState.create(id)
+              state.setDownloadedPath(res.downloadedPath)
+              console.log(media.getArchiveSize())
+              state.setSize(media.getArchiveSize())
+              state.setTemporaryPath(res.temporaryPath)
+              // add the temporary source
+              const source = Source.createTmpSource(id)
+              media.addSource(source)
+
+              console.log(media)
+              res.downloaded.then(() => afterDownload(media, state))
+
+              return mediaDB.replace(media)
             })
         } else {
           console.log('media already downloaded')
           return Promise.resolve(media)
         }
+      })
+  }
+
+  let afterDownload = (media, state) => {
+    console.log(media.url + ' is downloaded')
+    state.endsDownload()
+    return Archive.load(media)
+      .then(newArchive => {
+        const updatedMedia = Media.updateArchive(media, newArchive)
+        return mediaDB.replace(updatedMedia)
       })
   }
 

@@ -4,6 +4,7 @@ const findRoutes = require('./find-routes')
 const deleteRoutes = require('./delete-routes')
 const tagRoutes = require('./tag-routes.js')
 const lookupRoutes = require('./lookup-routes')
+const tmpFileRoute = require('./tmp-file-route')
 const UnarchivedMedia = require('../models/UnarchivedMedia')
 
 module.exports = function (collections) {
@@ -13,6 +14,8 @@ module.exports = function (collections) {
   deleteRoutes(router, handleJson, handleError, collections['links'], collections['cache'])
   tagRoutes(router, handleJson, handleError, collections['tags'], collections['links'])
   lookupRoutes(router, handleJson, handleError)
+  tmpFileRoute(router, handleJson, handleError, collections['links'])
+
   return router
 }
 

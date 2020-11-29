@@ -23,12 +23,14 @@ class Media extends UnarchivedMedia {
     this.archived = true
     this.id = obj._id
     this._id = obj._id
+    this.id = obj._id
     this.creation_date = obj.creation_date
     this.file_path = obj.file_path
     this.thumbnails = obj.thumbnails || []
     this.subtitles = obj.subtitles
     this.torrent_path = obj.torrent_path
     this.archive_dir = obj.archive_dir
+    this.sources = obj.sources || []
   }
 
   getThumbnailJSON () {
@@ -63,12 +65,25 @@ class Media extends UnarchivedMedia {
     if (this.torrent_path) {
       json.torrent_url = Media._urlFromPath(this.torrent_path)
     }
+    json.sources = this.sources
 
     return json
   }
 
   getFileUrl () {
     return (this.file_path) ? Media._urlFromPath(this.file_path) : null
+  }
+
+  addSource (source) {
+    this.sources.push(source)
+  }
+
+  setArchiveSize (size) {
+    this.archiveSize = size
+  }
+
+  getArchiveSize (size) {
+    return this.archiveSize
   }
 
   static _urlFromPath (path) {

@@ -5,8 +5,9 @@
                :poster="(media.thumbnail) ? media.thumbnail.url: undefined"
                :preload="(media.torrent_url) ? 'none' : 'metadata'"
                class="image">
+          <source v-if="media.sources && media.sources.length && media.sources[0].file_url" :src="media.sources && media.sources[0].file_url" :type="media.mime"/>
             <source v-if="(!media.torrent_url || offlineMediaURL) && media.file_url" :src="offlineMediaURL || media.file_url" :type="media.mime"/>
-            <source v-if="!media.torrent_url && media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/>
+            <!-- <source v-if="!media.torrent_url && media.original_file" :src="media.original_file.url" :type="media.original_file.mime"/> -->
             <track v-for="sub in media.subtitles" :key="sub.url"
                    :src="sub.url"
                    :label="sub.lang"

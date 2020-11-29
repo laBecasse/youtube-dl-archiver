@@ -55,12 +55,17 @@ function download (torrentPath, dirPath) {
       client.add(t, options, torrent => {
         const paths = torrent.files.map(f => f.path)
         torrent.on('wire', () => console.log('wire on ' + torrentPath))
-        torrent.on('done', () => {
-          resolve(paths)
+
+        const prm = new Promise((res, rej) => {
+          torrent.on('done', () => {
+            res()
+          })
+          torrent.on('error', err => {
+            rej(err)
+          })
         })
-        torrent.on('error', err => {
-          reject(err)
-        })
+        
+        resolve({path: paths[0], downloaded: prm})
       })
       client.on('error', err => {
         reject(err)
