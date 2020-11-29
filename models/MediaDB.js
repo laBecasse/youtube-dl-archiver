@@ -1,9 +1,4 @@
-const Mime = require('mime')
-const config = require('../config')
 const Media = require('./Media')
-const HOST = config.host
-
-const LANGS = config.subtitleLangs
 
 module.exports = function (links) {
 

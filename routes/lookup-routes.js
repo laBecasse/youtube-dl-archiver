@@ -2,7 +2,7 @@ const UnarchivedMedia = require('../models/UnarchivedMedia')
 const Downloader = require('../libs/downloader')
 const Invidious = require('../libs/invidious')
 
-module.exports = function (router) {
+module.exports = function (router, handleJSON, handleError) {
   router.get('/lookup', (req, res, next) => {
     const query = req.query.query
     const platform = req.query.platform

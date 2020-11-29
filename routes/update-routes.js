@@ -9,35 +9,7 @@ const Media = require('../models/Media')
 const DownloadState = require('../models/DownloadState')
 const afterUpdate = require('../config').afterUpdate
 
-let handleJson = function (promises, req, res) {
-  return promises
-    .then(medias => {
-      if (medias) {
-        if (Array.isArray(medias)) {
-          res.json(medias.map(media => media.toAPIJSON()))
-          return medias
-        } else {
-          res.json(medias.toAPIJSON())
-          return [medias]
-        }
-      } else {
-        res.status(404)
-        res.json({ message: 'not found' })
-        return []
-      }
-    })
-    .catch(handleError(res))
-}
-
-let handleError = function (res) {
-  return err => {
-    console.error(err.stack)
-    res.status(500)
-      .json({ error: 'server error' })
-  }
-}
-
-module.exports = function (router, links, cacheCol) {
+module.exports = function (router, handleJson, handleError, links, cacheCol) {
   const cache = Cache(cacheCol)
   const mediaDB = MediaDB(links)
 

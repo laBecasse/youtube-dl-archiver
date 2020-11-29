@@ -21,7 +21,7 @@ class Media extends UnarchivedMedia {
     super(obj)
 
     this.archived = true
-
+    this.id = obj._id
     this._id = obj._id
     this.creation_date = obj.creation_date
     this.file_path = obj.file_path

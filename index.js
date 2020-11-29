@@ -29,12 +29,13 @@ app.use('/medias/*', express.static('front/dist'))
 app.use('/archives', express.static(config.archivesDir))
 
 const router = require('./routes')(collections)
+const feeds = require('./routes/feeds')(collections)
 
 app.use('/api', router)
+app.use('/feed', feeds)
 
 app.listen(port, () => {
   console.log('We are live on http://localhost:' + port)
 })
-
 
 require('./init').init(collections['links']).catch(console.log)

@@ -5,7 +5,7 @@ const Downloader = require('../libs/downloader')
 const MediaDB = require('../models/MediaDB.js')
 const UnarchivedMedia = require('../models/UnarchivedMedia')
 
-module.exports = function (router, links) {
+module.exports = function (router, handleJson, handleError, links) {
   const mediaDB = MediaDB(links)
 
   let getByUrl = function (req, res, next) {
@@ -14,31 +14,6 @@ module.exports = function (router, links) {
       handleJson(mediaDB.findByUrl(url), req, res)
     } else {
       next()
-    }
-  }
-
-  let handleJson = function (promises, req, res) {
-    promises.then(medias => {
-
-      if (medias) {
-        if (Array.isArray(medias)) {
-          res.json(medias.map(media => media.toAPIJSON()))
-        } else {
-          res.json(medias.toAPIJSON())
-        }
-      } else {
-        res.status(404)
-        res.json({ message: 'not found' })
-      }
-    })
-      .catch(handleError(res))
-  }
-
-  let handleError = function (res) {
-    return err => {
-      console.error(err.stack)
-      res.status(500)
-        .json({ error: err.stack })
     }
   }
 
@@ -66,7 +41,7 @@ module.exports = function (router, links) {
     const uploader = req.query.uploader
     const platform = req.query.platform
 
-    if (!text) {
+    if (!text && !uploader) {
       res.status(400)
       return res.json({ message: 'invalid request' })
     }
