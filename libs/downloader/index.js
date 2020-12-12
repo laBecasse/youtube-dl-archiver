@@ -176,7 +176,7 @@ function downloadMetadata (url) {
   const dlDirPath = createTempDirectoryPath()
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
   const subLangValue = langs.join(',')
-  const cmdFormat = youtubeDl + ' -f "%s" --ignore-errors --skip-download --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" %s'
+  const cmdFormat = youtubeDl + ' -f "%s" --ignore-errors --skip-download --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" "%s"'
   const cmdLine = util.format(cmdFormat, 'best[tbr<=500]/best/bestvideo+bestaudio', subLangValue, outputValue, url)
   return exec(cmdLine)
     .catch(e => {
