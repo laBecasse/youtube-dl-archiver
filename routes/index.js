@@ -19,7 +19,6 @@ module.exports = function (collections) {
 let handleJson = function (promises, req, res) {
   return promises
     .then(object => {
-      console.log(object)
       if (object) {
         if (Array.isArray(object)) {
           res.json(object.map(o => {
