@@ -28,7 +28,14 @@ const queryPatterns = {
 function downloadMedia (info) {
   const dlDirPath = info._dirname
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
-  const cmdFormat = youtubeDl + ' -f "%s" --output "%s" --load-info-json "%s"'
+  let cmdFormat = youtubeDl + ' -f "%s" --output "%s" --load-info-json "%s"'
+
+  // fix for the  FranceTV audio bug
+  // https://github.com/ytdl-org/youtube-dl/issues/28102
+  if (info.extractor === 'FranceTV') {
+    cmdFormat += ' --hls-prefer-ffmpeg'
+  }
+
   const cmdLine = util.format(cmdFormat, formatDl, outputValue, info._selfPath)
 
   if (!info._torrent_file) {
