@@ -2,7 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const https = require('https')
 const util = require('util')
-const exec = util.promisify(require('child_process').exec)
+const exec = util.promisify(require('child_process').execFile)
 const mkdirp = require('mkdirp')
 const srt2vtt = require('srt-to-vtt')
 const axios = require('axios')
@@ -28,20 +28,18 @@ const queryPatterns = {
 function downloadMedia (info) {
   const dlDirPath = info._dirname
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
-  let cmdFormat = youtubeDl + ' -f "%s" --output "%s" --load-info-json "%s"'
+  let cmdFormat = [' -f', formatDl, '--output', outputValue, '--load-info-json', info._selfPath]
 
   // fix for the  FranceTV audio bug
   // https://github.com/ytdl-org/youtube-dl/issues/28102
   if (info.extractor === 'FranceTV') {
-    cmdFormat += ' --hls-prefer-ffmpeg'
+    cmdFormat.push(' --hls-prefer-ffmpeg')
   }
 
-  const cmdLine = util.format(cmdFormat, formatDl, outputValue, info._selfPath)
-
   if (!info._torrent_file) {
-    console.log('ydl execution: "' + cmdLine + '"')
-    return exec(cmdLine, { maxBuffer: Infinity })
-      .then(() => {
+    console.log('ydl execution: "' + cmdFormat + '"')
+    return exec(youtubeDl, cmdFormat, { maxBuffer: Infinity })
+      .then(res => {
         const mediaFileName = path.basename(info._filename)
         info._fileNames.push(mediaFileName)
         return info
@@ -187,9 +185,9 @@ function downloadMetadata (url) {
   const dlDirPath = createTempDirectoryPath()
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
   const subLangValue = langs.join(',')
-  const cmdFormat = youtubeDl + ' -f "%s" --ignore-errors --skip-download --write-sub --sub-lang %s --write-thumbnail --write-info-json --output "%s" "%s"'
-  const cmdLine = util.format(cmdFormat, 'best[tbr<=500]/best/bestvideo+bestaudio', subLangValue, outputValue, url)
-  return exec(cmdLine)
+  const cmdFormat = [ '-f', 'best[tbr<=500]/best/bestvideo+bestaudio', '--ignore-errors', '--skip-download', '--write-sub', '--sub-lang', subLangValue, '--write-thumbnail', '--write-info-json', '--output', outputValue, url ]
+
+  return exec(youtubeDl, cmdFormat)
     .catch(e => {
       // if any thing have been downloaded
       // it can append for playlist
