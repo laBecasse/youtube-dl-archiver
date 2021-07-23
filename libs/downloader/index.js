@@ -28,7 +28,9 @@ const queryPatterns = {
 function downloadMedia (info) {
   const dlDirPath = info._dirname
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
-  let cmdFormat = [' -f', formatDl, '--output', outputValue, '--load-info-json', info._selfPath]
+  // here the double quotes are essential !!!
+  // https://stackoverflow.com/questions/48014957/quotes-in-node-js-spawn-arguments
+  let cmdFormat = [ "-f", formatDl, "--output", outputValue, "--load-info-json", info._selfPath ]
 
   // fix for the  FranceTV audio bug
   // https://github.com/ytdl-org/youtube-dl/issues/28102
