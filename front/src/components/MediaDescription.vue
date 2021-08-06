@@ -17,32 +17,38 @@
             </p>
             <Tags v-if="media.tags" :tags="media.tags" :removingEnabled="expanded" :limited="!expanded" @removeTag="removeTag"/>
             <TagForm v-if="media.archived" @addTag="addTag"/>
-            <p v-if="media.description && !expanded" v-html="shortDescription" class="description">
+            <p v-if="media.description" v-html="description" class="description"></p>
+            <p v-if="expanded && descriptionShortening">
+              <button v-on:click="toggleDescription" v-if="fullDescription">show less</button>
+              <button v-on:click="toggleDescription" v-else>show more</button>
             </p>
-            <p v-if="media.description && expanded" v-html="description" class="description">
+            <p class="original-link">
+              <a  v-bind:href="media.url">lien original</a>
             </p>
-            <a v-bind:href="media.url">lien original</a>
         </div>
+        <WebmentionComponent v-if="media.id && expanded" :id="media.id" />
     </div>
 </template>
 
 <script>
  import TagForm from './TagForm.vue'
  import Tags from './Tags.vue'
+ import WebmentionComponent from './WebmentionComponent.vue'
 
  export default {
      name: 'MediaDescription',
      props: ['media', 'expanded'],
      components: {
          Tags,
-         TagForm
+         TagForm,
+         WebmentionComponent
      },
      computed: {
-         shortDescription(){
-             return getShortDescription(this.media)
-         },
-         description() {
-             return  getHTMLDescription(this.media)
+       description() {
+         if (this.fullDescription)
+           return  getHTMLDescription(this.media)
+         else
+           return getShortDescription(this.media)
          },
          uploadDate() {
              return getFormatedUploadDate(this.media)
@@ -50,7 +56,8 @@
      },
      data () {
          return {
-
+           fullDescription: false,
+           descriptionShortening: this.media.description && this.media.description.length > SHORT_DESCRIPTION_LENGTH
        }  
      },
      methods: {
@@ -61,7 +68,10 @@
          addTag (tag) {
              const mediaId = this.media.id
              this.$store.dispatch('addTagToMedia', { mediaId: mediaId, tag: tag})
-         }
+         },
+       toggleDescription() {
+         this.fullDescription = !this.fullDescription
+       }
      }
  }
 
@@ -131,5 +141,9 @@
   .description {
       text-overflow: ellipsis;
       overflow: hidden;
+  }
+
+  .original-link {
+      margin-top: 2em;
   }
 </style>
