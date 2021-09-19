@@ -26,7 +26,7 @@
               <a  v-bind:href="media.url">lien original</a>
             </p>
         </div>
-        <WebmentionComponent v-if="media.id && expanded" :id="media.id" />
+        <WebmentionComponent v-if="media.id && expanded" :id="media.id" :url="media.url" />
     </div>
 </template>
 

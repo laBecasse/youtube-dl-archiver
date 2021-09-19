@@ -20,13 +20,13 @@
 <script>
 export default {
   name: 'WebmentionComponent',
-  props: ['id'],
+  props: ['id', 'url'],
   computed: {
     abs_input_uri() {
       return process.env.VUE_APP_HOST + '/medias/' + this.id
     },
     webmention_url() {
-      return process.env.VUE_APP_WEBMENTION_URL + '?url=' + this.abs_input_uri
+      return process.env.VUE_APP_WEBMENTION_URL + '?url=' + this.abs_input_uri + ',' + this.url
     },
     micropub_url() {
       return process.env.VUE_APP_MICROPUB_URL + this.abs_input_uri
