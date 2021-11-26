@@ -18,7 +18,7 @@
     "vue-ionicons": "^3.0.5",
     "vue-router": "^3.4.9",
     "vuex": "^3.5.1",
-    "webtorrent": "^0.107.16"
+    "webtorrent": "^1.0.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.12.1",

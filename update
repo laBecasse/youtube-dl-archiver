@@ -1,3 +1,4 @@
 #!/bin/bash
 
-node libs/update-youtube-dl.js
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o bin/youtube-dl
+#node libs/update-youtube-dl.js

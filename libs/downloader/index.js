@@ -73,10 +73,11 @@ function downloadTorrentFile (info) {
       .then(video => {
         // choose resolution (expected 360p)
         const resolutionPreference = ['360p', '480p', '720p']
+        const files = (video.files.length !== 0) ? video.files : video.streamingPlaylists[0].files
         const filePreference = resolutionPreference
-              .map(res => video.files.filter(file => file.resolution.label === res)[0])
+              .map(res => files.filter(file => file.resolution.label === res)[0])
               .filter(file => file)
-        const file = filePreference[0] || video.files[0]
+        const file = filePreference[0] || files[0]
         const torrentURL = file.torrentUrl
 
         return new Promise((resolve, reject) => {
@@ -187,7 +188,7 @@ function downloadMetadata (url) {
   const dlDirPath = createTempDirectoryPath()
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
   const subLangValue = langs.join(',')
-  const cmdFormat = [ '-f', 'best[tbr<=500]/best/bestvideo+bestaudio', '--ignore-errors', '--skip-download', '--write-sub', '--sub-lang', subLangValue, '--write-thumbnail', '--write-info-json', '--output', outputValue, url ]
+  const cmdFormat = [ '--no-clean-infojson', '-f', 'best[tbr<=500]/best/bestvideo+bestaudio', '--ignore-errors', '--skip-download', '--write-sub', '--sub-lang', subLangValue, '--write-thumbnail', '--write-info-json', '--output', outputValue, url ]
 
   return exec(youtubeDl, cmdFormat)
     .catch(e => {
