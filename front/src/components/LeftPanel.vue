@@ -9,6 +9,13 @@
         <div class="panel-block">
             <Tags v-if="tags" :tags="tags.map(t=>t._id)" :removingEnabled="false" :limited="false" />
         </div>
+
+        <div v-if="commentUrl" class="panel-block">
+            <a class="button is-link is-outlined is-fullwidth" :href="commentUrl">
+                Comments
+            </a>
+        </div>
+
         <div class="panel-block">
             <router-link class="button is-link is-outlined is-fullwidth"
                          :to="{name: 'AllTags', params: {}}">
@@ -49,7 +56,8 @@
      },
      data () {
          return {
-             tagsLength: 20
+           tagsLength: 20,
+           commentUrl: process.env.VUE_APP_COMMENT_URL
          }
      },
      computed: {
