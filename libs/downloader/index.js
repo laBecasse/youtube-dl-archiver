@@ -188,7 +188,7 @@ function downloadMetadata (url) {
   const dlDirPath = createTempDirectoryPath()
   const outputValue = dlDirPath + '/%(title)s.%(ext)s'
   const subLangValue = langs.join(',')
-  const cmdFormat = [ '--no-clean-infojson', '-f', 'best[tbr<=500]/best/bestvideo+bestaudio', '--ignore-errors', '--skip-download', '--write-sub', '--sub-lang', subLangValue, '--write-thumbnail', '--write-info-json', '--output', outputValue, url ]
+  const cmdFormat = [ '--no-clean-infojson', '-f', formatDl, '--ignore-errors', '--skip-download', '--write-sub', '--sub-lang', subLangValue, '--write-thumbnail', '--write-info-json', '--output', outputValue, url ]
 
   return exec(youtubeDl, cmdFormat)
     .catch(e => {
