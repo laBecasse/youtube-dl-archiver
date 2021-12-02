@@ -11,7 +11,7 @@ const config = require('../../config')
 
 const tempDownloadDir = config.archivesTmpDir
 const youtubeDl = config.youtubedlBin
-const formatDl = 'bestvideo[vcodec^=avc1][height<=360]+bestaudio[ext=m4a]/bestvideo[vcodec^=avc1][height<=720]+bestaudio/bestvideo+bestaudio/best[height<=360]/best[height<=480]/best'
+const formatDl = 'mp4[height<=480]/mp4[height<=360]/mp4[height<=720]/best[height<=360]/best[height<=480]/best[height<=720]/best/bestvideo[vcodec^=avc1][height<=360]+bestaudio[ext=m4a]/bestvideo[vcodec^=avc1][height<=720]+bestaudio/bestvideo+bestaudio'
 const langs = config.subtitleLangs
 
 const queryPatterns = {

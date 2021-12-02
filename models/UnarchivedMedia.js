@@ -143,7 +143,7 @@ class UnarchivedMedia {
       media_url: mediaUrl,
       ext: info.ext,
       mime: Mime.getType(info.ext),
-      original_file: (info.url) ? originalFile : undefined,
+      original_file: (originalFile.url) ? originalFile : undefined,
       title: info.title,
       description: info.description,
       tags: [],
