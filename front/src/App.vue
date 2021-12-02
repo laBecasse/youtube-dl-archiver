@@ -73,7 +73,7 @@
      data () {
          return {
              'API_URL': process.env.VUE_APP_API_URL,
-             'offline': !navigator.onLine,
+             'offline': false,
              allTags: [],
              ympdClient: null,
              darkMode: false
@@ -101,16 +101,6 @@
          this.getParameters().setEventListenerOnKey('YMPD_URL', this.initYmpd)
          // darkMode event
          this.getParameters().setEventListenerOnKey('darkMode', v => {this.darkMode = v})
-     },
-     mounted () {
-         window.addEventListener('online',  () => {
-             this.showInfo("Tu es ligne, bienvenue sur les internets")
-             this.offline = false
-         })
-         window.addEventListener('offline', () => {
-             this.offline = true
-             this.showInfo("Tu es hors ligne ! <br/> Les seuls médias visibles sont ceux que tu as déjà vu")
-         })
      },
      methods: {
          ...mapGetters(['getParameters']),

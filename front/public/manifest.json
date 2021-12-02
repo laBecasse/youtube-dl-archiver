@@ -1,6 +1,6 @@
 {
-  "short_name": "YDlArchiver",
-  "name": "Youtube Download Archiver",
+  "short_name": "Mediarchiver",
+  "name": "Mediarchiver",
   "description": "An archiver for web medias",
   "start_url": "/",
   "scope": "/",
