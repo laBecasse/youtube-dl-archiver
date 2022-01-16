@@ -129,7 +129,12 @@ function createInfo (infoPath, torrentPath) {
   return new Promise((resolve, reject) => {
     fs.readFile(infoPath, (err, data) => {
       if (err) return reject(err)
-      const info = JSON.parse(data)
+      let info = JSON.parse(data)
+
+      if (info._type === 'playlist') {
+        info = info.entries[0]
+        info._filename = removeExt(infoPath) + '.' + info.ext
+      }
       // tmp directory for download
       info._dirname = path.dirname(infoPath)
       // title used in basename for metadata files
