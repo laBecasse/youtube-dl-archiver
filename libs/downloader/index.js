@@ -6,6 +6,8 @@ const exec = util.promisify(require('child_process').execFile)
 const mkdirp = require('mkdirp')
 const srt2vtt = require('srt-to-vtt')
 const axios = require('axios')
+const mime = require('mime')
+mime.define({'audio/mpeg': ['mp3']}, true)
 const downloadTorrent = require('../webtorrent/index.js').download
 const config = require('../../config')
 
@@ -27,7 +29,15 @@ const queryPatterns = {
  */
 function downloadMedia (info) {
   const dlDirPath = info._dirname
-  const outputValue = dlDirPath + '/%(title)s.%(ext)s'
+  let outputValue = dlDirPath + '/%(title)s.%(ext)s'
+
+  if (mime.getExtension(info.ext) !== null) {
+    const ext = mime.getExtension(info.ext)
+    outputValue = dlDirPath + '/%(title)s.' + ext
+    info._filename = info._filename.replace(info.ext.replace('/', '⧸'), ext)
+    info.ext = ext
+  }
+
   // here the double quotes are essential !!!
   // https://stackoverflow.com/questions/48014957/quotes-in-node-js-spawn-arguments
   let cmdFormat = [ "-f", formatDl, "--output", outputValue, "--load-info-json", info._selfPath ]
@@ -116,9 +126,10 @@ function loadInfo (dlDirPath, infoFileName, fileNames) {
     .then(info => {
       // related file are files downloaded with the info
       // concerning the same media
-      const relatedFileNames = fileNames.filter(file => {
-        return removeExt(file) === info._basename
-      })
+      const relatedFileNames = fileNames
+      //.filter(file => {
+        // return removeExt(file) === info._basename
+      // })
       info._fileNames = info._fileNames.concat(relatedFileNames)
 
       return info
